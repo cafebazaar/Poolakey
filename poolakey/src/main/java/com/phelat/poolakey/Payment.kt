@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import com.android.vending.billing.IInAppBillingService
 
 class Payment(private val context: Context) : ServiceConnection {
+
+    private var billingService: IInAppBillingService? = null
 
     fun initialize() {
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
@@ -18,9 +21,11 @@ class Payment(private val context: Context) : ServiceConnection {
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        billingService = IInAppBillingService.Stub.asInterface(service)
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
+        billingService = null
     }
 
     companion object {
