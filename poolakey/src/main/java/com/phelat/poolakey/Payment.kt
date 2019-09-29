@@ -21,7 +21,21 @@ class Payment(private val context: Context) : ServiceConnection {
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        billingService = IInAppBillingService.Stub.asInterface(service)
+        IInAppBillingService.Stub.asInterface(service)
+            ?.takeIf { isInAppBillingSupported(it) }
+            ?.also { billingService = it }
+            ?: run {
+                TODO("In app billing isn't supported")
+            }
+    }
+
+    private fun isInAppBillingSupported(inAppBillingService: IInAppBillingService): Boolean {
+        val inAppBillingSupportState = inAppBillingService.isBillingSupported(
+            IN_APP_BILLING_VERSION,
+            context.packageName,
+            BILLING_ITEM_TYPE_IN_APP
+        )
+        return inAppBillingSupportState == SERVICE_RESPONSE_RESULT_OK
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
@@ -29,8 +43,11 @@ class Payment(private val context: Context) : ServiceConnection {
     }
 
     companion object {
+        private const val SERVICE_RESPONSE_RESULT_OK = 0
+        private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
         private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
+        private const val BILLING_ITEM_TYPE_IN_APP = "inapp"
     }
 
 }
