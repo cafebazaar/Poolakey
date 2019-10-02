@@ -1,8 +1,8 @@
 package com.phelat.poolakey
 
-class ConnectionCallback {
+class ConnectionCallback : Connection {
 
-    lateinit var connectionState: ConnectionState
+    private lateinit var connectionState: ConnectionState
 
     internal var connectionSucceed: () -> Unit = {}
 
@@ -23,6 +23,10 @@ class ConnectionCallback {
     fun disconnected(block: () -> Unit) {
         connectionState = ConnectionState.Disconnected
         disconnected = block
+    }
+
+    override fun getState(): ConnectionState {
+        return connectionState
     }
 
 }
