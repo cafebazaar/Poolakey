@@ -9,24 +9,24 @@ import com.android.vending.billing.IInAppBillingService
 
 internal class BillingConnection(private val context: Context) : ServiceConnection {
 
+    private var callback: ConnectionCallback? = null
+
     private var billingService: IInAppBillingService? = null
 
-    internal fun startConnection() {
+    internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit) {
+        callback = ConnectionCallback().apply(connectionCallback)
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
             .takeIf { context.packageManager.queryIntentServices(it, 0).isNotEmpty() }
             ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
-            ?: run {
-                TODO("Service is not available")
-            }
+            ?: run { callback?.connectionFailed?.invoke() }
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
             ?.takeIf { isInAppBillingSupported(it) }
             ?.also { billingService = it }
-            ?: run {
-                TODO("In app billing isn't supported")
-            }
+            ?.also { callback?.connectionSucceed?.invoke() }
+            ?: run { callback?.connectionFailed?.invoke() }
     }
 
     private fun isInAppBillingSupported(inAppBillingService: IInAppBillingService): Boolean {

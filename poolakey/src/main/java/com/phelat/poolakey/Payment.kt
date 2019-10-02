@@ -6,8 +6,8 @@ class Payment(context: Context) {
 
     private val connection = BillingConnection(context)
 
-    fun initialize() {
-        connection.startConnection()
+    fun initialize(callback: ConnectionCallback.() -> Unit) {
+        connection.startConnection(callback)
     }
 
 }
