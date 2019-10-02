@@ -13,9 +13,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
 
     private var billingService: IInAppBillingService? = null
 
-    internal fun startConnection(
-        connectionCallback: ConnectionCallback.() -> Unit
-    ): ConnectionCallback {
+    internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback().apply(connectionCallback)
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
             .takeIf { context.packageManager.queryIntentServices(it, 0).isNotEmpty() }
