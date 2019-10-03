@@ -65,10 +65,15 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
     private fun stopConnection() {
         if (billingService != null) {
             context.unbindService(this)
+            disconnect()
         }
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
+        disconnect()
+    }
+
+    private fun disconnect() {
         billingService = null
         callback?.disconnected?.invoke()
         callback = null
