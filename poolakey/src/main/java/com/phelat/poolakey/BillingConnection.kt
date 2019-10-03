@@ -49,7 +49,6 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
         private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
         private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
-        private const val BILLING_ITEM_TYPE_IN_APP = "inapp"
     }
 
 }
