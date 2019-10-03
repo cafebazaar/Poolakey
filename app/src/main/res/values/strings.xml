@@ -1,3 +1,9 @@
 <resources>
+
     <string name="app_name">PoolakeySample</string>
+
+    <string name="general_service_connection_not_connected_text">Service: Not Connected</string>
+    <string name="general_service_connection_connected_text">Service: Connected</string>
+    <string name="general_service_connection_failed_text">Service: Failed to Connect</string>
+
 </resources>
