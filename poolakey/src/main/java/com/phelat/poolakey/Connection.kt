@@ -4,4 +4,6 @@ interface Connection {
 
     fun getState(): ConnectionState
 
+    fun disconnect()
+
 }

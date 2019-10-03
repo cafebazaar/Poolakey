@@ -1,6 +1,6 @@
 package com.phelat.poolakey
 
-class ConnectionCallback : Connection {
+class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
 
     private lateinit var connectionState: ConnectionState
 
@@ -27,6 +27,10 @@ class ConnectionCallback : Connection {
 
     override fun getState(): ConnectionState {
         return connectionState
+    }
+
+    override fun disconnect() {
+        disconnect.invoke()
     }
 
 }

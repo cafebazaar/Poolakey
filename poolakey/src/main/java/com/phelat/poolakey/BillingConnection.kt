@@ -16,7 +16,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
     private var billingService: IInAppBillingService? = null
 
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
-        callback = ConnectionCallback().apply(connectionCallback)
+        callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
             .takeIf { context.packageManager.queryIntentServices(it, 0).isNotEmpty() }
             ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
@@ -60,6 +60,12 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
                     0
                 )
             }
+    }
+
+    private fun stopConnection() {
+        if (billingService != null) {
+            context.unbindService(this)
+        }
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
