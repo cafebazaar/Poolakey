@@ -34,7 +34,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
         val inAppBillingSupportState = inAppBillingService.isBillingSupported(
             IN_APP_BILLING_VERSION,
             context.packageName,
-            BILLING_ITEM_TYPE_IN_APP
+            PurchaseType.IN_APP.type
         )
         return inAppBillingSupportState == SERVICE_RESPONSE_RESULT_OK
     }
