@@ -2,7 +2,7 @@ package com.phelat.poolakey
 
 class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
 
-    private lateinit var connectionState: ConnectionState
+    private var connectionState: ConnectionState = ConnectionState.Disconnected
 
     internal var connectionSucceed: () -> Unit = {}
 
