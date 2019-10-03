@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        payment.initialize {
+        payment.connect {
             connectionSucceed {
                 serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
             }
