@@ -71,6 +71,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
     override fun onServiceDisconnected(name: ComponentName?) {
         billingService = null
         callback?.disconnected?.invoke()
+        callback = null
     }
 
     companion object {
