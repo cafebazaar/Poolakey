@@ -48,7 +48,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
             purchaseRequest.sku,
             purchaseType.type,
             purchaseRequest.extraData
-        )?.takeIf { it.get(INTENT_RESPONSE_CODE) == SERVICE_RESPONSE_RESULT_OK }
+        )?.takeIf { it.get(BazaarIntent.RESPONSE_CODE) == SERVICE_RESPONSE_RESULT_OK }
             ?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)
             ?.also { purchaseIntent ->
                 activity.startIntentSenderForResult(
@@ -84,7 +84,6 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
         private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
         private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
-        private const val INTENT_RESPONSE_CODE = "RESPONSE_CODE"
         private const val INTENT_RESPONSE_BUY = "BUY_INTENT"
     }
 
