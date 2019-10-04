@@ -1,6 +1,8 @@
 package com.phelat.poolakeysample
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.ConnectionState
@@ -39,6 +41,26 @@ class MainActivity : AppCompatActivity() {
                         requestCode = PURCHASE_REQUEST_CODE
                     )
                 )
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        payment.onActivityResult(requestCode, resultCode, data) {
+            purchaseSucceed {
+                Toast.makeText(
+                    this@MainActivity,
+                    R.string.general_purchase_succeed_message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            purchaseFailed {
+                Toast.makeText(
+                    this@MainActivity,
+                    R.string.general_purchase_failed_message,
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
