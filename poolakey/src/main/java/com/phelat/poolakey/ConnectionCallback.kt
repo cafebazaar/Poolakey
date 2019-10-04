@@ -11,18 +11,24 @@ class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
     internal var disconnected: () -> Unit = {}
 
     fun connectionSucceed(block: () -> Unit) {
-        connectionState = ConnectionState.Connected
-        connectionSucceed = block
+        connectionSucceed = {
+            connectionState = ConnectionState.Connected
+            block.invoke()
+        }
     }
 
     fun connectionFailed(block: () -> Unit) {
-        connectionState = ConnectionState.FailedToConnect
-        connectionFailed = block
+        connectionFailed = {
+            connectionState = ConnectionState.FailedToConnect
+            block.invoke()
+        }
     }
 
     fun disconnected(block: () -> Unit) {
-        connectionState = ConnectionState.Disconnected
-        disconnected = block
+        disconnected = {
+            connectionState = ConnectionState.Disconnected
+            block.invoke()
+        }
     }
 
     override fun getState(): ConnectionState {
