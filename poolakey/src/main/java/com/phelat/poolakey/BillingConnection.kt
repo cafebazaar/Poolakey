@@ -47,7 +47,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
             context.packageName,
             purchaseRequest.sku,
             purchaseType.type,
-            purchaseRequest.extraData
+            purchaseRequest.payload
         )?.takeIf { it.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK }
             ?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)
             ?.also { purchaseIntent ->
