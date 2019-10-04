@@ -12,7 +12,13 @@ class Payment(context: Context) {
     }
 
     fun purchaseItem(activity: Activity, request: PurchaseRequest) {
+        requestCode = request.requestCode
         connection.purchase(activity, request, PurchaseType.IN_APP)
+    }
+
+    companion object {
+        @Volatile
+        private var requestCode: Int = -1
     }
 
 }
