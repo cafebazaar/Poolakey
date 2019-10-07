@@ -19,6 +19,10 @@ class Payment(context: Context) {
         connection.purchase(activity, request, PurchaseType.IN_APP)
     }
 
+    fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
+        connection.consume(purchaseToken, callback)
+    }
+
     fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
