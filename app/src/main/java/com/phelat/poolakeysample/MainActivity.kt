@@ -52,12 +52,26 @@ class MainActivity : AppCompatActivity() {
         payment.onActivityResult(requestCode, resultCode, data) {
             purchaseSucceed {
                 toast(R.string.general_purchase_succeed_message)
+                if (consumeSwitch.isChecked) {
+                    consumePurchasedItem(it.purchaseToken)
+                }
             }
             purchaseCanceled {
                 toast(R.string.general_purchase_cancelled_message)
             }
             purchaseFailed {
                 toast(R.string.general_purchase_failed_message)
+            }
+        }
+    }
+
+    private fun consumePurchasedItem(purchaseToken: String) {
+        payment.consumeItem(purchaseToken) {
+            consumeSucceed {
+                toast(R.string.general_consume_succeed_message)
+            }
+            consumeFailed {
+                toast(R.string.general_consume_failed_message)
             }
         }
     }
