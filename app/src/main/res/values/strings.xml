@@ -8,6 +8,7 @@
     <string name="general_service_connection_connected_text">Service: Connected</string>
     <string name="general_service_connection_failed_text">Service: Failed to Connect</string>
     <string name="general_purchase_succeed_message">Purchase succeed</string>
+    <string name="general_purchase_cancelled_message">Purchase Cancelled</string>
     <string name="general_purchase_failed_message">Purchase failed</string>
 
 </resources>

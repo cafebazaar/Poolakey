@@ -55,6 +55,13 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+            purchaseCanceled {
+                Toast.makeText(
+                    this@MainActivity,
+                    R.string.general_purchase_cancelled_message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             purchaseFailed {
                 Toast.makeText(
                     this@MainActivity,
