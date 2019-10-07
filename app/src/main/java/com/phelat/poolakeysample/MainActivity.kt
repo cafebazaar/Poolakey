@@ -3,6 +3,7 @@ package com.phelat.poolakeysample
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.ConnectionState
@@ -50,27 +51,19 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         payment.onActivityResult(requestCode, resultCode, data) {
             purchaseSucceed {
-                Toast.makeText(
-                    this@MainActivity,
-                    R.string.general_purchase_succeed_message,
-                    Toast.LENGTH_LONG
-                ).show()
+                toast(R.string.general_purchase_succeed_message)
             }
             purchaseCanceled {
-                Toast.makeText(
-                    this@MainActivity,
-                    R.string.general_purchase_cancelled_message,
-                    Toast.LENGTH_LONG
-                ).show()
+                toast(R.string.general_purchase_cancelled_message)
             }
             purchaseFailed {
-                Toast.makeText(
-                    this@MainActivity,
-                    R.string.general_purchase_failed_message,
-                    Toast.LENGTH_LONG
-                ).show()
+                toast(R.string.general_purchase_failed_message)
             }
         }
+    }
+
+    private fun toast(@StringRes message: Int) {
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
     }
 
     override fun onDestroy() {
