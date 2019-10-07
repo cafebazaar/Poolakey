@@ -35,10 +35,10 @@ class Payment(context: Context) {
         data: Intent?,
         purchaseCallback: PurchaseCallback.() -> Unit
     ) {
-        if (resultCode == Activity.RESULT_OK) {
-            resultParser.parseResult(data, purchaseCallback)
-        } else {
-            PurchaseCallback().apply(purchaseCallback).purchaseFailed.invoke()
+        when (resultCode) {
+            Activity.RESULT_OK -> resultParser.parseResult(data, purchaseCallback)
+            Activity.RESULT_CANCELED -> PurchaseCallback().apply(purchaseCallback).purchaseCanceled.invoke()
+            else -> PurchaseCallback().apply(purchaseCallback).purchaseFailed.invoke()
         }
     }
 
