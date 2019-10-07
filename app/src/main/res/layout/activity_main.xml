@@ -16,9 +16,18 @@
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/skuValueInput"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
+        android:layout_above="@+id/consumeSwitch"
+        android:hint="@string/general_sku_hint"
+        android:padding="16dp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/consumeSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
         android:layout_above="@+id/purchaseButton"
-        android:hint="@string/general_sku_hint" />
+        android:padding="16dp"
+        android:text="@string/general_consume_purchase_text" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/purchaseButton"
