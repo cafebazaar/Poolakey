@@ -38,7 +38,8 @@ class MainActivity : AppCompatActivity() {
                     activity = this,
                     request = PurchaseRequest(
                         sku = skuValueInput.text.toString(),
-                        requestCode = PURCHASE_REQUEST_CODE
+                        requestCode = PURCHASE_REQUEST_CODE,
+                        payload = ""
                     )
                 )
             }
