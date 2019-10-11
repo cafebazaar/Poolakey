@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_above="@+id/consumeSwitch"
-        android:hint="@string/general_sku_hint"
+        android:hint="@string/general_product_id_hint"
         android:padding="16dp" />
 
     <androidx.appcompat.widget.SwitchCompat
