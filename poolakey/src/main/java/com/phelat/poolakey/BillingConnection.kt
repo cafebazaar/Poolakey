@@ -26,29 +26,23 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
-            ?.takeIf { isInAppBillingSupported(it) }
-            ?.takeIf { isSubscriptionSupported(it) }
+            ?.takeIf { isPurchaseTypeSupported(PurchaseType.IN_APP, it) }
+            ?.takeIf { isPurchaseTypeSupported(PurchaseType.SUBSCRIPTION, it) }
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
             ?: run { callback?.connectionFailed?.invoke() }
     }
 
-    private fun isInAppBillingSupported(inAppBillingService: IInAppBillingService): Boolean {
-        val inAppBillingSupportState = inAppBillingService.isBillingSupported(
+    private fun isPurchaseTypeSupported(
+        purchaseType: PurchaseType,
+        inAppBillingService: IInAppBillingService
+    ): Boolean {
+        val supportState = inAppBillingService.isBillingSupported(
             IN_APP_BILLING_VERSION,
             context.packageName,
-            PurchaseType.IN_APP.type
+            purchaseType.type
         )
-        return inAppBillingSupportState == BazaarIntent.RESPONSE_RESULT_OK
-    }
-
-    private fun isSubscriptionSupported(inAppBillingService: IInAppBillingService): Boolean {
-        val subscriptionSupportState = inAppBillingService.isBillingSupported(
-            IN_APP_BILLING_VERSION,
-            context.packageName,
-            PurchaseType.SUBSCRIPTION.type
-        )
-        return subscriptionSupportState == BazaarIntent.RESPONSE_RESULT_OK
+        return supportState == BazaarIntent.RESPONSE_RESULT_OK
     }
 
     fun purchase(activity: Activity, purchaseRequest: PurchaseRequest, purchaseType: PurchaseType) {
