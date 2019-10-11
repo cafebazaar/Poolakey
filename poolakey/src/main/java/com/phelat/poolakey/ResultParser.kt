@@ -3,6 +3,7 @@ package com.phelat.poolakey
 import android.content.Intent
 import com.phelat.poolakey.callback.PurchaseCallback
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.entity.PurchaseInfo
 import org.json.JSONObject
 
 internal class ResultParser {

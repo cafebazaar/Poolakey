@@ -1,4 +1,4 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.entity
 
 data class PurchaseInfo(
     val orderId: String,
