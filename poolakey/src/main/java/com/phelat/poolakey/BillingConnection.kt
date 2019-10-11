@@ -41,6 +41,15 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
         return inAppBillingSupportState == BazaarIntent.RESPONSE_RESULT_OK
     }
 
+    private fun isSubscriptionSupported(inAppBillingService: IInAppBillingService): Boolean {
+        val subscriptionSupportState = inAppBillingService.isBillingSupported(
+            IN_APP_BILLING_VERSION,
+            context.packageName,
+            PurchaseType.SUBSCRIPTION.type
+        )
+        return subscriptionSupportState == BazaarIntent.RESPONSE_RESULT_OK
+    }
+
     fun purchase(activity: Activity, purchaseRequest: PurchaseRequest, purchaseType: PurchaseType) {
         billingService?.getBuyIntent(
             IN_APP_BILLING_VERSION,
