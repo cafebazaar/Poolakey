@@ -45,6 +45,18 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        subscribeButton.setOnClickListener {
+            if (paymentConnection.getState() == ConnectionState.Connected) {
+                payment.subscribeItem(
+                    activity = this@MainActivity,
+                    request = PurchaseRequest(
+                        sku = skuValueInput.text.toString(),
+                        requestCode = SUBSCRIBE_REQUEST_CODE,
+                        payload = ""
+                    )
+                )
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -87,6 +99,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val PURCHASE_REQUEST_CODE = 1000
+        private const val SUBSCRIBE_REQUEST_CODE = 1001
     }
 
 }
