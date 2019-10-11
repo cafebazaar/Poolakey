@@ -29,8 +29,18 @@ internal class BillingConnection(
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
-            ?.takeIf { isPurchaseTypeSupported(PurchaseType.IN_APP, it) }
-            ?.takeIf { isPurchaseTypeSupported(PurchaseType.SUBSCRIPTION, it) }
+            ?.takeIf {
+                isPurchaseTypeSupported(
+                    purchaseType = PurchaseType.IN_APP,
+                    inAppBillingService = it
+                )
+            }
+            ?.takeIf {
+                !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
+                    purchaseType = PurchaseType.SUBSCRIPTION,
+                    inAppBillingService = it
+                )
+            }
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
             ?: run { callback?.connectionFailed?.invoke() }
