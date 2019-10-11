@@ -36,4 +36,12 @@
         android:layout_centerInParent="true"
         android:text="@string/general_purchase_text" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/subscribeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/purchaseButton"
+        android:layout_centerHorizontal="true"
+        android:text="@string/general_subscribe_text" />
+
 </RelativeLayout>

@@ -3,6 +3,7 @@
     <string name="app_name">PoolakeySample</string>
 
     <string name="general_purchase_text">Purchase</string>
+    <string name="general_subscribe_text">Subscribe</string>
     <string name="general_consume_purchase_text">Consume Purchase</string>
     <string name="general_sku_hint">SKU to purchase</string>
     <string name="general_service_connection_not_connected_text">Service: Not Connected</string>
