@@ -27,6 +27,7 @@ internal class BillingConnection(private val context: Context) : ServiceConnecti
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
             ?.takeIf { isInAppBillingSupported(it) }
+            ?.takeIf { isSubscriptionSupported(it) }
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
             ?: run { callback?.connectionFailed?.invoke() }
