@@ -9,6 +9,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
+import com.phelat.poolakey.callback.ConsumeCallback
 
 internal class BillingConnection(
     private val context: Context,

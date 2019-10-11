@@ -1,4 +1,4 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.callback
 
 class ConsumeCallback {
 
