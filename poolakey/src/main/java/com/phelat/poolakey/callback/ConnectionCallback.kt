@@ -1,4 +1,7 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.callback
+
+import com.phelat.poolakey.Connection
+import com.phelat.poolakey.ConnectionState
 
 class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
 

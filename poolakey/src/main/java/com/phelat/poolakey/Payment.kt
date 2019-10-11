@@ -3,6 +3,7 @@ package com.phelat.poolakey
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.phelat.poolakey.callback.ConnectionCallback
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
