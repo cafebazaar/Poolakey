@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
+import com.phelat.poolakey.callback.PurchaseCallback
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 

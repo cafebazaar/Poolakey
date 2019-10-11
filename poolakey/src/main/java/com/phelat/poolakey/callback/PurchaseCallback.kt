@@ -1,4 +1,6 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.callback
+
+import com.phelat.poolakey.PurchaseInfo
 
 class PurchaseCallback {
 
