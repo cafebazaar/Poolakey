@@ -1,4 +1,4 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.constant
 
 internal object BazaarIntent {
 
