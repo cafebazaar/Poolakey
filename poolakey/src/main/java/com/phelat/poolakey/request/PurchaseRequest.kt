@@ -1,4 +1,4 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.request
 
 data class PurchaseRequest(
     val productId: String,

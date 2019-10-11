@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.ConnectionState
 import com.phelat.poolakey.Payment
-import com.phelat.poolakey.PurchaseRequest
+import com.phelat.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
