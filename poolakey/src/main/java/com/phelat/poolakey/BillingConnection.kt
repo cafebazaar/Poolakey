@@ -62,7 +62,7 @@ internal class BillingConnection(
         billingService?.getBuyIntent(
             IN_APP_BILLING_VERSION,
             context.packageName,
-            purchaseRequest.sku,
+            purchaseRequest.productId,
             purchaseType.type,
             purchaseRequest.payload
         )?.takeIf { it.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK }

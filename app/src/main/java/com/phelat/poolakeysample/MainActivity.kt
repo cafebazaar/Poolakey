@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
                 payment.purchaseItem(
                     activity = this,
                     request = PurchaseRequest(
-                        sku = skuValueInput.text.toString(),
+                        productId = skuValueInput.text.toString(),
                         requestCode = PURCHASE_REQUEST_CODE,
                         payload = ""
                     )
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                 payment.subscribeItem(
                     activity = this@MainActivity,
                     request = PurchaseRequest(
-                        sku = skuValueInput.text.toString(),
+                        productId = skuValueInput.text.toString(),
                         requestCode = SUBSCRIBE_REQUEST_CODE,
                         payload = ""
                     )

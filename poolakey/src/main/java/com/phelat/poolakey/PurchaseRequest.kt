@@ -1,7 +1,7 @@
 package com.phelat.poolakey
 
 data class PurchaseRequest(
-    val sku: String,
+    val productId: String,
     val requestCode: Int,
     val payload: String
 )
