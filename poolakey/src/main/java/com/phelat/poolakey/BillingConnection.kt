@@ -9,7 +9,10 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import com.android.vending.billing.IInAppBillingService
 
-internal class BillingConnection(private val context: Context) : ServiceConnection {
+internal class BillingConnection(
+    private val context: Context,
+    private val paymentConfiguration: PaymentConfiguration
+) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
 

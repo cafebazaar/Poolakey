@@ -6,7 +6,7 @@ import android.content.Intent
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
-    private val connection = BillingConnection(context)
+    private val connection = BillingConnection(context, config)
 
     private var resultParser = ResultParser()
 
