@@ -1,4 +1,4 @@
-package com.phelat.poolakey
+package com.phelat.poolakey.config
 
 data class PaymentConfiguration(
     val shouldSupportSubscription: Boolean = true

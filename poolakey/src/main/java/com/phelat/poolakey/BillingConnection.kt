@@ -10,6 +10,7 @@ import android.os.IBinder
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
+import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.request.PurchaseRequest
 
