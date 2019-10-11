@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 
-class Payment(context: Context) {
+class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
     private val connection = BillingConnection(context)
 
@@ -21,6 +21,11 @@ class Payment(context: Context) {
 
     fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
+    }
+
+    fun subscribeItem(activity: Activity, request: PurchaseRequest) {
+        requestCode = request.requestCode
+        connection.purchase(activity, request, PurchaseType.SUBSCRIPTION)
     }
 
     fun onActivityResult(
