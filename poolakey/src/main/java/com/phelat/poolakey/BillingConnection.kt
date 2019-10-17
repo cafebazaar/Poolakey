@@ -122,6 +122,13 @@ internal class BillingConnection(
         }
     }
 
+    private inline fun <T> T?.takeIf(thisIsTrue: (T?) -> Boolean, andIfNot: () -> Unit): T? {
+        if (!thisIsTrue.invoke(this)) {
+            andIfNot.invoke()
+        }
+        return this
+    }
+
     companion object {
         private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
