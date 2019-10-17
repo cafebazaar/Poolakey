@@ -12,6 +12,7 @@ import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.request.PurchaseRequest
 
@@ -92,7 +93,7 @@ internal class BillingConnection(
                 andIfNot = {
                     ConsumeCallback().apply(callback)
                         .consumeFailed
-                        .invoke(Exception())
+                        .invoke(ConsumeFailedException())
                 }
             )
             ?.also { ConsumeCallback().apply(callback).consumeSucceed.invoke() }
