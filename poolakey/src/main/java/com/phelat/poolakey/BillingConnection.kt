@@ -114,6 +114,12 @@ internal class BillingConnection(
             ?: run { ConnectionState.Disconnected }
     }
 
+    private inline infix fun ConnectionState.ifServiceIsDisconnected(block: () -> Unit) {
+        if (this is ConnectionState.Disconnected) {
+            block.invoke()
+        }
+    }
+
     companion object {
         private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
