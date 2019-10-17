@@ -1,8 +1,10 @@
 package com.phelat.poolakey
 
-internal inline fun <T> T?.takeIf(thisIsTrue: (T?) -> Boolean, andIfNot: () -> Unit): T? {
-    if (!thisIsTrue.invoke(this)) {
+internal inline fun <T> T.takeIf(thisIsTrue: (T) -> Boolean, andIfNot: () -> Unit): T? {
+    return if (thisIsTrue.invoke(this)) {
+        this
+    } else {
         andIfNot.invoke()
+        null
     }
-    return this
 }
