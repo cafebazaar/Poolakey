@@ -84,11 +84,13 @@ internal class BillingConnection(
             }
     }
 
-    fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
-        billingService?.consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
-            ?.takeIf { it == BazaarIntent.RESPONSE_RESULT_OK }
+    fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) = withService {
+        consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
+            .takeIf { it == BazaarIntent.RESPONSE_RESULT_OK }
             ?.also { ConsumeCallback().apply(callback).consumeSucceed.invoke() }
             ?: run { ConsumeCallback().apply(callback).consumeFailed.invoke() }
+    } ifServiceIsDisconnected {
+        ConsumeCallback().apply(callback).consumeFailed.invoke()
     }
 
     private fun stopConnection() {
