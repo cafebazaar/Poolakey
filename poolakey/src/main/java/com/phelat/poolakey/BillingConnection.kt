@@ -12,6 +12,7 @@ import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.request.PurchaseRequest
 
 internal class BillingConnection(
@@ -96,7 +97,7 @@ internal class BillingConnection(
             )
             ?.also { ConsumeCallback().apply(callback).consumeSucceed.invoke() }
     } ifServiceIsDisconnected {
-        ConsumeCallback().apply(callback).consumeFailed.invoke(Exception())
+        ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }
 
     private fun stopConnection() {
