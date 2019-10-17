@@ -108,6 +108,12 @@ internal class BillingConnection(
         callback = null
     }
 
+    private inline fun withService(service: IInAppBillingService.() -> Unit): ConnectionState {
+        return billingService?.also { service.invoke(it) }
+            ?.let { ConnectionState.Connected }
+            ?: run { ConnectionState.Disconnected }
+    }
+
     companion object {
         private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
