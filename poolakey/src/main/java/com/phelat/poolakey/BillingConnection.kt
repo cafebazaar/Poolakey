@@ -12,6 +12,7 @@ import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.request.PurchaseRequest
@@ -29,7 +30,14 @@ internal class BillingConnection(
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
-            .takeIf { context.packageManager.queryIntentServices(it, 0).isNotEmpty() }
+            .takeIf(
+                thisIsTrue = {
+                    context.packageManager.queryIntentServices(it, 0).isNotEmpty()
+                },
+                andIfNot = {
+                    callback?.connectionFailed?.invoke(BazaarNotFoundException())
+                }
+            )
             ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
             ?: run { callback?.connectionFailed?.invoke(Exception()) }
         return requireNotNull(callback)
