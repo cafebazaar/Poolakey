@@ -39,7 +39,6 @@ internal class BillingConnection(
                 }
             )
             ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
-            ?: run { callback?.connectionFailed?.invoke(Exception()) }
         return requireNotNull(callback)
     }
 
