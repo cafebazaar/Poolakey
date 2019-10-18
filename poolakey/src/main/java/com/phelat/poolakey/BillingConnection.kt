@@ -10,6 +10,7 @@ import android.os.IBinder
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
+import com.phelat.poolakey.callback.PurchaseIntentCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.exception.BazaarNotFoundException
@@ -86,7 +87,8 @@ internal class BillingConnection(
     fun purchase(
         activity: Activity,
         purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
     ) = withService {
         getBuyIntent(
             IN_APP_BILLING_VERSION,

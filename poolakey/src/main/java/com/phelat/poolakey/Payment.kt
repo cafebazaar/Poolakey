@@ -6,6 +6,7 @@ import android.content.Intent
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseCallback
+import com.phelat.poolakey.callback.PurchaseIntentCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.request.PurchaseRequest
 
@@ -19,18 +20,26 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         return connection.startConnection(callback)
     }
 
-    fun purchaseItem(activity: Activity, request: PurchaseRequest) {
+    fun purchaseItem(
+        activity: Activity,
+        request: PurchaseRequest,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
         requestCode = request.requestCode
-        connection.purchase(activity, request, PurchaseType.IN_APP)
+        connection.purchase(activity, request, PurchaseType.IN_APP, callback)
     }
 
     fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
     }
 
-    fun subscribeItem(activity: Activity, request: PurchaseRequest) {
+    fun subscribeItem(
+        activity: Activity,
+        request: PurchaseRequest,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
         requestCode = request.requestCode
-        connection.purchase(activity, request, PurchaseType.SUBSCRIPTION)
+        connection.purchase(activity, request, PurchaseType.SUBSCRIPTION, callback)
     }
 
     fun onActivityResult(

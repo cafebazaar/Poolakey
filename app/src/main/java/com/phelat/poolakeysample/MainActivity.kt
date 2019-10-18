@@ -42,7 +42,14 @@ class MainActivity : AppCompatActivity() {
                         requestCode = PURCHASE_REQUEST_CODE,
                         payload = ""
                     )
-                )
+                ) {
+                    purchaseFlowBegan {
+
+                    }
+                    failedToBeginFlow {
+
+                    }
+                }
             }
         }
         subscribeButton.setOnClickListener {
@@ -54,7 +61,14 @@ class MainActivity : AppCompatActivity() {
                         requestCode = SUBSCRIBE_REQUEST_CODE,
                         payload = ""
                     )
-                )
+                ) {
+                    purchaseFlowBegan {
+
+                    }
+                    failedToBeginFlow {
+
+                    }
+                }
             }
         }
     }
