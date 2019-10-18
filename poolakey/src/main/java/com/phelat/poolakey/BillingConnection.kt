@@ -69,7 +69,6 @@ internal class BillingConnection(
             )
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
-            ?: run { callback?.connectionFailed?.invoke(Exception()) }
     }
 
     private fun isPurchaseTypeSupported(
