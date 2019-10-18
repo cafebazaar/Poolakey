@@ -121,6 +121,7 @@ internal class BillingConnection(
                 0,
                 0
             )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
         }
     } ifServiceIsDisconnected {
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
