@@ -8,7 +8,7 @@ class PurchaseCallback {
 
     internal var purchaseCanceled: () -> Unit = {}
 
-    internal var purchaseFailed: () -> Unit = {}
+    internal var purchaseFailed: (throwable: Throwable) -> Unit = {}
 
     fun purchaseSucceed(block: (PurchaseInfo) -> Unit) {
         purchaseSucceed = block
@@ -18,7 +18,7 @@ class PurchaseCallback {
         purchaseCanceled = block
     }
 
-    fun purchaseFailed(block: () -> Unit) {
+    fun purchaseFailed(block: (throwable: Throwable) -> Unit) {
         purchaseFailed = block
     }
 

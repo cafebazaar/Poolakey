@@ -30,10 +30,10 @@ internal class ResultParser {
                     callback?.purchaseSucceed?.invoke(purchaseInfo)
                 }
             } else {
-                callback?.purchaseFailed?.invoke()
+                callback?.purchaseFailed?.invoke(IllegalStateException("Received data is not valid"))
             }
         } else {
-            callback?.purchaseFailed?.invoke()
+            callback?.purchaseFailed?.invoke(IllegalStateException("Response code is not valid"))
         }
     }
 

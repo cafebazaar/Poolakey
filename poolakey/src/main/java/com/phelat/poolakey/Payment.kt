@@ -50,9 +50,17 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         purchaseCallback: PurchaseCallback.() -> Unit
     ) {
         when (resultCode) {
-            Activity.RESULT_OK -> resultParser.parseResult(data, purchaseCallback)
-            Activity.RESULT_CANCELED -> PurchaseCallback().apply(purchaseCallback).purchaseCanceled.invoke()
-            else -> PurchaseCallback().apply(purchaseCallback).purchaseFailed.invoke()
+            Activity.RESULT_OK -> {
+                resultParser.parseResult(data, purchaseCallback)
+            }
+            Activity.RESULT_CANCELED -> {
+                PurchaseCallback().apply(purchaseCallback).purchaseCanceled.invoke()
+            }
+            else -> {
+                PurchaseCallback().apply(purchaseCallback)
+                    .purchaseFailed
+                    .invoke(IllegalStateException("Result code is not valid"))
+            }
         }
     }
 
