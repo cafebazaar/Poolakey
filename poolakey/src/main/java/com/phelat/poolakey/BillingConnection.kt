@@ -15,6 +15,7 @@ import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.request.PurchaseRequest
+import java.lang.Exception
 
 internal class BillingConnection(
     private val context: Context,
@@ -30,7 +31,7 @@ internal class BillingConnection(
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
             .takeIf { context.packageManager.queryIntentServices(it, 0).isNotEmpty() }
             ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
-            ?: run { callback?.connectionFailed?.invoke() }
+            ?: run { callback?.connectionFailed?.invoke(Exception()) }
         return requireNotNull(callback)
     }
 
@@ -50,7 +51,7 @@ internal class BillingConnection(
             }
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
-            ?: run { callback?.connectionFailed?.invoke() }
+            ?: run { callback?.connectionFailed?.invoke(Exception()) }
     }
 
     private fun isPurchaseTypeSupported(

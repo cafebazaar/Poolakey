@@ -9,7 +9,7 @@ class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
 
     internal var connectionSucceed: () -> Unit = {}
 
-    internal var connectionFailed: () -> Unit = {}
+    internal var connectionFailed: (throwable: Throwable) -> Unit = {}
 
     internal var disconnected: () -> Unit = {}
 
@@ -20,10 +20,10 @@ class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
         }
     }
 
-    fun connectionFailed(block: () -> Unit) {
+    fun connectionFailed(block: (throwable: Throwable) -> Unit) {
         connectionFailed = {
             connectionState = ConnectionState.FailedToConnect
-            block.invoke()
+            block.invoke(it)
         }
     }
 
