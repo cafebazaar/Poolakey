@@ -44,10 +44,10 @@ class MainActivity : AppCompatActivity() {
                     )
                 ) {
                     purchaseFlowBegan {
-
+                        toast(R.string.general_purchase_flow_began_message)
                     }
                     failedToBeginFlow {
-
+                        toast(R.string.general_purchase_failed_message)
                     }
                 }
             }
@@ -63,10 +63,10 @@ class MainActivity : AppCompatActivity() {
                     )
                 ) {
                     purchaseFlowBegan {
-
+                        toast(R.string.general_purchase_flow_began_message)
                     }
                     failedToBeginFlow {
-
+                        toast(R.string.general_purchase_failed_message)
                     }
                 }
             }
