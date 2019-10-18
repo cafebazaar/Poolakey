@@ -96,18 +96,24 @@ internal class BillingConnection(
             purchaseRequest.productId,
             purchaseType.type,
             purchaseRequest.payload
-        )?.takeIf { it.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK }
-            ?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)
-            ?.also { purchaseIntent ->
-                activity.startIntentSenderForResult(
-                    purchaseIntent.intentSender,
-                    purchaseRequest.requestCode,
-                    Intent(),
-                    0,
-                    0,
-                    0
-                )
+        )?.takeIf(
+            thisIsTrue = { bundle ->
+                bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
+            }, andIfNot = {
+                PurchaseIntentCallback().apply(callback)
+                    .failedToBeginFlow
+                    .invoke(IllegalStateException("Failed to receive response from Bazaar"))
             }
+        )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
+            activity.startIntentSenderForResult(
+                purchaseIntent.intentSender,
+                purchaseRequest.requestCode,
+                Intent(),
+                0,
+                0,
+                0
+            )
+        }
     } ifServiceIsDisconnected {
         TODO("Handle disconnect state")
     }
