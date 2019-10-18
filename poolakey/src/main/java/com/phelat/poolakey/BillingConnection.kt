@@ -15,6 +15,7 @@ import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
+import com.phelat.poolakey.exception.IAPNotSupportedException
 import com.phelat.poolakey.request.PurchaseRequest
 import java.lang.Exception
 
@@ -44,12 +45,17 @@ internal class BillingConnection(
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
-            ?.takeIf {
-                isPurchaseTypeSupported(
-                    purchaseType = PurchaseType.IN_APP,
-                    inAppBillingService = it
-                )
-            }
+            ?.takeIf(
+                thisIsTrue = {
+                    isPurchaseTypeSupported(
+                        purchaseType = PurchaseType.IN_APP,
+                        inAppBillingService = it
+                    )
+                },
+                andIfNot = {
+                    callback?.connectionFailed?.invoke(IAPNotSupportedException())
+                }
+            )
             ?.takeIf {
                 !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
                     purchaseType = PurchaseType.SUBSCRIPTION,
