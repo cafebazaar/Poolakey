@@ -83,8 +83,12 @@ internal class BillingConnection(
         return supportState == BazaarIntent.RESPONSE_RESULT_OK
     }
 
-    fun purchase(activity: Activity, purchaseRequest: PurchaseRequest, purchaseType: PurchaseType) {
-        billingService?.getBuyIntent(
+    fun purchase(
+        activity: Activity,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType
+    ) = withService {
+        getBuyIntent(
             IN_APP_BILLING_VERSION,
             context.packageName,
             purchaseRequest.productId,
@@ -102,6 +106,8 @@ internal class BillingConnection(
                     0
                 )
             }
+    } ifServiceIsDisconnected {
+        TODO("Handle disconnect state")
     }
 
     fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) = withService {
