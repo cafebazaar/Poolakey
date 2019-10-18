@@ -104,6 +104,14 @@ internal class BillingConnection(
                     .failedToBeginFlow
                     .invoke(IllegalStateException("Failed to receive response from Bazaar"))
             }
+        )?.takeIf(
+            thisIsTrue = { bundle ->
+                bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
+            }, andIfNot = {
+                PurchaseIntentCallback().apply(callback)
+                    .failedToBeginFlow
+                    .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
+            }
         )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
             activity.startIntentSenderForResult(
                 purchaseIntent.intentSender,
