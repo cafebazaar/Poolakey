@@ -123,7 +123,7 @@ internal class BillingConnection(
             )
         }
     } ifServiceIsDisconnected {
-        TODO("Handle disconnect state")
+        PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
     }
 
     fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) = withService {
