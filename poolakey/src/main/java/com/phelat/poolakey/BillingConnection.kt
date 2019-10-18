@@ -16,8 +16,8 @@ import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.exception.IAPNotSupportedException
+import com.phelat.poolakey.exception.SubsNotSupportedException
 import com.phelat.poolakey.request.PurchaseRequest
-import java.lang.Exception
 
 internal class BillingConnection(
     private val context: Context,
@@ -56,12 +56,17 @@ internal class BillingConnection(
                     callback?.connectionFailed?.invoke(IAPNotSupportedException())
                 }
             )
-            ?.takeIf {
-                !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
-                    purchaseType = PurchaseType.SUBSCRIPTION,
-                    inAppBillingService = it
-                )
-            }
+            ?.takeIf(
+                thisIsTrue = {
+                    !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
+                        purchaseType = PurchaseType.SUBSCRIPTION,
+                        inAppBillingService = it
+                    )
+                },
+                andIfNot = {
+                    callback?.connectionFailed?.invoke(SubsNotSupportedException())
+                }
+            )
             ?.also { billingService = it }
             ?.also { callback?.connectionSucceed?.invoke() }
             ?: run { callback?.connectionFailed?.invoke(Exception()) }
