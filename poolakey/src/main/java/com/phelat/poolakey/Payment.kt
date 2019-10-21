@@ -8,13 +8,16 @@ import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
 import com.phelat.poolakey.config.PaymentConfiguration
+import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
     private val connection = BillingConnection(context, config)
 
-    private var resultParser = ResultParser()
+    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
+
+    private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo)
 
     fun connect(callback: ConnectionCallback.() -> Unit = {}): Connection {
         return connection.startConnection(callback)
@@ -49,26 +52,20 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         purchaseCallback: PurchaseCallback.() -> Unit
     ) {
         if (Payment.requestCode > -1 && Payment.requestCode == requestCode) {
-            handleReceivedResult(resultCode, data, purchaseCallback)
-        }
-    }
-
-    private fun handleReceivedResult(
-        resultCode: Int,
-        data: Intent?,
-        purchaseCallback: PurchaseCallback.() -> Unit
-    ) {
-        when (resultCode) {
-            Activity.RESULT_OK -> {
-                resultParser.parseResult(data, purchaseCallback)
-            }
-            Activity.RESULT_CANCELED -> {
-                PurchaseCallback().apply(purchaseCallback).purchaseCanceled.invoke()
-            }
-            else -> {
-                PurchaseCallback().apply(purchaseCallback)
-                    .purchaseFailed
-                    .invoke(IllegalStateException("Result code is not valid"))
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    purchaseResultParser.handleReceivedResult(data, purchaseCallback)
+                }
+                Activity.RESULT_CANCELED -> {
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseCanceled
+                        .invoke()
+                }
+                else -> {
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseFailed
+                        .invoke(IllegalStateException("Result code is not valid"))
+                }
             }
         }
     }
