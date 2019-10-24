@@ -145,13 +145,16 @@ internal class BillingConnection(
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }
 
-    fun queryBoughtItems(callback: PurchaseQueryCallback.() -> Unit) = withService {
+    fun queryBoughtItems(
+        purchaseType: PurchaseType,
+        callback: PurchaseQueryCallback.() -> Unit
+    ) = withService {
         var continuationToken: String? = null
         do {
             getPurchases(
                 IN_APP_BILLING_VERSION,
                 context.packageName,
-                PurchaseType.IN_APP.type,
+                purchaseType.type,
                 continuationToken
             )?.takeIf(
                 thisIsTrue = { bundle ->

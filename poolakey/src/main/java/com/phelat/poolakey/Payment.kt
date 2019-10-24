@@ -47,7 +47,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     }
 
     fun getPurchasedItems(callback: PurchaseQueryCallback.() -> Unit) {
-        connection.queryBoughtItems(callback)
+        connection.queryBoughtItems(PurchaseType.IN_APP, callback)
     }
 
     fun onActivityResult(
