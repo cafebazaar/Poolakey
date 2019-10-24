@@ -11,6 +11,7 @@ import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
+import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.exception.BazaarNotFoundException
@@ -18,11 +19,13 @@ import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.exception.IAPNotSupportedException
 import com.phelat.poolakey.exception.SubsNotSupportedException
+import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
 
 internal class BillingConnection(
     private val context: Context,
-    private val paymentConfiguration: PaymentConfiguration
+    private val paymentConfiguration: PaymentConfiguration,
+    private val rawDataToPurchaseInfo: RawDataToPurchaseInfo
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
@@ -140,6 +143,47 @@ internal class BillingConnection(
             ?.also { ConsumeCallback().apply(callback).consumeSucceed.invoke() }
     } ifServiceIsDisconnected {
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
+    }
+
+    fun queryBoughtItems(callback: PurchaseQueryCallback.() -> Unit) = withService {
+        var continuationToken: String? = null
+        do {
+            getPurchases(
+                IN_APP_BILLING_VERSION,
+                context.packageName,
+                PurchaseType.IN_APP.type,
+                continuationToken
+            )?.takeIf(
+                thisIsTrue = { bundle ->
+                    bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
+                },
+                andIfNot = {
+                    PurchaseQueryCallback().apply(callback)
+                        .queryFailed
+                        .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                }
+            )?.takeIf(
+                thisIsTrue = { bundle ->
+                    bundle.containsKey(BazaarIntent.RESPONSE_PURCHASE_ITEM_LIST)
+                        .and(bundle.containsKey(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST))
+                        .and(bundle.containsKey(BazaarIntent.RESPONSE_DATA_SIGNATURE_LIST))
+                        .and(bundle.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST) != null)
+                },
+                andIfNot = {
+                    PurchaseQueryCallback().apply(callback)
+                        .queryFailed
+                        .invoke(IllegalStateException("Missing data from the received result"))
+                }
+            )?.also { bundle ->
+                continuationToken = bundle.getString(BazaarIntent.RESPONSE_CONTINUATION_TOKEN)
+            }?.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST)?.map { rawData ->
+                rawDataToPurchaseInfo.mapToPurchaseInfo(rawData)
+            }?.also { purchasedItems ->
+                PurchaseQueryCallback().apply(callback).querySucceed.invoke(purchasedItems)
+            }
+        } while (!continuationToken.isNullOrBlank())
+    } ifServiceIsDisconnected {
+        PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
     }
 
     private fun stopConnection() {

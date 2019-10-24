@@ -13,9 +13,9 @@ import com.phelat.poolakey.request.PurchaseRequest
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
-    private val connection = BillingConnection(context, config)
-
     private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
+
+    private val connection = BillingConnection(context, config, rawDataToPurchaseInfo)
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo)
 
