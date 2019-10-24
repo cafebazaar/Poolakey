@@ -6,13 +6,13 @@ class PurchaseQueryCallback {
 
     internal var querySucceed: (List<PurchaseInfo>) -> Unit = {}
 
-    internal var queryFailed: () -> Unit = {}
+    internal var queryFailed: (throwable: Throwable) -> Unit = {}
 
     fun querySucceed(block: (List<PurchaseInfo>) -> Unit) {
         querySucceed = block
     }
 
-    fun queryFailed(block: () -> Unit) {
+    fun queryFailed(block: (throwable: Throwable) -> Unit) {
         queryFailed = block
     }
 
