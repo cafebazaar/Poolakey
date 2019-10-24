@@ -44,4 +44,12 @@
         android:layout_centerHorizontal="true"
         android:text="@string/general_subscribe_text" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/queryPurchasedItemsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/subscribeButton"
+        android:layout_centerHorizontal="true"
+        android:text="@string/general_query_purchase_text" />
+
 </RelativeLayout>

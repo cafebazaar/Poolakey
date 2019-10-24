@@ -71,6 +71,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        queryPurchasedItemsButton.setOnClickListener {
+            if (paymentConnection.getState() == ConnectionState.Connected) {
+                payment.getPurchasedItems {
+                    querySucceed { purchasedItems ->
+                        val productId = skuValueInput.text.toString()
+                        purchasedItems.find { it.productId == productId }
+                            ?.also { toast(R.string.general_user_purchased_item_message) }
+                            ?: run { toast(R.string.general_user_did_not_purchased_item_message) }
+                    }
+                    queryFailed {
+                        toast(R.string.general_query_purchased_items_failed_message)
+                    }
+                }
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
