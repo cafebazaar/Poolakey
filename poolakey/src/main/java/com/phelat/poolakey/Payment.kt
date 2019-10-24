@@ -50,6 +50,10 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         connection.queryBoughtItems(PurchaseType.IN_APP, callback)
     }
 
+    fun getSubscribedItems(callback: PurchaseQueryCallback.() -> Unit) {
+        connection.queryBoughtItems(PurchaseType.SUBSCRIPTION, callback)
+    }
+
     fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
