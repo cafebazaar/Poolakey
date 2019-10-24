@@ -7,6 +7,7 @@ import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
+import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
@@ -43,6 +44,10 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     ) {
         requestCode = request.requestCode
         connection.purchase(activity, request, PurchaseType.SUBSCRIPTION, callback)
+    }
+
+    fun getPurchasedItems(callback: PurchaseQueryCallback.() -> Unit) {
+        connection.queryBoughtItems(callback)
     }
 
     fun onActivityResult(
