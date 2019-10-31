@@ -151,7 +151,7 @@ internal class BillingConnection(
     fun queryBoughtItems(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
-    ) = withService {
+    ) = withService(runOnBackground = true) {
         var continuationToken: String? = null
         do {
             getPurchases(
@@ -164,9 +164,11 @@ internal class BillingConnection(
                     bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
                 },
                 andIfNot = {
-                    PurchaseQueryCallback().apply(callback)
-                        .queryFailed
-                        .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                    mainThread.execute {
+                        PurchaseQueryCallback().apply(callback)
+                            .queryFailed
+                            .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                    }
                 }
             )?.takeIf(
                 thisIsTrue = { bundle ->
@@ -176,16 +178,20 @@ internal class BillingConnection(
                         .and(bundle.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST) != null)
                 },
                 andIfNot = {
-                    PurchaseQueryCallback().apply(callback)
-                        .queryFailed
-                        .invoke(IllegalStateException("Missing data from the received result"))
+                    mainThread.execute {
+                        PurchaseQueryCallback().apply(callback)
+                            .queryFailed
+                            .invoke(IllegalStateException("Missing data from the received result"))
+                    }
                 }
             )?.also { bundle ->
                 continuationToken = bundle.getString(BazaarIntent.RESPONSE_CONTINUATION_TOKEN)
             }?.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST)?.map { rawData ->
                 rawDataToPurchaseInfo.mapToPurchaseInfo(rawData)
             }?.also { purchasedItems ->
-                PurchaseQueryCallback().apply(callback).querySucceed.invoke(purchasedItems)
+                mainThread.execute {
+                    PurchaseQueryCallback().apply(callback).querySucceed.invoke(purchasedItems)
+                }
             }
         } while (!continuationToken.isNullOrBlank())
     } ifServiceIsDisconnected {
