@@ -133,17 +133,26 @@ internal class BillingConnection(
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
     }
 
-    fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) = withService {
+    fun consume(
+        purchaseToken: String,
+        callback: ConsumeCallback.() -> Unit
+    ) = withService(runOnBackground = true) {
         consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
             .takeIf(
                 thisIsTrue = { it == BazaarIntent.RESPONSE_RESULT_OK },
                 andIfNot = {
-                    ConsumeCallback().apply(callback)
-                        .consumeFailed
-                        .invoke(ConsumeFailedException())
+                    mainThread.execute {
+                        ConsumeCallback().apply(callback)
+                            .consumeFailed
+                            .invoke(ConsumeFailedException())
+                    }
                 }
             )
-            ?.also { ConsumeCallback().apply(callback).consumeSucceed.invoke() }
+            ?.also {
+                mainThread.execute {
+                    ConsumeCallback().apply(callback).consumeSucceed.invoke()
+                }
+            }
     } ifServiceIsDisconnected {
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }
