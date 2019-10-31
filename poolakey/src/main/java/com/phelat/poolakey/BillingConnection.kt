@@ -209,9 +209,17 @@ internal class BillingConnection(
         callback = null
     }
 
-    private inline fun withService(service: IInAppBillingService.() -> Unit): ConnectionState {
-        return billingService?.also { service.invoke(it) }
-            ?.let { ConnectionState.Connected }
+    private inline fun withService(
+        runOnBackground: Boolean = false,
+        crossinline service: IInAppBillingService.() -> Unit
+    ): ConnectionState {
+        return billingService?.also {
+            if (runOnBackground) {
+                backgroundThread.execute(Runnable { service.invoke(it) })
+            } else {
+                service.invoke(it)
+            }
+        }?.let { ConnectionState.Connected }
             ?: run { ConnectionState.Disconnected }
     }
 
