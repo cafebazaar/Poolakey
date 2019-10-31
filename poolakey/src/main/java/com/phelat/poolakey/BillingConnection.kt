@@ -222,6 +222,7 @@ internal class BillingConnection(
         billingService = null
         callback?.disconnected?.invoke()
         callback = null
+        backgroundThread.dispose()
     }
 
     private inline fun withService(
