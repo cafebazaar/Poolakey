@@ -11,12 +11,25 @@ import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
+import com.phelat.poolakey.thread.BackgroundThread
+import com.phelat.poolakey.thread.MainThread
+import com.phelat.poolakey.thread.PoolakeyThread
 
 class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
 
     private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
-    private val connection = BillingConnection(context, config, rawDataToPurchaseInfo)
+    private val backgroundThread = BackgroundThread()
+
+    private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
+
+    private val connection = BillingConnection(
+        context = context,
+        paymentConfiguration = config,
+        rawDataToPurchaseInfo = rawDataToPurchaseInfo,
+        backgroundThread = backgroundThread,
+        mainThread = mainThread
+    )
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo)
 

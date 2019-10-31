@@ -21,11 +21,14 @@ import com.phelat.poolakey.exception.IAPNotSupportedException
 import com.phelat.poolakey.exception.SubsNotSupportedException
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
+import com.phelat.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
-    private val rawDataToPurchaseInfo: RawDataToPurchaseInfo
+    private val rawDataToPurchaseInfo: RawDataToPurchaseInfo,
+    private val backgroundThread: PoolakeyThread<Runnable>,
+    private val mainThread: PoolakeyThread<() -> Unit>
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
