@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import android.os.RemoteException
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
@@ -143,22 +144,28 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) = withService(runOnBackground = true) {
-        consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
-            .takeIf(
-                thisIsTrue = { it == BazaarIntent.RESPONSE_RESULT_OK },
-                andIfNot = {
+        try {
+            consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
+                .takeIf(
+                    thisIsTrue = { it == BazaarIntent.RESPONSE_RESULT_OK },
+                    andIfNot = {
+                        mainThread.execute {
+                            ConsumeCallback().apply(callback)
+                                .consumeFailed
+                                .invoke(ConsumeFailedException())
+                        }
+                    }
+                )
+                ?.also {
                     mainThread.execute {
-                        ConsumeCallback().apply(callback)
-                            .consumeFailed
-                            .invoke(ConsumeFailedException())
+                        ConsumeCallback().apply(callback).consumeSucceed.invoke()
                     }
                 }
-            )
-            ?.also {
-                mainThread.execute {
-                    ConsumeCallback().apply(callback).consumeSucceed.invoke()
-                }
+        } catch (e: RemoteException) {
+            mainThread.execute {
+                ConsumeCallback().apply(callback).consumeFailed.invoke(e)
             }
+        }
     } ifServiceIsDisconnected {
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }
