@@ -46,7 +46,13 @@ internal class BillingConnection(
                     callback?.connectionFailed?.invoke(BazaarNotFoundException())
                 }
             )
-            ?.also { context.bindService(it, this, Context.BIND_AUTO_CREATE) }
+            ?.also {
+                try {
+                    context.bindService(it, this, Context.BIND_AUTO_CREATE)
+                } catch (e: SecurityException) {
+                    callback?.connectionFailed?.invoke(e)
+                }
+            }
         return requireNotNull(callback)
     }
 
