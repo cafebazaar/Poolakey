@@ -34,6 +34,16 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo)
 
+    /**
+     * You can use this function to connect to the In-App Billing service. Note that you have to
+     * connect to Bazaar's Billing service before using any other available functions, So make sure
+     * you call this function before doing anything else, also make sure that you are connected to
+     * the billing service through com.phelat.poolakey.Connection.
+     * @see Connection
+     * @param callback That's how you can get notified about service connection changes.
+     * @return a com.phelat.poolakey.Connection interface which you can use to disconnect from the
+     * service or get the current connection state.
+     */
     fun connect(callback: ConnectionCallback.() -> Unit = {}): Connection {
         return connection.startConnection(callback)
     }
