@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 ext {
-    library_version = "1.0.0-dev01"
+    library_version = "1.0.0-dev02"
     artifact_id = 'poolakey'
 }
 
