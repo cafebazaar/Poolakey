@@ -5,9 +5,11 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.RemoteException
+import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
@@ -102,6 +104,45 @@ internal class BillingConnection(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        purchase(purchaseRequest, purchaseType, callback) { intentSender ->
+            activity.startIntentSenderForResult(
+                intentSender,
+                purchaseRequest.requestCode,
+                Intent(),
+                0,
+                0,
+                0
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+    }
+
+    fun purchase(
+        fragment: Fragment,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        purchase(purchaseRequest, purchaseType, callback) { intentSender ->
+            fragment.startIntentSenderForResult(
+                intentSender,
+                purchaseRequest.requestCode,
+                Intent(),
+                0,
+                0,
+                0,
+                null
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+    }
+
+    private fun purchase(
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit,
+        fireIntent: (IntentSender) -> Unit
     ) = withService {
         try {
             getBuyIntent(
@@ -127,15 +168,7 @@ internal class BillingConnection(
                         .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
                 }
             )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-                activity.startIntentSenderForResult(
-                    purchaseIntent.intentSender,
-                    purchaseRequest.requestCode,
-                    Intent(),
-                    0,
-                    0,
-                    0
-                )
-                PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+                fireIntent.invoke(purchaseIntent.intentSender)
             }
         } catch (e: RemoteException) {
             PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(e)
