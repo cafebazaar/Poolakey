@@ -1,6 +1,7 @@
 package com.phelat.poolakey.mapper
 
 import com.phelat.poolakey.entity.PurchaseInfo
+import com.phelat.poolakey.entity.PurchaseState
 import org.json.JSONObject
 
 internal class RawDataToPurchaseInfo {
@@ -12,7 +13,11 @@ internal class RawDataToPurchaseInfo {
                 purchaseToken = optString(PURCHASE_TOKEN),
                 payload = optString(DEVELOPER_PAYLOAD),
                 packageName = optString(PACKAGE_NAME),
-                purchaseState = optInt(PURCHASE_STATE),
+                purchaseState = if (optInt(PURCHASE_STATE) == 0) {
+                    PurchaseState.PURCHASED
+                } else {
+                    PurchaseState.REFUNDED
+                },
                 purchaseTime = optLong(PURCHASE_TIME),
                 productId = optString(PRODUCT_ID)
             )

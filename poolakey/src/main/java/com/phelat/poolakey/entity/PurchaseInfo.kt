@@ -5,7 +5,7 @@ data class PurchaseInfo(
     val purchaseToken: String,
     val payload: String,
     val packageName: String,
-    val purchaseState: Int,
+    val purchaseState: PurchaseState,
     val purchaseTime: Long,
     val productId: String
 )
