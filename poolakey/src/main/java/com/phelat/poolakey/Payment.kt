@@ -3,6 +3,7 @@ package com.phelat.poolakey
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.fragment.app.Fragment
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseCallback
@@ -44,6 +45,15 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     ) {
         requestCode = request.requestCode
         connection.purchase(activity, request, PurchaseType.IN_APP, callback)
+    }
+
+    fun purchaseItem(
+        fragment: Fragment,
+        request: PurchaseRequest,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        requestCode = request.requestCode
+        connection.purchase(fragment, request, PurchaseType.IN_APP, callback)
     }
 
     fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
