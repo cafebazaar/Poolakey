@@ -103,38 +103,42 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) = withService {
-        getBuyIntent(
-            IN_APP_BILLING_VERSION,
-            context.packageName,
-            purchaseRequest.productId,
-            purchaseType.type,
-            purchaseRequest.payload
-        )?.takeIf(
-            thisIsTrue = { bundle ->
-                bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
-            }, andIfNot = {
-                PurchaseIntentCallback().apply(callback)
-                    .failedToBeginFlow
-                    .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+        try {
+            getBuyIntent(
+                IN_APP_BILLING_VERSION,
+                context.packageName,
+                purchaseRequest.productId,
+                purchaseType.type,
+                purchaseRequest.payload
+            )?.takeIf(
+                thisIsTrue = { bundle ->
+                    bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
+                }, andIfNot = {
+                    PurchaseIntentCallback().apply(callback)
+                        .failedToBeginFlow
+                        .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                }
+            )?.takeIf(
+                thisIsTrue = { bundle ->
+                    bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
+                }, andIfNot = {
+                    PurchaseIntentCallback().apply(callback)
+                        .failedToBeginFlow
+                        .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
+                }
+            )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
+                activity.startIntentSenderForResult(
+                    purchaseIntent.intentSender,
+                    purchaseRequest.requestCode,
+                    Intent(),
+                    0,
+                    0,
+                    0
+                )
+                PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
             }
-        )?.takeIf(
-            thisIsTrue = { bundle ->
-                bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
-            }, andIfNot = {
-                PurchaseIntentCallback().apply(callback)
-                    .failedToBeginFlow
-                    .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
-            }
-        )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-            activity.startIntentSenderForResult(
-                purchaseIntent.intentSender,
-                purchaseRequest.requestCode,
-                Intent(),
-                0,
-                0,
-                0
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        } catch (e: RemoteException) {
+            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(e)
         }
     } ifServiceIsDisconnected {
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
