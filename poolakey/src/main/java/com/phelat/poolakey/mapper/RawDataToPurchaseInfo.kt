@@ -1,5 +1,6 @@
 package com.phelat.poolakey.mapper
 
+import com.phelat.poolakey.constant.RawJson
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.entity.PurchaseState
 import org.json.JSONObject
@@ -9,29 +10,19 @@ internal class RawDataToPurchaseInfo {
     fun mapToPurchaseInfo(purchaseData: String): PurchaseInfo {
         return JSONObject(purchaseData).run {
             PurchaseInfo(
-                orderId = optString(ORDER_ID),
-                purchaseToken = optString(PURCHASE_TOKEN),
-                payload = optString(DEVELOPER_PAYLOAD),
-                packageName = optString(PACKAGE_NAME),
-                purchaseState = if (optInt(PURCHASE_STATE) == 0) {
+                orderId = optString(RawJson.ORDER_ID),
+                purchaseToken = optString(RawJson.PURCHASE_TOKEN),
+                payload = optString(RawJson.DEVELOPER_PAYLOAD),
+                packageName = optString(RawJson.PACKAGE_NAME),
+                purchaseState = if (optInt(RawJson.PURCHASE_STATE) == 0) {
                     PurchaseState.PURCHASED
                 } else {
                     PurchaseState.REFUNDED
                 },
-                purchaseTime = optLong(PURCHASE_TIME),
-                productId = optString(PRODUCT_ID)
+                purchaseTime = optLong(RawJson.PURCHASE_TIME),
+                productId = optString(RawJson.PRODUCT_ID)
             )
         }
-    }
-
-    companion object {
-        private const val ORDER_ID: String = "orderId"
-        private const val PURCHASE_TOKEN: String = "purchaseToken"
-        private const val DEVELOPER_PAYLOAD: String = "developerPayload"
-        private const val PACKAGE_NAME: String = "packageName"
-        private const val PURCHASE_STATE: String = "purchaseState"
-        private const val PURCHASE_TIME: String = "purchaseTime"
-        private const val PRODUCT_ID: String = "productId"
     }
 
 }
