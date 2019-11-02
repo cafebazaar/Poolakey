@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             purchaseSucceed {
                 toast(R.string.general_purchase_succeed_message)
                 if (consumeSwitch.isChecked) {
-                    consumePurchasedItem(it.purchaseToken)
+                    consumePurchasedItem(it.purchaseInfo.purchaseToken)
                 }
             }
             purchaseCanceled {

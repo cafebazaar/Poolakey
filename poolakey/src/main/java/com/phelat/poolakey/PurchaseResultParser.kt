@@ -3,6 +3,7 @@ package com.phelat.poolakey
 import android.content.Intent
 import com.phelat.poolakey.callback.PurchaseCallback
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.entity.PurchaseEntity
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 
 internal class PurchaseResultParser(private val rawDataToPurchaseInfo: RawDataToPurchaseInfo) {
@@ -21,12 +22,12 @@ internal class PurchaseResultParser(private val rawDataToPurchaseInfo: RawDataTo
         val purchaseData = data?.getStringExtra(BazaarIntent.RESPONSE_PURCHASE_DATA)
         val dataSignature = data?.getStringExtra(BazaarIntent.RESPONSE_SIGNATURE_DATA)
         if (purchaseData != null && dataSignature != null) {
-            rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseData)
-                .also { purchaseInfo ->
-                    PurchaseCallback().apply(purchaseCallback)
-                        .purchaseSucceed
-                        .invoke(purchaseInfo)
-                }
+            PurchaseEntity(
+                purchaseInfo = rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseData),
+                dataSignature = dataSignature
+            ).also { purchaseInfo ->
+                PurchaseCallback().apply(purchaseCallback).purchaseSucceed.invoke(purchaseInfo)
+            }
         } else {
             PurchaseCallback().apply(purchaseCallback)
                 .purchaseFailed
