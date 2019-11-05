@@ -1,6 +1,6 @@
 apply plugin: 'com.jfrog.bintray'
 
-version = library_version
+version = poolakeyVersion
 
 if (project.getPlugins().hasPlugin('com.android.application') ||
         project.getPlugins().hasPlugin('com.android.library')) {
