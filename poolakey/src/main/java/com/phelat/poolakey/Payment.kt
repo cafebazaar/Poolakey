@@ -92,13 +92,14 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     }
 
     /**
-     * You can use this function to consume an already purchased item. Note that you can't use this
-     * function to consume subscribed items. This function runs off the main thread, so you don't
-     * have to handle the threading by your self.
-     * @param purchaseToken You have received this token when user purchased that particular item.
-     * You can also use 'getPurchasedItems' function to get all the purchased items by this
+     * You can use this function to consume an already purchased product. Note that you can't use
+     * this function to consume subscribed products. This function runs off the main thread, so you
+     * don't have to handle the threading by your self.
+     * @param purchaseToken You have received this token when user purchased that particular product.
+     * You can also use 'getPurchasedItems' function to get all the purchased products by this
      * particular user.
-     * @param callback That's how you can get notified if product consumption was successful or not
+     * @param callback You have to use callback in order to get notified if product consumption was
+     * successful or not.
      * @see getPurchasedItems
      */
     fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
