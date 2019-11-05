@@ -9,6 +9,9 @@ interface Connection {
      */
     fun getState(): ConnectionState
 
+    /**
+     * You can use this function to actually disconnect from the billing service.
+     */
     fun disconnect()
 
 }
