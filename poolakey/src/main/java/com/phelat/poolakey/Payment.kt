@@ -166,6 +166,19 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         connection.queryBoughtItems(PurchaseType.SUBSCRIPTION, callback)
     }
 
+    /**
+     * You have to use this function in order to check if user purchased or subscribed the product.
+     * Note that even if the purchase was successful, it's highly recommended to double check the
+     * purchase via Bazaar's REST API: http://developers.cafebazaar.ir/fa/docs/developer-api-v2-introduction/
+     * @param requestCode This is the request code that you've used when constructing PurchaseRequest.
+     * @see PurchaseRequest
+     * @param resultCode When you override 'onActivityResult' function in your activity or fragment
+     * you have access to this argument and it indicates if user canceled the purchase or not.
+     * @param data When you override 'onActivityResult' function in your activity or fragment
+     * you have access to this argument and it contains purchase data.
+     * @param purchaseCallback You have to use this callback in order to get notified about the
+     * purchase state.
+     */
     fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
