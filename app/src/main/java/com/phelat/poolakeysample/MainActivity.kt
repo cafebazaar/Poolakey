@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         }
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.purchaseItem(
+                payment.purchaseProduct(
                     activity = this,
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),

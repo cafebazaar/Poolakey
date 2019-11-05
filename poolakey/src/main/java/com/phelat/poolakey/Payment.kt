@@ -61,7 +61,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun purchaseItem(
+    fun purchaseProduct(
         activity: Activity,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -82,7 +82,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun purchaseItem(
+    fun purchaseProduct(
         fragment: Fragment,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -108,8 +108,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
-     * Note that for purchasing a product you have to use the 'purchaseItem' function.
-     * @see purchaseItem
+     * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+     * @see purchaseProduct
      * @param activity We use this activity instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to subscribe.
      * @param callback You have to use callback in order to get notified about the purchase flow.
@@ -129,8 +129,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
-     * Note that for purchasing a product you have to use the 'purchaseItem' function.
-     * @see purchaseItem
+     * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+     * @see purchaseProduct
      * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to subscribe.
      * @param callback You have to use callback in order to get notified about the purchase flow.
