@@ -40,12 +40,12 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * you call this function before doing anything else, also make sure that you are connected to
      * the billing service through Connection.
      * @see Connection
-     * @param callback You can use this callback in order to get notified about the service
+     * @param callback You have to use this callback in order to get notified about the service
      * connection changes.
      * @return a Connection interface which you can use to disconnect from the
      * service or get the current connection state.
      */
-    fun connect(callback: ConnectionCallback.() -> Unit = {}): Connection {
+    fun connect(callback: ConnectionCallback.() -> Unit): Connection {
         return connection.startConnection(callback)
     }
 

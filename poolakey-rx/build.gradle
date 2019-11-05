@@ -1,16 +1,20 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+
+ext {
+    library_version = "1.0.0-dev04"
+    artifact_id = 'poolakey-rx'
+}
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
-        applicationId "com.phelat.poolakeysample"
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName library_version
+        consumerProguardFiles 'consumer-rules.pro'
     }
     buildTypes {
         release {
@@ -24,11 +28,12 @@ dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
     implementation "androidx.appcompat:appcompat:$libraryVersions.appcompat"
 
+    api "io.reactivex.rxjava2:rxkotlin:$libraryVersions.rxkotlin"
+
     implementation project(":poolakey")
-    implementation project(":poolakey-rx")
 
 }
