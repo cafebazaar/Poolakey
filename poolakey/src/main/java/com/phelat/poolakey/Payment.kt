@@ -102,6 +102,17 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         connection.consume(purchaseToken, callback)
     }
 
+    /**
+     * You can use this function to navigate user to Bazaar's payment activity to subscribe an item.
+     * Note that for purchasing an item you have to use the 'purchaseItem' function.
+     * @see purchaseItem
+     * @param activity We use this activity instance to actually start Bazaar's payment activity.
+     * @param request This contains some information about the product that we are going to subscribe.
+     * @param callback That's how you can get notified about the purchase flow. Note that this
+     * callback is only used for notifying about the purchase flow and if you want to get notified
+     * if user actually subscribed the item, you have to use the 'onActivityResult' function.
+     * @see onActivityResult
+     */
     fun subscribeItem(
         activity: Activity,
         request: PurchaseRequest,
@@ -111,6 +122,17 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         connection.purchase(activity, request, PurchaseType.SUBSCRIPTION, callback)
     }
 
+    /**
+     * You can use this function to navigate user to Bazaar's payment activity to subscribe an item.
+     * Note that for purchasing an item you have to use the 'purchaseItem' function.
+     * @see purchaseItem
+     * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
+     * @param request This contains some information about the product that we are going to subscribe.
+     * @param callback That's how you can get notified about the purchase flow. Note that this
+     * callback is only used for notifying about the purchase flow and if you want to get notified
+     * if user actually subscribed the item, you have to use the 'onActivityResult' function.
+     * @see onActivityResult
+     */
     fun subscribeItem(
         fragment: Fragment,
         request: PurchaseRequest,
