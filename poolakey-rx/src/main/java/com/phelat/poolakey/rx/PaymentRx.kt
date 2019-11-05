@@ -131,3 +131,20 @@ fun Payment.getPurchasedProducts(): Single<List<PurchaseInfo>> {
         }
     }
 }
+
+/**
+ * You can use this function to query user's subscribed products, Note that if you want to query
+ * user's purchased products, you have to use 'getPurchasedProducts' function, since this function
+ * will only query subscribed products and not the purchased products. This function runs off
+ * the main thread, so you don't have to handle the threading by your self.
+ * @see getPurchasedProducts
+ * @return Single that you can subscribe to it and get the list of subscribed products.
+ */
+fun Payment.getSubscribedProducts(): Single<List<PurchaseInfo>> {
+    return Single.create { emitter ->
+        getSubscribedProducts {
+            querySucceed { emitter.onSuccess(it) }
+            queryFailed { emitter.onError(it) }
+        }
+    }
+}
