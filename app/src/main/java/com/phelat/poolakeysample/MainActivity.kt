@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun consumePurchasedItem(purchaseToken: String) {
-        payment.consumeItem(purchaseToken) {
+        payment.consumeProduct(purchaseToken) {
             consumeSucceed {
                 toast(R.string.general_consume_succeed_message)
             }

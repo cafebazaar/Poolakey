@@ -102,7 +102,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * successful or not.
      * @see getPurchasedItems
      */
-    fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
+    fun consumeProduct(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
     }
 
