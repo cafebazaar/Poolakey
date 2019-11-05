@@ -32,6 +32,8 @@ dependencies {
 
     implementation "androidx.appcompat:appcompat:$libraryVersions.appcompat"
 
+    implementation "io.reactivex.rxjava2:rxkotlin:$libraryVersions.rxkotlin"
+
     implementation project(":poolakey")
 
 }
