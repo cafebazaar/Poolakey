@@ -150,10 +150,10 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to query user's purchased products, Note that if you want to query
-     * user's subscribed products, you have to use 'getSubscribedItems' function, since this function
+     * user's subscribed products, you have to use 'getSubscribedProducts' function, since this function
      * will only query purchased products and not the subscribed products. This function runs off
      * the main thread, so you don't have to handle the threading by your self.
-     * @see getSubscribedItems
+     * @see getSubscribedProducts
      * @param callback You have to use callback in order to get notified about query's result.
      */
     fun getPurchasedProducts(callback: PurchaseQueryCallback.() -> Unit) {
@@ -168,7 +168,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * @see getPurchasedProducts
      * @param callback You have to use callback in order to get notified about query's result.
      */
-    fun getSubscribedItems(callback: PurchaseQueryCallback.() -> Unit) {
+    fun getSubscribedProducts(callback: PurchaseQueryCallback.() -> Unit) {
         connection.queryBoughtItems(PurchaseType.SUBSCRIPTION, callback)
     }
 

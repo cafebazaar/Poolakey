@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         }
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.getSubscribedItems(handlePurchaseQueryCallback())
+                payment.getSubscribedProducts(handlePurchaseQueryCallback())
             }
         }
     }
