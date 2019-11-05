@@ -51,8 +51,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
-     * Note that for subscribing a product you have to use the 'subscribeItem' function.
-     * @see subscribeItem
+     * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+     * @see subscribeProduct
      * @param activity We use this activity instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
      * @param callback You have to use this callback in order to get notified about the purchase flow.
@@ -61,7 +61,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun purchaseItem(
+    fun purchaseProduct(
         activity: Activity,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -72,8 +72,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
-     * Note that for subscribing a product you have to use the 'subscribeItem' function.
-     * @see subscribeItem
+     * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+     * @see subscribeProduct
      * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
      * @param callback You have to use this callback in order to get notified about the purchase flow.
@@ -82,7 +82,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun purchaseItem(
+    fun purchaseProduct(
         fragment: Fragment,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -96,20 +96,20 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * this function to consume subscribed products. This function runs off the main thread, so you
      * don't have to handle the threading by your self.
      * @param purchaseToken You have received this token when user purchased that particular product.
-     * You can also use 'getPurchasedItems' function to get all the purchased products by this
+     * You can also use 'getPurchasedProducts' function to get all the purchased products by this
      * particular user.
      * @param callback You have to use callback in order to get notified if product consumption was
      * successful or not.
-     * @see getPurchasedItems
+     * @see getPurchasedProducts
      */
-    fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
+    fun consumeProduct(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
     }
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
-     * Note that for purchasing a product you have to use the 'purchaseItem' function.
-     * @see purchaseItem
+     * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+     * @see purchaseProduct
      * @param activity We use this activity instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to subscribe.
      * @param callback You have to use callback in order to get notified about the purchase flow.
@@ -118,7 +118,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun subscribeItem(
+    fun subscribeProduct(
         activity: Activity,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -129,8 +129,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
-     * Note that for purchasing a product you have to use the 'purchaseItem' function.
-     * @see purchaseItem
+     * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+     * @see purchaseProduct
      * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to subscribe.
      * @param callback You have to use callback in order to get notified about the purchase flow.
@@ -139,7 +139,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun subscribeItem(
+    fun subscribeProduct(
         fragment: Fragment,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -150,25 +150,25 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to query user's purchased products, Note that if you want to query
-     * user's subscribed products, you have to use 'getSubscribedItems' function, since this function
+     * user's subscribed products, you have to use 'getSubscribedProducts' function, since this function
      * will only query purchased products and not the subscribed products. This function runs off
      * the main thread, so you don't have to handle the threading by your self.
-     * @see getSubscribedItems
+     * @see getSubscribedProducts
      * @param callback You have to use callback in order to get notified about query's result.
      */
-    fun getPurchasedItems(callback: PurchaseQueryCallback.() -> Unit) {
+    fun getPurchasedProducts(callback: PurchaseQueryCallback.() -> Unit) {
         connection.queryBoughtItems(PurchaseType.IN_APP, callback)
     }
 
     /**
      * You can use this function to query user's subscribed products, Note that if you want to query
-     * user's purchased products, you have to use 'getPurchasedItems' function, since this function
+     * user's purchased products, you have to use 'getPurchasedProducts' function, since this function
      * will only query subscribed products and not the purchased products. This function runs off
      * the main thread, so you don't have to handle the threading by your self.
-     * @see getPurchasedItems
+     * @see getPurchasedProducts
      * @param callback You have to use callback in order to get notified about query's result.
      */
-    fun getSubscribedItems(callback: PurchaseQueryCallback.() -> Unit) {
+    fun getSubscribedProducts(callback: PurchaseQueryCallback.() -> Unit) {
         connection.queryBoughtItems(PurchaseType.SUBSCRIPTION, callback)
     }
 

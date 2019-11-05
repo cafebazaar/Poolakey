@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         }
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.purchaseItem(
+                payment.purchaseProduct(
                     activity = this,
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
         subscribeButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.subscribeItem(
+                payment.subscribeProduct(
                     activity = this@MainActivity,
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
@@ -74,12 +74,12 @@ class MainActivity : AppCompatActivity() {
         }
         queryPurchasedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.getPurchasedItems(handlePurchaseQueryCallback())
+                payment.getPurchasedProducts(handlePurchaseQueryCallback())
             }
         }
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.getSubscribedItems(handlePurchaseQueryCallback())
+                payment.getSubscribedProducts(handlePurchaseQueryCallback())
             }
         }
     }
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun consumePurchasedItem(purchaseToken: String) {
-        payment.consumeItem(purchaseToken) {
+        payment.consumeProduct(purchaseToken) {
             consumeSucceed {
                 toast(R.string.general_consume_succeed_message)
             }
