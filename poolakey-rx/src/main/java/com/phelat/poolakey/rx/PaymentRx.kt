@@ -1,11 +1,14 @@
 package com.phelat.poolakey.rx
 
 import android.app.Activity
+import android.content.Intent
 import androidx.fragment.app.Fragment
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.Payment
+import com.phelat.poolakey.entity.PurchaseEntity
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
+import com.phelat.poolakey.rx.exception.PurchaseCanceledException
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -145,6 +148,32 @@ fun Payment.getSubscribedProducts(): Single<List<PurchaseInfo>> {
         getSubscribedProducts {
             querySucceed { emitter.onSuccess(it) }
             queryFailed { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You have to use this function in order to check if user purchased or subscribed the product.
+ * Note that even if the purchase was successful, it's highly recommended to double check the
+ * purchase via Bazaar's REST API: http://developers.cafebazaar.ir/fa/docs/developer-api-v2-introduction/
+ * @param requestCode This is the request code that you've used when constructing PurchaseRequest.
+ * @see PurchaseRequest
+ * @param resultCode When you override 'onActivityResult' function in your activity or fragment
+ * you have access to this argument and it indicates if user canceled the purchase or not.
+ * @param data When you override 'onActivityResult' function in your activity or fragment
+ * you have access to this argument and it contains purchase data.
+ * @return Single that you can subscribe to it and get notified about the purchase state.
+ */
+fun Payment.onActivityResult(
+    requestCode: Int,
+    resultCode: Int,
+    data: Intent?
+): Single<PurchaseEntity> {
+    return Single.create { emitter ->
+        onActivityResult(requestCode, resultCode, data) {
+            purchaseSucceed { emitter.onSuccess(it) }
+            purchaseCanceled { emitter.onError(PurchaseCanceledException()) }
+            purchaseFailed { emitter.onError(it) }
         }
     }
 }
