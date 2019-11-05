@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
         subscribeButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.subscribeItem(
+                payment.subscribeProduct(
                     activity = this@MainActivity,
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),

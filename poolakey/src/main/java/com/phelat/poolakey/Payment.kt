@@ -51,8 +51,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
-     * Note that for subscribing a product you have to use the 'subscribeItem' function.
-     * @see subscribeItem
+     * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+     * @see subscribeProduct
      * @param activity We use this activity instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
      * @param callback You have to use this callback in order to get notified about the purchase flow.
@@ -72,8 +72,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     /**
      * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
-     * Note that for subscribing a product you have to use the 'subscribeItem' function.
-     * @see subscribeItem
+     * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+     * @see subscribeProduct
      * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
      * @param callback You have to use this callback in order to get notified about the purchase flow.
@@ -118,7 +118,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun subscribeItem(
+    fun subscribeProduct(
         activity: Activity,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
@@ -139,7 +139,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * function.
      * @see onActivityResult
      */
-    fun subscribeItem(
+    fun subscribeProduct(
         fragment: Fragment,
         request: PurchaseRequest,
         callback: PurchaseIntentCallback.() -> Unit
