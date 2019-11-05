@@ -1,7 +1,11 @@
 package com.phelat.poolakey.rx
 
+import android.app.Activity
+import androidx.fragment.app.Fragment
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.Payment
+import com.phelat.poolakey.request.PurchaseRequest
+import io.reactivex.Completable
 import io.reactivex.Observable
 
 /**
@@ -18,6 +22,40 @@ fun Payment.connect(): Observable<Connection> {
             connectionSucceed { emitter.onNext(this) }
             disconnected { emitter.onNext(this) }
             connectionFailed { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
+ * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+ * @see subscribeProduct
+ * @param activity We use this activity instance to actually start Bazaar's payment activity.
+ * @param request This contains some information about the product that we are going to purchase.
+ * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ */
+fun Payment.purchaseProduct(activity: Activity, request: PurchaseRequest): Completable {
+    return Completable.create { emitter ->
+        purchaseProduct(activity, request) {
+            purchaseFlowBegan { emitter.onComplete() }
+            failedToBeginFlow { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
+ * Note that for subscribing a product you have to use the 'subscribeProduct' function.
+ * @see subscribeProduct
+ * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
+ * @param request This contains some information about the product that we are going to purchase.
+ * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ */
+fun Payment.purchaseProduct(fragment: Fragment, request: PurchaseRequest): Completable {
+    return Completable.create { emitter ->
+        purchaseProduct(fragment, request) {
+            purchaseFlowBegan { emitter.onComplete() }
+            failedToBeginFlow { emitter.onError(it) }
         }
     }
 }
