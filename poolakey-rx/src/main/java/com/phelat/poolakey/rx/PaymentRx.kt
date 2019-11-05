@@ -4,9 +4,11 @@ import android.app.Activity
 import androidx.fragment.app.Fragment
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.Payment
+import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
  * You have to use this function to connect to the In-App Billing service. Note that you have to
@@ -109,6 +111,23 @@ fun Payment.subscribeProduct(fragment: Fragment, request: PurchaseRequest): Comp
         subscribeProduct(fragment, request) {
             purchaseFlowBegan { emitter.onComplete() }
             failedToBeginFlow { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to query user's purchased products, Note that if you want to query
+ * user's subscribed products, you have to use 'getSubscribedProducts' function, since this function
+ * will only query purchased products and not the subscribed products. This function runs off
+ * the main thread, so you don't have to handle the threading by your self.
+ * @see getSubscribedProducts
+ * @return Single that you can subscribe to it and get the list of purchased products.
+ */
+fun Payment.getPurchasedProducts(): Single<List<PurchaseInfo>> {
+    return Single.create { emitter ->
+        getPurchasedProducts {
+            querySucceed { emitter.onSuccess(it) }
+            queryFailed { emitter.onError(it) }
         }
     }
 }
