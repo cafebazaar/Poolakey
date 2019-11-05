@@ -96,11 +96,11 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * this function to consume subscribed products. This function runs off the main thread, so you
      * don't have to handle the threading by your self.
      * @param purchaseToken You have received this token when user purchased that particular product.
-     * You can also use 'getPurchasedItems' function to get all the purchased products by this
+     * You can also use 'getPurchasedProducts' function to get all the purchased products by this
      * particular user.
      * @param callback You have to use callback in order to get notified if product consumption was
      * successful or not.
-     * @see getPurchasedItems
+     * @see getPurchasedProducts
      */
     fun consumeProduct(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
@@ -156,16 +156,16 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
      * @see getSubscribedItems
      * @param callback You have to use callback in order to get notified about query's result.
      */
-    fun getPurchasedItems(callback: PurchaseQueryCallback.() -> Unit) {
+    fun getPurchasedProducts(callback: PurchaseQueryCallback.() -> Unit) {
         connection.queryBoughtItems(PurchaseType.IN_APP, callback)
     }
 
     /**
      * You can use this function to query user's subscribed products, Note that if you want to query
-     * user's purchased products, you have to use 'getPurchasedItems' function, since this function
+     * user's purchased products, you have to use 'getPurchasedProducts' function, since this function
      * will only query subscribed products and not the purchased products. This function runs off
      * the main thread, so you don't have to handle the threading by your self.
-     * @see getPurchasedItems
+     * @see getPurchasedProducts
      * @param callback You have to use callback in order to get notified about query's result.
      */
     fun getSubscribedItems(callback: PurchaseQueryCallback.() -> Unit) {
