@@ -157,7 +157,8 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     /**
      * You can use this function to query user's subscribed products, Note that if you want to query
      * user's purchased products, you have to use 'getPurchasedItems' function since this function
-     * will only query subscribed products and not the purchased products.
+     * will only query subscribed products and not the purchased products. This function runs off
+     * the main thread, so you don't have to handle the threading by your self.
      * @see getPurchasedItems
      * @param callback That's how you can get notified about query's result.
      */
