@@ -2,7 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 ext {
-    library_version = "1.0.0-dev04"
     artifact_id = 'poolakey-rx'
 }
 
