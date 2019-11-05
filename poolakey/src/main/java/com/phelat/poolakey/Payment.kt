@@ -50,14 +50,15 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     }
 
     /**
-     * You can use this function to navigate user to Bazaar's payment activity to purchase an item.
-     * Note that for subscribing an item you have to use the 'subscribeItem' function.
+     * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
+     * Note that for subscribing a product you have to use the 'subscribeItem' function.
      * @see subscribeItem
      * @param activity We use this activity instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
-     * @param callback That's how you can get notified about the purchase flow. Note that this
-     * callback is only used for notifying about the purchase flow and if you want to get notified
-     * if user actually purchased the item, you have to use the 'onActivityResult' function.
+     * @param callback You have to use this callback in order to get notified about the purchase flow.
+     * Note that this callback is only used for notifying about the purchase flow and if you want to
+     * get notified if user actually purchased the product, you have to use the 'onActivityResult'
+     * function.
      * @see onActivityResult
      */
     fun purchaseItem(
@@ -70,14 +71,15 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
     }
 
     /**
-     * You can use this function to navigate user to Bazaar's payment activity to purchase an item.
-     * Note that for subscribing an item you have to use the 'subscribeItem' function.
+     * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
+     * Note that for subscribing a product you have to use the 'subscribeItem' function.
      * @see subscribeItem
      * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
      * @param request This contains some information about the product that we are going to purchase.
-     * @param callback That's how you can get notified about the purchase flow. Note that this
-     * callback is only used for notifying about the purchase flow and if you want to get notified
-     * if user actually purchased the item, you have to use the 'onActivityResult' function.
+     * @param callback You have to use this callback in order to get notified about the purchase flow.
+     * Note that this callback is only used for notifying about the purchase flow and if you want to
+     * get notified if user actually purchased the product, you have to use the 'onActivityResult'
+     * function.
      * @see onActivityResult
      */
     fun purchaseItem(
