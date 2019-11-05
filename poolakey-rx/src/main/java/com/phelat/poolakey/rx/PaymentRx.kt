@@ -78,3 +78,37 @@ fun Payment.consumeProduct(purchaseToken: String): Completable {
         }
     }
 }
+
+/**
+ * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
+ * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+ * @see purchaseProduct
+ * @param activity We use this activity instance to actually start Bazaar's payment activity.
+ * @param request This contains some information about the product that we are going to subscribe.
+ * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ */
+fun Payment.subscribeProduct(activity: Activity, request: PurchaseRequest): Completable {
+    return Completable.create { emitter ->
+        subscribeProduct(activity, request) {
+            purchaseFlowBegan { emitter.onComplete() }
+            failedToBeginFlow { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
+ * Note that for purchasing a product you have to use the 'purchaseProduct' function.
+ * @see purchaseProduct
+ * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
+ * @param request This contains some information about the product that we are going to subscribe.
+ * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ */
+fun Payment.subscribeProduct(fragment: Fragment, request: PurchaseRequest): Completable {
+    return Completable.create { emitter ->
+        subscribeProduct(fragment, request) {
+            purchaseFlowBegan { emitter.onComplete() }
+            failedToBeginFlow { emitter.onError(it) }
+        }
+    }
+}
