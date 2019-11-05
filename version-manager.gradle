@@ -6,6 +6,6 @@ ext {
             'rxkotlin' : '2.4.0'
     ]
 
-    poolakeyVersion = "1.0.0-dev04"
+    poolakeyVersion = "1.0.0-dev05"
 
 }
