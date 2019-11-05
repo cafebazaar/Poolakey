@@ -88,6 +88,16 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
         connection.purchase(fragment, request, PurchaseType.IN_APP, callback)
     }
 
+    /**
+     * You can use this function to consume an already purchased item. Note that you can't use this
+     * function to consume subscribed items. This function runs off the main thread, so you don't
+     * have to handle the threading by your self.
+     * @param purchaseToken You have received this token when user purchased that particular item.
+     * You can also use 'getPurchasedItems' function to get all the purchased items by this
+     * particular user.
+     * @param callback That's how you can get notified if product consumption was successful or not
+     * @see getPurchasedItems
+     */
     fun consumeItem(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         connection.consume(purchaseToken, callback)
     }
