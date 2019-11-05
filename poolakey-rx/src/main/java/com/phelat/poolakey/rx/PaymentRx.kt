@@ -59,3 +59,22 @@ fun Payment.purchaseProduct(fragment: Fragment, request: PurchaseRequest): Compl
         }
     }
 }
+
+/**
+ * You can use this function to consume an already purchased product. Note that you can't use
+ * this function to consume subscribed products. This function runs off the main thread, so you
+ * don't have to handle the threading by your self.
+ * @param purchaseToken You have received this token when user purchased that particular product.
+ * You can also use 'getPurchasedProducts' function to get all the purchased products by this
+ * particular user.
+ * @see getPurchasedProducts
+ * @return Completable that you can subscribe to it and it gets completed when consumption succeeds.
+ */
+fun Payment.consumeProduct(purchaseToken: String): Completable {
+    return Completable.create { emitter ->
+        consumeProduct(purchaseToken) {
+            consumeSucceed { emitter.onComplete() }
+            consumeFailed { emitter.onError(it) }
+        }
+    }
+}
