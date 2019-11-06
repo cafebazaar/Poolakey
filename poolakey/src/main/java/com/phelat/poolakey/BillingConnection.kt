@@ -21,6 +21,7 @@ import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.exception.IAPNotSupportedException
+import com.phelat.poolakey.exception.ResultNotOkayException
 import com.phelat.poolakey.exception.SubsNotSupportedException
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
@@ -157,7 +158,7 @@ internal class BillingConnection(
                 }, andIfNot = {
                     PurchaseIntentCallback().apply(callback)
                         .failedToBeginFlow
-                        .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                        .invoke(ResultNotOkayException())
                 }
             )?.takeIf(
                 thisIsTrue = { bundle ->
@@ -227,7 +228,7 @@ internal class BillingConnection(
                         mainThread.execute {
                             PurchaseQueryCallback().apply(callback)
                                 .queryFailed
-                                .invoke(IllegalStateException("Failed to receive response from Bazaar"))
+                                .invoke(ResultNotOkayException())
                         }
                     }
                 )?.takeIf(
