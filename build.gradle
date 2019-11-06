@@ -5,11 +5,11 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.2'
+        classpath "com.android.tools.build:gradle:$pluginVersions.gradle"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$libraryVersions.kotlin"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
-        classpath 'org.jetbrains.dokka:dokka-gradle-plugin:0.10.0'
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$pluginVersions.bintray"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:$pluginVersions.androidmaven"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:$pluginVersions.dokka"
     }
 }
 

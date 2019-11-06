@@ -6,6 +6,13 @@ ext {
             'rxkotlin' : '2.4.0'
     ]
 
+    pluginVersions = [
+            'gradle'      : '3.5.2',
+            'bintray'     : '1.2',
+            'androidmaven': '1.4.1',
+            'dokka'       : '0.10.0'
+    ]
+
     poolakeyVersion = "1.0.0-dev05"
 
 }
