@@ -32,3 +32,4 @@ dependencies {
     implementation project(":poolakey-rx")
 
 }
+preBuild.dependsOn "detekt"
