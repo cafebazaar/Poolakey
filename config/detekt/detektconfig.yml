@@ -217,7 +217,7 @@ potential-bugs:
   IteratorNotThrowingNoSuchElementException:
     active: true
   LateinitUsage:
-    active: false
+    active: true
     excludeAnnotatedProperties: ""
     ignoreOnClassesPattern: ""
   UnconditionalJumpStatementInLoop:
