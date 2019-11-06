@@ -18,12 +18,28 @@ class MainActivity : AppCompatActivity() {
         Payment(context = this)
     }
 
-    private lateinit var paymentConnection: Connection
+    private val paymentConnection: Connection by lazy(LazyThreadSafetyMode.NONE) {
+        payment.connect {
+            connectionSucceed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
+            }
+            connectionFailed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
+            }
+            disconnected {
+                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        connectPayment()
+        /*
+        Just a simple call to this property, so it gets initialized. This is a much better pattern
+        than using lateinit or making it null-able.
+         */
+        paymentConnection
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.purchaseProduct(
@@ -70,20 +86,6 @@ class MainActivity : AppCompatActivity() {
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSubscribedProducts(handlePurchaseQueryCallback())
-            }
-        }
-    }
-
-    private fun connectPayment() {
-        paymentConnection = payment.connect {
-            connectionSucceed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
-            }
-            connectionFailed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
-            }
-            disconnected {
-                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
             }
         }
     }
