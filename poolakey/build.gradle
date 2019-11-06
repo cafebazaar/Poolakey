@@ -38,7 +38,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
-    implementation "androidx.fragment:fragment:$libraryVersions.fragment"
+    api "androidx.fragment:fragment:$libraryVersions.fragment"
 
 }
 
