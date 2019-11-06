@@ -31,7 +31,7 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "Poolakey"
-        name = "Poolakey"
+        name = project.package_id
         websiteUrl = 'https://github.com/PHELAT/Poolakey'
         vcsUrl = 'https://github.com/PHELAT/Poolakey.git'
         licenses = ["Apache-2.0"]
