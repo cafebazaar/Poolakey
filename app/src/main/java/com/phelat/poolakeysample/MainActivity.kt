@@ -23,17 +23,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        paymentConnection = payment.connect {
-            connectionSucceed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
-            }
-            connectionFailed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
-            }
-            disconnected {
-                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
-            }
-        }
+        connectPayment()
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.purchaseProduct(
@@ -80,6 +70,20 @@ class MainActivity : AppCompatActivity() {
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSubscribedProducts(handlePurchaseQueryCallback())
+            }
+        }
+    }
+
+    private fun connectPayment() {
+        paymentConnection = payment.connect {
+            connectionSucceed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
+            }
+            connectionFailed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
+            }
+            disconnected {
+                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
             }
         }
     }
