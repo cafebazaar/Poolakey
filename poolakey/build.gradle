@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'org.jetbrains.dokka'
 
 ext {
+    package_id = 'Poolakey'
     artifact_id = 'poolakey'
 }
 
