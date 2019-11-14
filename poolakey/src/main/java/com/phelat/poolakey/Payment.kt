@@ -20,7 +20,7 @@ class Payment(context: Context, config: PaymentConfiguration = PaymentConfigurat
 
     private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
-    private val backgroundThread = BackgroundThread()
+    private val backgroundThread: PoolakeyThread<Runnable> = BackgroundThread()
 
     private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
 
