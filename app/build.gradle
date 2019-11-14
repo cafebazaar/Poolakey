@@ -12,6 +12,11 @@ android {
         versionCode 1
         versionName "1.0.0"
     }
+    Properties properties = new Properties()
+    properties.load(rootProject.file('app.properties').newDataInputStream())
+    buildTypes.each {
+        it.buildConfigField('String', 'IN_APP_BILLING_KEY', "\"${properties.getProperty('inAppBillingKey')}\"")
+    }
     buildTypes {
         release {
             minifyEnabled false
