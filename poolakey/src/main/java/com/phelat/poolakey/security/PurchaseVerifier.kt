@@ -1,6 +1,7 @@
 package com.phelat.poolakey.security
 
 import android.util.Base64
+import java.lang.IllegalArgumentException
 import java.security.InvalidKeyException
 import java.security.KeyFactory
 import java.security.NoSuchAlgorithmException
@@ -16,14 +17,19 @@ internal class PurchaseVerifier {
         NoSuchAlgorithmException::class,
         InvalidKeySpecException::class,
         InvalidKeyException::class,
-        SignatureException::class
+        SignatureException::class,
+        IllegalArgumentException::class
     )
     fun verifyPurchase(base64PublicKey: String, signedData: String, signature: String): Boolean {
         val key = generatePublicKey(base64PublicKey)
         return verify(key, signedData, signature)
     }
 
-    @Throws(NoSuchAlgorithmException::class, InvalidKeySpecException::class)
+    @Throws(
+        NoSuchAlgorithmException::class,
+        InvalidKeySpecException::class,
+        IllegalArgumentException::class
+    )
     private fun generatePublicKey(encodedPublicKey: String): PublicKey {
         val decodedKey = Base64.decode(encodedPublicKey, Base64.DEFAULT)
         val keyFactory = KeyFactory.getInstance(KEY_FACTORY_ALGORITHM)
