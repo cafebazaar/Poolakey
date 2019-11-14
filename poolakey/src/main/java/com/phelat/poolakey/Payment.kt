@@ -12,11 +12,12 @@ import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
+import com.phelat.poolakey.security.PurchaseVerifier
 import com.phelat.poolakey.thread.BackgroundThread
 import com.phelat.poolakey.thread.MainThread
 import com.phelat.poolakey.thread.PoolakeyThread
 
-class Payment(context: Context, config: PaymentConfiguration) {
+class Payment(context: Context, private val config: PaymentConfiguration) {
 
     private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
@@ -32,7 +33,9 @@ class Payment(context: Context, config: PaymentConfiguration) {
         mainThread = mainThread
     )
 
-    private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo)
+    private val purchaseVerifier = PurchaseVerifier()
+
+    private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)
 
     /**
      * You have to use this function to connect to the In-App Billing service. Note that you have to
@@ -194,7 +197,11 @@ class Payment(context: Context, config: PaymentConfiguration) {
         if (Payment.requestCode > -1 && Payment.requestCode == requestCode) {
             when (resultCode) {
                 Activity.RESULT_OK -> {
-                    purchaseResultParser.handleReceivedResult(data, purchaseCallback)
+                    purchaseResultParser.handleReceivedResult(
+                        config.localSecurityCheck,
+                        data,
+                        purchaseCallback
+                    )
                 }
                 Activity.RESULT_CANCELED -> {
                     PurchaseCallback().apply(purchaseCallback)
