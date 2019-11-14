@@ -16,7 +16,7 @@ import com.phelat.poolakey.thread.BackgroundThread
 import com.phelat.poolakey.thread.MainThread
 import com.phelat.poolakey.thread.PoolakeyThread
 
-class Payment(context: Context, config: PaymentConfiguration = PaymentConfiguration()) {
+class Payment(context: Context, config: PaymentConfiguration) {
 
     private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 

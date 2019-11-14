@@ -9,13 +9,19 @@ import com.phelat.poolakey.Connection
 import com.phelat.poolakey.ConnectionState
 import com.phelat.poolakey.Payment
 import com.phelat.poolakey.callback.PurchaseQueryCallback
+import com.phelat.poolakey.config.PaymentConfiguration
+import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    private val paymentConfiguration = PaymentConfiguration(
+        localSecurityCheck = SecurityCheck.Enable(rsaPublicKey = "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwC0iZC8p1QiXOKzIXiSGB2me3HISN4sSJ09wRBFok22QjTp4ML+LBANFbVeIBSAYChpgHHi5mGb1SRRN5znIducFrOxxetFsL2l+xUOxz+gLORrUztF4gAsTo1j4zv6uc1iQ44gkxKhyHLZsfAX3zCnFxD2o5vQfX5alPRoedkggPfScqoxlGR5pASZS5K+Y2WYjlvFqxCS3Ig+kSZlqysue9fL3EH4Q5oTErC8mVUCAwEAAQ==")
+    )
+
     private val payment by lazy(LazyThreadSafetyMode.NONE) {
-        Payment(context = this)
+        Payment(context = this, config = paymentConfiguration)
     }
 
     private val paymentConnection: Connection by lazy(LazyThreadSafetyMode.NONE) {
