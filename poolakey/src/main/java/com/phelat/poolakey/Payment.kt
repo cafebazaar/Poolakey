@@ -161,7 +161,7 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
      * @param callback You have to use callback in order to get notified about query's result.
      */
     fun getPurchasedProducts(callback: PurchaseQueryCallback.() -> Unit) {
-        connection.queryBoughtItems(PurchaseType.IN_APP, callback)
+        connection.queryPurchasedProducts(PurchaseType.IN_APP, callback)
     }
 
     /**
@@ -173,7 +173,7 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
      * @param callback You have to use callback in order to get notified about query's result.
      */
     fun getSubscribedProducts(callback: PurchaseQueryCallback.() -> Unit) {
-        connection.queryBoughtItems(PurchaseType.SUBSCRIPTION, callback)
+        connection.queryPurchasedProducts(PurchaseType.SUBSCRIPTION, callback)
     }
 
     /**

@@ -213,7 +213,7 @@ internal class BillingConnection(
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }
 
-    fun queryBoughtItems(
+    fun queryPurchasedProducts(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) = withService(runOnBackground = true) {
