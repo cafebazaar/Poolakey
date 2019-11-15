@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
+import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
 import androidx.fragment.app.Fragment
@@ -16,7 +17,9 @@ import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
 import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
+import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
@@ -25,12 +28,14 @@ import com.phelat.poolakey.exception.ResultNotOkayException
 import com.phelat.poolakey.exception.SubsNotSupportedException
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
+import com.phelat.poolakey.security.PurchaseVerifier
 import com.phelat.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
     private val rawDataToPurchaseInfo: RawDataToPurchaseInfo,
+    private val purchaseVerifier: PurchaseVerifier,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) : ServiceConnection {
@@ -247,9 +252,7 @@ internal class BillingConnection(
                     }
                 )?.also { bundle ->
                     continuationToken = bundle.getString(BazaarIntent.RESPONSE_CONTINUATION_TOKEN)
-                }?.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST)?.map { rawData ->
-                    rawDataToPurchaseInfo.mapToPurchaseInfo(rawData)
-                }?.also { purchasedItems ->
+                }?.let(::extractPurchasedDataFromBundle)?.also { purchasedItems ->
                     mainThread.execute {
                         PurchaseQueryCallback().apply(callback).querySucceed.invoke(purchasedItems)
                     }
@@ -262,6 +265,28 @@ internal class BillingConnection(
         }
     } ifServiceIsDisconnected {
         PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
+    }
+
+    private fun extractPurchasedDataFromBundle(bundle: Bundle): List<PurchaseInfo> {
+        val purchaseDataList: List<String> = bundle.getStringArrayList(
+            BazaarIntent.RESPONSE_PURCHASE_DATA_LIST
+        ) ?: emptyList()
+        val signatureDataList: List<String> = bundle.getStringArrayList(
+            BazaarIntent.RESPONSE_DATA_SIGNATURE_LIST
+        ) ?: emptyList()
+        val validPurchases = mutableListOf<PurchaseInfo>()
+        for (i in purchaseDataList.indices) {
+            if (paymentConfiguration.localSecurityCheck is SecurityCheck.Enable) {
+                val isPurchaseValid = purchaseVerifier.verifyPurchase(
+                    paymentConfiguration.localSecurityCheck.rsaPublicKey,
+                    purchaseDataList[i],
+                    signatureDataList[i]
+                )
+                if (!isPurchaseValid) continue
+            }
+            validPurchases += rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseDataList[i])
+        }
+        return validPurchases
     }
 
     private fun stopConnection() {

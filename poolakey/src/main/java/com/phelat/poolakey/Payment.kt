@@ -25,15 +25,16 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
 
     private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
 
+    private val purchaseVerifier = PurchaseVerifier()
+
     private val connection = BillingConnection(
         context = context,
         paymentConfiguration = config,
         rawDataToPurchaseInfo = rawDataToPurchaseInfo,
+        purchaseVerifier = purchaseVerifier,
         backgroundThread = backgroundThread,
         mainThread = mainThread
     )
-
-    private val purchaseVerifier = PurchaseVerifier()
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)
 
