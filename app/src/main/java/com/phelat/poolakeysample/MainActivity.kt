@@ -41,10 +41,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        /*
-        Just a simple call to this property, so it gets initialized. This is a much better pattern
-        than using lateinit or making it null-able.
-         */
         paymentConnection
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
