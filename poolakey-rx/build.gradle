@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.dokka'
 
 ext {
     package_id = 'Poolakey-Rx'
@@ -20,6 +21,17 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    dokka {
+        outputFormat = 'html'
+        outputDirectory = "$buildDir/kotlindoc"
+        configuration {
+            skipEmptyPackages = true
+            externalDocumentationLink {
+                url = new URL("file://${project(":poolakey").buildDir}/kotlindoc/poolakey/")
+                packageListUrl = new URL(url, "package-list")
+            }
         }
     }
 }
