@@ -49,7 +49,7 @@ internal class BillingConnection(
         Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
             .takeIf(
                 thisIsTrue = {
-                    context.packageManager.queryIntentServices(it, 0).isNotEmpty()
+                    context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
                 },
                 andIfNot = {
                     callback?.connectionFailed?.invoke(BazaarNotFoundException())
