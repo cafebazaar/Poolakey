@@ -32,7 +32,7 @@ subprojects {
     detekt {
         toolVersion = pluginVersions.detekt
         input = files("${rootDir}")
-        config = files("${rootDir}/config/detekt/detektconfig.yml")
+        config = files("${rootDir}/detektconfig.yml")
         filters = ".*/resources/.*,.*/build/.*"
         reports {
             xml.enabled = false
