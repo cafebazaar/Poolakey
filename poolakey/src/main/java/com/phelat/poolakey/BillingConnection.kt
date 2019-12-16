@@ -19,6 +19,7 @@ import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.constant.BazaarIntent
+import com.phelat.poolakey.constant.Billing
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.ConsumeFailedException
@@ -98,7 +99,7 @@ internal class BillingConnection(
         inAppBillingService: IInAppBillingService
     ): Boolean {
         val supportState = inAppBillingService.isBillingSupported(
-            IN_APP_BILLING_VERSION,
+            Billing.IN_APP_BILLING_VERSION,
             context.packageName,
             purchaseType.type
         )
@@ -152,7 +153,7 @@ internal class BillingConnection(
     ) = withService {
         try {
             getBuyIntent(
-                IN_APP_BILLING_VERSION,
+                Billing.IN_APP_BILLING_VERSION,
                 context.packageName,
                 purchaseRequest.productId,
                 purchaseType.type,
@@ -188,7 +189,7 @@ internal class BillingConnection(
         callback: ConsumeCallback.() -> Unit
     ) = withService(runOnBackground = true) {
         try {
-            consumePurchase(IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
+            consumePurchase(Billing.IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
                 .takeIf(
                     thisIsTrue = { it == BazaarIntent.RESPONSE_RESULT_OK },
                     andIfNot = {
@@ -221,7 +222,7 @@ internal class BillingConnection(
             var continuationToken: String? = null
             do {
                 getPurchases(
-                    IN_APP_BILLING_VERSION,
+                    Billing.IN_APP_BILLING_VERSION,
                     context.packageName,
                     purchaseType.type,
                     continuationToken
@@ -328,7 +329,6 @@ internal class BillingConnection(
     }
 
     companion object {
-        private const val IN_APP_BILLING_VERSION = 3
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
         private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
         private const val INTENT_RESPONSE_BUY = "BUY_INTENT"
