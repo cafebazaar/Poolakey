@@ -1,7 +1,6 @@
 package com.phelat.poolakey
 
 import android.app.Activity
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -12,6 +11,8 @@ import android.os.IBinder
 import android.os.RemoteException
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
+import com.phelat.poolakey.billing.BillingFunction
+import com.phelat.poolakey.billing.purchase.PurchaseFunctionRequest
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
@@ -38,7 +39,8 @@ internal class BillingConnection(
     private val rawDataToPurchaseInfo: RawDataToPurchaseInfo,
     private val purchaseVerifier: PurchaseVerifier,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val mainThread: PoolakeyThread<() -> Unit>
+    private val mainThread: PoolakeyThread<() -> Unit>,
+    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
@@ -151,35 +153,10 @@ internal class BillingConnection(
         callback: PurchaseIntentCallback.() -> Unit,
         fireIntent: (IntentSender) -> Unit
     ) = withService {
-        try {
-            getBuyIntent(
-                Billing.IN_APP_BILLING_VERSION,
-                context.packageName,
-                purchaseRequest.productId,
-                purchaseType.type,
-                purchaseRequest.payload
-            )?.takeIf(
-                thisIsTrue = { bundle ->
-                    bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
-                }, andIfNot = {
-                    PurchaseIntentCallback().apply(callback)
-                        .failedToBeginFlow
-                        .invoke(ResultNotOkayException())
-                }
-            )?.takeIf(
-                thisIsTrue = { bundle ->
-                    bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
-                }, andIfNot = {
-                    PurchaseIntentCallback().apply(callback)
-                        .failedToBeginFlow
-                        .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
-                }
-            )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-                fireIntent.invoke(purchaseIntent.intentSender)
-            }
-        } catch (e: RemoteException) {
-            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(e)
-        }
+        purchaseFunction.function(
+            billingService = this,
+            request = PurchaseFunctionRequest(purchaseRequest, purchaseType, callback, fireIntent)
+        )
     } ifServiceIsDisconnected {
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
     }
@@ -331,7 +308,5 @@ internal class BillingConnection(
     companion object {
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
         private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
-        private const val INTENT_RESPONSE_BUY = "BUY_INTENT"
     }
-
 }
