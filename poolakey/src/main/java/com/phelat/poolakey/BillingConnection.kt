@@ -12,6 +12,7 @@ import android.os.RemoteException
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.billing.BillingFunction
+import com.phelat.poolakey.billing.consume.ConsumeFunctionRequest
 import com.phelat.poolakey.billing.purchase.PurchaseFunctionRequest
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
@@ -23,7 +24,6 @@ import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.constant.Billing
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.exception.BazaarNotFoundException
-import com.phelat.poolakey.exception.ConsumeFailedException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.exception.IAPNotSupportedException
 import com.phelat.poolakey.exception.ResultNotOkayException
@@ -40,7 +40,8 @@ internal class BillingConnection(
     private val purchaseVerifier: PurchaseVerifier,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val mainThread: PoolakeyThread<() -> Unit>,
-    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>
+    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
+    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
@@ -165,28 +166,10 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) = withService(runOnBackground = true) {
-        try {
-            consumePurchase(Billing.IN_APP_BILLING_VERSION, context.packageName, purchaseToken)
-                .takeIf(
-                    thisIsTrue = { it == BazaarIntent.RESPONSE_RESULT_OK },
-                    andIfNot = {
-                        mainThread.execute {
-                            ConsumeCallback().apply(callback)
-                                .consumeFailed
-                                .invoke(ConsumeFailedException())
-                        }
-                    }
-                )
-                ?.also {
-                    mainThread.execute {
-                        ConsumeCallback().apply(callback).consumeSucceed.invoke()
-                    }
-                }
-        } catch (e: RemoteException) {
-            mainThread.execute {
-                ConsumeCallback().apply(callback).consumeFailed.invoke(e)
-            }
-        }
+        consumeFunction.function(
+            billingService = this,
+            request = ConsumeFunctionRequest(purchaseToken, callback)
+        )
     } ifServiceIsDisconnected {
         ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
     }

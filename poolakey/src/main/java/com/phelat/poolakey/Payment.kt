@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.Fragment
+import com.phelat.poolakey.billing.consume.ConsumeFunction
 import com.phelat.poolakey.billing.purchase.PurchaseFunction
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
@@ -30,6 +31,8 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
 
     private val purchaseFunction = PurchaseFunction(context)
 
+    private val consumeFunction = ConsumeFunction(mainThread, context)
+
     private val connection = BillingConnection(
         context = context,
         paymentConfiguration = config,
@@ -37,7 +40,8 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
         purchaseVerifier = purchaseVerifier,
         backgroundThread = backgroundThread,
         mainThread = mainThread,
-        purchaseFunction = purchaseFunction
+        purchaseFunction = purchaseFunction,
+        consumeFunction = consumeFunction
     )
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)
