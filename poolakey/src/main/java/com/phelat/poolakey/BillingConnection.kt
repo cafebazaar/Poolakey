@@ -6,42 +6,34 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
-import android.os.Bundle
 import android.os.IBinder
-import android.os.RemoteException
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
 import com.phelat.poolakey.billing.BillingFunction
 import com.phelat.poolakey.billing.consume.ConsumeFunctionRequest
 import com.phelat.poolakey.billing.purchase.PurchaseFunctionRequest
+import com.phelat.poolakey.billing.query.QueryFunctionRequest
 import com.phelat.poolakey.callback.ConnectionCallback
 import com.phelat.poolakey.callback.ConsumeCallback
 import com.phelat.poolakey.callback.PurchaseIntentCallback
 import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
-import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.constant.BazaarIntent
 import com.phelat.poolakey.constant.Billing
-import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.exception.BazaarNotFoundException
 import com.phelat.poolakey.exception.DisconnectException
 import com.phelat.poolakey.exception.IAPNotSupportedException
-import com.phelat.poolakey.exception.ResultNotOkayException
 import com.phelat.poolakey.exception.SubsNotSupportedException
-import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
-import com.phelat.poolakey.security.PurchaseVerifier
 import com.phelat.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
-    private val rawDataToPurchaseInfo: RawDataToPurchaseInfo,
-    private val purchaseVerifier: PurchaseVerifier,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val mainThread: PoolakeyThread<() -> Unit>,
     private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
-    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>
+    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>,
+    private val queryFunction: BillingFunction<QueryFunctionRequest>
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
@@ -178,76 +170,12 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) = withService(runOnBackground = true) {
-        try {
-            var continuationToken: String? = null
-            do {
-                getPurchases(
-                    Billing.IN_APP_BILLING_VERSION,
-                    context.packageName,
-                    purchaseType.type,
-                    continuationToken
-                )?.takeIf(
-                    thisIsTrue = { bundle ->
-                        bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
-                    },
-                    andIfNot = {
-                        mainThread.execute {
-                            PurchaseQueryCallback().apply(callback)
-                                .queryFailed
-                                .invoke(ResultNotOkayException())
-                        }
-                    }
-                )?.takeIf(
-                    thisIsTrue = { bundle ->
-                        bundle.containsKey(BazaarIntent.RESPONSE_PURCHASE_ITEM_LIST)
-                            .and(bundle.containsKey(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST))
-                            .and(bundle.containsKey(BazaarIntent.RESPONSE_DATA_SIGNATURE_LIST))
-                            .and(bundle.getStringArrayList(BazaarIntent.RESPONSE_PURCHASE_DATA_LIST) != null)
-                    },
-                    andIfNot = {
-                        mainThread.execute {
-                            PurchaseQueryCallback().apply(callback)
-                                .queryFailed
-                                .invoke(IllegalStateException("Missing data from the received result"))
-                        }
-                    }
-                )?.also { bundle ->
-                    continuationToken = bundle.getString(BazaarIntent.RESPONSE_CONTINUATION_TOKEN)
-                }?.let(::extractPurchasedDataFromBundle)?.also { purchasedItems ->
-                    mainThread.execute {
-                        PurchaseQueryCallback().apply(callback).querySucceed.invoke(purchasedItems)
-                    }
-                }
-            } while (!continuationToken.isNullOrBlank())
-        } catch (e: RemoteException) {
-            mainThread.execute {
-                PurchaseQueryCallback().apply(callback).queryFailed.invoke(e)
-            }
-        }
+        queryFunction.function(
+            billingService = this,
+            request = QueryFunctionRequest(purchaseType, callback)
+        )
     } ifServiceIsDisconnected {
         PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
-    }
-
-    private fun extractPurchasedDataFromBundle(bundle: Bundle): List<PurchaseInfo> {
-        val purchaseDataList: List<String> = bundle.getStringArrayList(
-            BazaarIntent.RESPONSE_PURCHASE_DATA_LIST
-        ) ?: emptyList()
-        val signatureDataList: List<String> = bundle.getStringArrayList(
-            BazaarIntent.RESPONSE_DATA_SIGNATURE_LIST
-        ) ?: emptyList()
-        val validPurchases = mutableListOf<PurchaseInfo>()
-        for (i in purchaseDataList.indices) {
-            if (paymentConfiguration.localSecurityCheck is SecurityCheck.Enable) {
-                val isPurchaseValid = purchaseVerifier.verifyPurchase(
-                    paymentConfiguration.localSecurityCheck.rsaPublicKey,
-                    purchaseDataList[i],
-                    signatureDataList[i]
-                )
-                if (!isPurchaseValid) continue
-            }
-            validPurchases += rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseDataList[i])
-        }
-        return validPurchases
     }
 
     private fun stopConnection() {
