@@ -1,6 +1,6 @@
 <img src="https://github.com/PHELAT/Poolakey/raw/master/asset/Poolakey.jpg"/><br/>
 [![Build Status](https://travis-ci.org/PHELAT/Poolakey.svg?branch=master)](https://travis-ci.org/PHELAT/Poolakey)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7df95fd6d30d4b9493912131561839ef)](https://www.codacy.com/manual/PHELAT/Poolakey?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PHELAT/Poolakey&amp;utm_campaign=Badge_Grade) [![](https://api.bintray.com/packages/m4hdi/Poolakey/Poolakey/images/download.svg)](https://bintray.com/beta/#/m4hdi/Poolakey?tab=packages)  
+[![](https://api.bintray.com/packages/m4hdi/Poolakey/Poolakey/images/download.svg)](https://bintray.com/beta/#/m4hdi/Poolakey?tab=packages)  
 -
 Android In-App Billing SDK for [Cafe Bazaar](https://cafebazaar.ir/?l=en) App Store.
 ## Getting Started
