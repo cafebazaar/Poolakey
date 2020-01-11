@@ -22,12 +22,16 @@ import io.reactivex.Single
  * @return Observable that you can subscribe to it and get notified about service connection changes.
  */
 fun Payment.connect(): Observable<Connection> {
+    var connection: Connection? = null
     return Observable.create<Connection> { emitter ->
         connect {
+            connection = this
             connectionSucceed { emitter.onNext(this) }
             disconnected { emitter.onNext(this) }
             connectionFailed { emitter.onError(it) }
         }
+    }.doOnDispose {
+        connection?.disconnect()
     }
 }
 
