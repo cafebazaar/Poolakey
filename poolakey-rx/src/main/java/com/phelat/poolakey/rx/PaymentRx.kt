@@ -24,8 +24,7 @@ import io.reactivex.Single
 fun Payment.connect(): Observable<Connection> {
     var connection: Connection? = null
     return Observable.create<Connection> { emitter ->
-        connect {
-            connection = this
+        connection = connect {
             connectionSucceed { emitter.onNext(this) }
             disconnected { emitter.onNext(this) }
             connectionFailed { emitter.onError(it) }
