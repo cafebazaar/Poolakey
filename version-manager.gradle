@@ -15,6 +15,6 @@ ext {
             'detekt'      : '1.1.1'
     ]
 
-    poolakeyVersion = "1.0.0-alpha02"
+    poolakeyVersion = "1.0.0-alpha03"
 
 }
