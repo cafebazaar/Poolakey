@@ -103,7 +103,7 @@ internal class PurchaseFunction(
         PurchaseIntentCallback().apply(callback)
             .failedToBeginFlow
             .invoke(ResultNotOkayException())
-    }
+        }
     )
 
     private fun doesClientSupportIntentV2(purchaseConfigBundle: Bundle?): Boolean {
