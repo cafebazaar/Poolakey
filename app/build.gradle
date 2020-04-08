@@ -3,12 +3,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion buildVersions.compileSdkVersion
+    buildToolsVersion buildVersions.buildToolsVersion
     defaultConfig {
         applicationId "com.phelat.poolakeysample"
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion buildVersions.minSdkVersion
+        targetSdkVersion buildVersions.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
     }
