@@ -36,7 +36,7 @@ internal class PurchaseFunction(
                     .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
             }
 
-            if (supportIntentV2(purchaseConfigBundle)) {
+            if (doesClientSupportIntentV2(purchaseConfigBundle)) {
                 getBuyIntentV2FromBillingService(
                     billingService,
                     purchaseRequest,
@@ -94,17 +94,21 @@ internal class PurchaseFunction(
         purchaseRequest.payload
     )?.takeBundleIfResponseIsOk(callback)
 
-    private inline fun Bundle.takeBundleIfResponseIsOk(callback: PurchaseIntentCallback.() -> Unit): Bundle? = takeIf(
+    private inline fun Bundle.takeBundleIfResponseIsOk(
+        callback: PurchaseIntentCallback.() -> Unit
+    ): Bundle? = takeIf(
         thisIsTrue = { bundle ->
             bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
         }, andIfNot = {
         PurchaseIntentCallback().apply(callback)
             .failedToBeginFlow
             .invoke(ResultNotOkayException())
-    })
+    }
+    )
 
-    private fun supportIntentV2(purchaseConfigBundle: Bundle?) =
-        purchaseConfigBundle?.getBoolean(INTENT_V2_SUPPORT) ?: false
+    private fun doesClientSupportIntentV2(purchaseConfigBundle: Bundle?): Boolean {
+        return purchaseConfigBundle?.getBoolean(INTENT_V2_SUPPORT) ?: false
+    }
 
     companion object {
         private const val INTENT_RESPONSE_BUY = "BUY_INTENT"
