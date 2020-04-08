@@ -63,7 +63,6 @@ internal class PurchaseFunction(
                     fireIntentWithIntentSender.invoke(purchaseIntent.intentSender)
                 }
             }
-
         } catch (e: RemoteException) {
             PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(e)
         }
