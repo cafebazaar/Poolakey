@@ -22,13 +22,19 @@ internal class PurchaseFunction(
     override fun function(
         billingService: IInAppBillingService,
         request: PurchaseFunctionRequest
-    ): Unit = with (request) {
+    ): Unit = with(request) {
         try {
             val purchaseConfigBundle = billingService.getPurchaseConfig(
                 Billing.IN_APP_BILLING_VERSION,
                 context.packageName,
                 purchaseType.type
             )
+
+            val intentResponseIsNullError = {
+                PurchaseIntentCallback().apply(callback)
+                    .failedToBeginFlow
+                    .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
+            }
 
             if (supportIntentV2(purchaseConfigBundle)) {
                 getBuyIntentV2FromBillingService(
@@ -39,11 +45,7 @@ internal class PurchaseFunction(
                 )?.takeIf(
                     thisIsTrue = { bundle ->
                         bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
-                    }, andIfNot = {
-                    PurchaseIntentCallback().apply(callback)
-                        .failedToBeginFlow
-                        .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
-                }
+                    }, andIfNot = intentResponseIsNullError
                 )?.getParcelable<Intent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
                     fireIntentWithIntent.invoke(purchaseIntent)
                 }
@@ -56,11 +58,8 @@ internal class PurchaseFunction(
                 )?.takeIf(
                     thisIsTrue = { bundle ->
                         bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
-                    }, andIfNot = {
-                    PurchaseIntentCallback().apply(callback)
-                        .failedToBeginFlow
-                        .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
-                })?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
+                    }, andIfNot = intentResponseIsNullError
+                )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
                     fireIntentWithIntentSender.invoke(purchaseIntent.intentSender)
                 }
             }
