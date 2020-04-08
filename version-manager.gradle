@@ -15,6 +15,13 @@ ext {
             'detekt'      : '1.1.1'
     ]
 
+    buildVersions = [
+            'compileSdkVersion': 29,
+            'buildToolsVersion': '29.0.2',
+            'minSdkVersion'    : 14,
+            'targetSdkVersion' : 29
+    ]
+
     poolakeyVersion = "1.0.0-alpha03"
 
 }
