@@ -107,7 +107,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        purchase(purchaseRequest, purchaseType, callback) { intentSender ->
+
+        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
             activity.startIntentSenderForResult(
                 intentSender,
                 purchaseRequest.requestCode,
@@ -118,6 +119,16 @@ internal class BillingConnection(
             )
             PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
         }
+
+        val intentFire: (Intent) -> Unit = { intent ->
+            activity.startActivityForResult(
+                intent,
+                purchaseRequest.requestCode
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        purchase(purchaseRequest, purchaseType, callback, intentSenderFire, intentFire)
     }
 
     fun purchase(
@@ -126,7 +137,7 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        purchase(purchaseRequest, purchaseType, callback) { intentSender ->
+        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
             fragment.startIntentSenderForResult(
                 intentSender,
                 purchaseRequest.requestCode,
@@ -138,17 +149,34 @@ internal class BillingConnection(
             )
             PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
         }
+
+        val intentFire: (Intent) -> Unit = { intent ->
+            fragment.startActivityForResult(
+                intent,
+                purchaseRequest.requestCode
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        purchase(purchaseRequest, purchaseType, callback, intentSenderFire, intentFire)
     }
 
     private fun purchase(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit,
-        fireIntent: (IntentSender) -> Unit
+        fireIntentSender: (IntentSender) -> Unit,
+        fireIntent: (Intent) -> Unit
     ) = withService {
         purchaseFunction.function(
             billingService = this,
-            request = PurchaseFunctionRequest(purchaseRequest, purchaseType, callback, fireIntent)
+            request = PurchaseFunctionRequest(
+                purchaseRequest,
+                purchaseType,
+                callback,
+                fireIntentSender,
+                fireIntent
+            )
         )
     } ifServiceIsDisconnected {
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
