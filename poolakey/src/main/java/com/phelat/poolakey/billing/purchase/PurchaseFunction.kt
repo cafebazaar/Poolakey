@@ -69,7 +69,7 @@ internal class PurchaseFunction(
         }
     }
 
-    private fun getBuyIntentFromBillingService(
+    private inline fun getBuyIntentFromBillingService(
         billingService: IInAppBillingService,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -82,7 +82,7 @@ internal class PurchaseFunction(
         purchaseRequest.payload
     )?.takeBundleIfResponseIsOk(callback)
 
-    private fun getBuyIntentV2FromBillingService(
+    private inline fun getBuyIntentV2FromBillingService(
         billingService: IInAppBillingService,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -95,7 +95,7 @@ internal class PurchaseFunction(
         purchaseRequest.payload
     )?.takeBundleIfResponseIsOk(callback)
 
-    private fun Bundle.takeBundleIfResponseIsOk(callback: PurchaseIntentCallback.() -> Unit): Bundle? = takeIf(
+    private inline fun Bundle.takeBundleIfResponseIsOk(callback: PurchaseIntentCallback.() -> Unit): Bundle? = takeIf(
         thisIsTrue = { bundle ->
             bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
         }, andIfNot = {
