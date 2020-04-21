@@ -45,6 +45,7 @@ dependencies {
     api "androidx.fragment:fragment:$libraryVersions.fragment"
 
     api "io.reactivex.rxjava3:rxkotlin:$libraryVersions.rxkotlin3"
+    api "io.reactivex.rxjava3:rxjava:$libraryVersions.rxjava3"
 
     implementation project(":poolakey")
     implementation project(":poolakey-rxbase")
