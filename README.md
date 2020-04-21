@@ -19,6 +19,9 @@ There is a fully functional sample application which demonstrates the usage of P
 Yes, you've read that right! Poolakey supports Reactive Extension framework. Just add it's dependency in your `build.gradle` file:
 ```groovy
 dependencies {
+    // RxJava 3
+    implementation "com.phelat:poolakey-rx3:[latest_version]"
+    // RxJava 2
     implementation "com.phelat:poolakey-rx:[latest_version]"
 }
 ```
