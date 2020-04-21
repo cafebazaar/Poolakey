@@ -12,7 +12,13 @@ import com.phelat.poolakey.callback.PurchaseQueryCallback
 import com.phelat.poolakey.config.PaymentConfiguration
 import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.request.PurchaseRequest
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.consumeSwitch
+import kotlinx.android.synthetic.main.activity_main.purchaseButton
+import kotlinx.android.synthetic.main.activity_main.queryPurchasedItemsButton
+import kotlinx.android.synthetic.main.activity_main.querySubscribedItemsButton
+import kotlinx.android.synthetic.main.activity_main.serviceConnectionStatus
+import kotlinx.android.synthetic.main.activity_main.skuValueInput
+import kotlinx.android.synthetic.main.activity_main.subscribeButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,24 +30,12 @@ class MainActivity : AppCompatActivity() {
         Payment(context = this, config = paymentConfiguration)
     }
 
-    private val paymentConnection: Connection by lazy(LazyThreadSafetyMode.NONE) {
-        payment.connect {
-            connectionSucceed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
-            }
-            connectionFailed {
-                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
-            }
-            disconnected {
-                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
-            }
-        }
-    }
+    private lateinit var paymentConnection: Connection
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        paymentConnection
+        startPaymentConnection()
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.purchaseProduct(
@@ -88,6 +82,20 @@ class MainActivity : AppCompatActivity() {
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSubscribedProducts(handlePurchaseQueryCallback())
+            }
+        }
+    }
+
+    private fun startPaymentConnection() {
+        paymentConnection = payment.connect {
+            connectionSucceed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_connected_text)
+            }
+            connectionFailed {
+                serviceConnectionStatus.setText(R.string.general_service_connection_failed_text)
+            }
+            disconnected {
+                serviceConnectionStatus.setText(R.string.general_service_connection_not_connected_text)
             }
         }
     }
