@@ -40,5 +40,6 @@ interface IInAppBillingService {
         String type,
         String developerPayload);
 
-    Bundle getPurchaseConfig(int apiVersion, String packageName, String type);
+    Bundle getPurchaseConfig(int apiVersion);
+
 }

@@ -25,9 +25,7 @@ internal class PurchaseFunction(
     ): Unit = with(request) {
         try {
             val purchaseConfigBundle = billingService.getPurchaseConfig(
-                Billing.IN_APP_BILLING_VERSION,
-                context.packageName,
-                purchaseType.type
+                Billing.IN_APP_BILLING_VERSION
             )
 
             val intentResponseIsNullError = {
