@@ -1,2 +1,2 @@
-include ':app', ':poolakey', ':poolakey-rx'
+include ':app', ':poolakey', ':poolakey-rxbase', ':poolakey-rx', ':poolakey-rx3'
 rootProject.name='PoolakeySample'

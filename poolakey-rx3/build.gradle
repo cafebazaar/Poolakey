@@ -3,8 +3,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka'
 
 ext {
-    package_id = 'Poolakey-Rx'
-    artifact_id = 'poolakey-rx'
+    package_id = 'Poolakey-Rx3'
+    artifact_id = 'poolakey-rx3'
 }
 
 android {
@@ -29,7 +29,7 @@ android {
         configuration {
             skipEmptyPackages = true
             externalDocumentationLink {
-                url = new URL("file://${project(":poolakey").buildDir}/kotlindoc/poolakey/")
+                url = new URL("file://${project(":poolakey-rx3").buildDir}/kotlindoc/poolakey/")
                 packageListUrl = new URL(url, "package-list")
             }
         }
@@ -44,7 +44,7 @@ dependencies {
 
     api "androidx.fragment:fragment:$libraryVersions.fragment"
 
-    api "io.reactivex.rxjava2:rxkotlin:$libraryVersions.rxkotlin"
+    api "io.reactivex.rxjava3:rxkotlin:$libraryVersions.rxkotlin3"
 
     implementation project(":poolakey")
     implementation project(":poolakey-rxbase")

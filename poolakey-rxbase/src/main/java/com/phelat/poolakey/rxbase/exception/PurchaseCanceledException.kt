@@ -1,4 +1,4 @@
-package com.phelat.poolakey.rx.exception
+package com.phelat.poolakey.rxbase.exception
 
 import java.lang.Exception
 

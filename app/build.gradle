@@ -34,7 +34,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libraryVersions.appcompat"
 
     implementation project(":poolakey")
-    implementation project(":poolakey-rx")
+    implementation project(":poolakey-rx3")
 
 }
 preBuild.dependsOn "detekt"

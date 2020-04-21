@@ -1,4 +1,4 @@
-package com.phelat.poolakey.rx
+package com.phelat.poolakey.rx3
 
 import android.app.Activity
 import android.content.Intent
@@ -9,9 +9,9 @@ import com.phelat.poolakey.entity.PurchaseEntity
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
 import com.phelat.poolakey.rxbase.exception.PurchaseCanceledException
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Single
 
 /**
  * You have to use this function to connect to the In-App Billing service. Note that you have to

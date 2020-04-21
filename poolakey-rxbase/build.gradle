@@ -2,11 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka'
 
-ext {
-    package_id = 'Poolakey-Rx'
-    artifact_id = 'poolakey-rx'
-}
-
 android {
     compileSdkVersion buildVersions.compileSdkVersion
     buildToolsVersion buildVersions.buildToolsVersion
@@ -29,7 +24,7 @@ android {
         configuration {
             skipEmptyPackages = true
             externalDocumentationLink {
-                url = new URL("file://${project(":poolakey").buildDir}/kotlindoc/poolakey/")
+                url = new URL("file://${project(":poolakey-rxbase").buildDir}/kotlindoc/poolakey/")
                 packageListUrl = new URL(url, "package-list")
             }
         }
@@ -42,14 +37,4 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
-    api "androidx.fragment:fragment:$libraryVersions.fragment"
-
-    api "io.reactivex.rxjava2:rxkotlin:$libraryVersions.rxkotlin"
-
-    implementation project(":poolakey")
-    implementation project(":poolakey-rxbase")
-
 }
-
-apply from: "$rootDir/bintray/install-bintray.gradle"
-apply from: "$rootDir/bintray/config-bintray.gradle"
