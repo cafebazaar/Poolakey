@@ -1,16 +1,16 @@
 package com.phelat.poolakey.callback
 
-import com.phelat.poolakey.entity.PurchaseEntity
+import com.phelat.poolakey.entity.PurchaseInfo
 
 class PurchaseCallback {
 
-    internal var purchaseSucceed: (PurchaseEntity) -> Unit = {}
+    internal var purchaseSucceed: (PurchaseInfo) -> Unit = {}
 
     internal var purchaseCanceled: () -> Unit = {}
 
     internal var purchaseFailed: (throwable: Throwable) -> Unit = {}
 
-    fun purchaseSucceed(block: (PurchaseEntity) -> Unit) {
+    fun purchaseSucceed(block: (PurchaseInfo) -> Unit) {
         purchaseSucceed = block
     }
 
