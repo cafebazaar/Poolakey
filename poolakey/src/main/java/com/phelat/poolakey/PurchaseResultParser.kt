@@ -44,15 +44,18 @@ internal class PurchaseResultParser(
                 purchaseData = purchaseData,
                 dataSignature = dataSignature,
                 purchaseIsValid = {
-                    PurchaseCallback().apply(purchaseCallback).purchaseSucceed.invoke(
-                        rawDataToPurchaseInfo.mapToPurchaseInfo(
-                            purchaseData,
-                            dataSignature
-                        )
+                    val purchaseInfo = rawDataToPurchaseInfo.mapToPurchaseInfo(
+                        purchaseData,
+                        dataSignature
                     )
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseSucceed
+                        .invoke(purchaseInfo)
                 },
                 purchaseIsNotValid = { throwable ->
-                    PurchaseCallback().apply(purchaseCallback).purchaseFailed.invoke(throwable)
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseFailed
+                        .invoke(throwable)
                 }
             )
         } else {
