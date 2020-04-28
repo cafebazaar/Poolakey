@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.fragment.app.Fragment
 import com.phelat.poolakey.Connection
 import com.phelat.poolakey.Payment
-import com.phelat.poolakey.entity.PurchaseEntity
 import com.phelat.poolakey.entity.PurchaseInfo
 import com.phelat.poolakey.request.PurchaseRequest
 import com.phelat.poolakey.rxbase.exception.PurchaseCanceledException
@@ -171,7 +170,7 @@ fun Payment.onActivityResult(
     requestCode: Int,
     resultCode: Int,
     data: Intent?
-): Single<PurchaseEntity> {
+): Single<PurchaseInfo> {
     return Single.create { emitter ->
         onActivityResult(requestCode, resultCode, data) {
             purchaseSucceed { emitter.onSuccess(it) }

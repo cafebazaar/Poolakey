@@ -23,7 +23,7 @@ internal class QueryFunction(
     private val paymentConfiguration: PaymentConfiguration,
     private val mainThread: PoolakeyThread<() -> Unit>,
     private val context: Context
-): BillingFunction<QueryFunctionRequest> {
+) : BillingFunction<QueryFunctionRequest> {
 
     override fun function(
         billingService: IInAppBillingService,
@@ -84,7 +84,7 @@ internal class QueryFunction(
         val signatureDataList: List<String> = bundle.getStringArrayList(
             BazaarIntent.RESPONSE_DATA_SIGNATURE_LIST
         ) ?: emptyList()
-        val validPurchases = mutableListOf<PurchaseInfo>()
+        val validPurchases = ArrayList<PurchaseInfo>(purchaseDataList.size)
         for (i in purchaseDataList.indices) {
             if (paymentConfiguration.localSecurityCheck is SecurityCheck.Enable) {
                 val isPurchaseValid = purchaseVerifier.verifyPurchase(
@@ -94,7 +94,10 @@ internal class QueryFunction(
                 )
                 if (!isPurchaseValid) continue
             }
-            validPurchases += rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseDataList[i])
+            validPurchases += rawDataToPurchaseInfo.mapToPurchaseInfo(
+                purchaseDataList[i],
+                signatureDataList[i]
+            )
         }
         return validPurchases
     }

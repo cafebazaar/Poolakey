@@ -10,7 +10,8 @@ data class PurchaseInfo(
     val packageName: String,
     val purchaseState: PurchaseState,
     val purchaseTime: Long,
-    val productId: String
+    val productId: String,
+    val dataSignature: String
 ) {
 
     fun toJson() = with(JSONObject()) {

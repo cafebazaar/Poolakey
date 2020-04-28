@@ -4,11 +4,9 @@ import android.content.Intent
 import com.phelat.poolakey.callback.PurchaseCallback
 import com.phelat.poolakey.config.SecurityCheck
 import com.phelat.poolakey.constant.BazaarIntent
-import com.phelat.poolakey.entity.PurchaseEntity
 import com.phelat.poolakey.exception.PurchaseHijackedException
 import com.phelat.poolakey.mapper.RawDataToPurchaseInfo
 import com.phelat.poolakey.security.PurchaseVerifier
-import java.lang.IllegalArgumentException
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.security.SignatureException
@@ -46,15 +44,18 @@ internal class PurchaseResultParser(
                 purchaseData = purchaseData,
                 dataSignature = dataSignature,
                 purchaseIsValid = {
-                    PurchaseEntity(
-                        purchaseInfo = rawDataToPurchaseInfo.mapToPurchaseInfo(purchaseData),
-                        dataSignature = dataSignature
-                    ).also { purchaseInfo ->
-                        PurchaseCallback().apply(purchaseCallback).purchaseSucceed.invoke(purchaseInfo)
-                    }
+                    val purchaseInfo = rawDataToPurchaseInfo.mapToPurchaseInfo(
+                        purchaseData,
+                        dataSignature
+                    )
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseSucceed
+                        .invoke(purchaseInfo)
                 },
                 purchaseIsNotValid = { throwable ->
-                    PurchaseCallback().apply(purchaseCallback).purchaseFailed.invoke(throwable)
+                    PurchaseCallback().apply(purchaseCallback)
+                        .purchaseFailed
+                        .invoke(throwable)
                 }
             )
         } else {
