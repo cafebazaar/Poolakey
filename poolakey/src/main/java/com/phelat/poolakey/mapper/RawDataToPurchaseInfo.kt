@@ -7,7 +7,7 @@ import org.json.JSONObject
 
 internal class RawDataToPurchaseInfo {
 
-    fun mapToPurchaseInfo(purchaseData: String): PurchaseInfo {
+    fun mapToPurchaseInfo(purchaseData: String, dataSignature: String): PurchaseInfo {
         return JSONObject(purchaseData).run {
             PurchaseInfo(
                 orderId = optString(RawJson.ORDER_ID),
@@ -20,7 +20,8 @@ internal class RawDataToPurchaseInfo {
                     PurchaseState.REFUNDED
                 },
                 purchaseTime = optLong(RawJson.PURCHASE_TIME),
-                productId = optString(RawJson.PRODUCT_ID)
+                productId = optString(RawJson.PRODUCT_ID),
+                dataSignature = dataSignature
             )
         }
     }
