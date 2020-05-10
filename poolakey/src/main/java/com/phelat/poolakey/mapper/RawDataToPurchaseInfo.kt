@@ -21,7 +21,8 @@ internal class RawDataToPurchaseInfo {
                 },
                 purchaseTime = optLong(RawJson.PURCHASE_TIME),
                 productId = optString(RawJson.PRODUCT_ID),
-                dataSignature = dataSignature
+                dataSignature = dataSignature,
+                originalJson = purchaseData
             )
         }
     }
