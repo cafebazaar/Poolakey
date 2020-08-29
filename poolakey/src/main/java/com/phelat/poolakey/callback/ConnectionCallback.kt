@@ -9,7 +9,7 @@ class ConnectionCallback(private val disconnect: () -> Unit) : Connection {
 
     internal var connectionSucceed: () -> Unit = {}
 
-    internal var connectionFailed: (throwable: Throwable) -> Unit = {}
+    internal var connectionFailed: (throwable: Throwable) -> Unit = Throwable::printStackTrace
 
     internal var disconnected: () -> Unit = {}
 
