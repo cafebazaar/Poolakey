@@ -25,6 +25,6 @@ ext {
             'targetSdkVersion' : 29
     ]
 
-    poolakeyVersion = "1.0.0-alpha07"
+    poolakeyVersion = "1.0.0-alpha08"
 
 }
