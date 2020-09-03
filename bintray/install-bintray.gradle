@@ -1,17 +1,17 @@
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.phelat'
+group = 'ir.cafebazaar'
 
 install {
     repositories.mavenInstaller {
         pom {
             project {
                 packaging 'aar'
-                groupId 'com.phelat'
+                groupId 'ir.cafebazaar'
                 artifactId project.artifact_id
 
                 name 'Poolakey'
-                url 'https://github.com/PHELAT/Poolakey'
+                url 'https://github.com/CafeBazaar/Poolakey'
 
                 licenses {
                     license {
@@ -22,16 +22,16 @@ install {
 
                 developers {
                     developer {
-                        id 'm4hdi'
-                        name 'Mahdi Nouri'
-                        email 'm4hdi.pdroid@gmail.com'
+                        id 'cafebazaar'
+                        name 'Cafe Bazaar'
+                        email 'mobilechapter.bazaar@gmail.com'
                     }
                 }
 
                 scm {
-                    connection 'https://github.com/PHELAT/Poolakey.git'
-                    developerConnection 'https://github.com/PHELAT/Poolakey.git'
-                    url 'https://github.com/PHELAT/Poolakey'
+                    connection 'https://github.com/CafeBazaar/Poolakey.git'
+                    developerConnection 'https://github.com/CafeBazaar/Poolakey.git'
+                    url 'https://github.com/CafeBazaar/Poolakey'
                 }
             }
             withXml {

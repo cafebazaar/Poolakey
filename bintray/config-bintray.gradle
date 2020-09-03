@@ -25,15 +25,15 @@ artifacts {
 }
 
 bintray {
-    user = System.getenv('BINTRAY_USERNAME')
-    key = System.getenv('BINTRAY_KEY')
+    user = System.getenv('CAFE_BINTRAY_USERNAME')
+    key = System.getenv('CAFE_BINTRAY_KEY')
 
     configurations = ['archives']
     pkg {
         repo = "Poolakey"
         name = project.package_id
-        websiteUrl = 'https://github.com/PHELAT/Poolakey'
-        vcsUrl = 'https://github.com/PHELAT/Poolakey.git'
+        websiteUrl = 'https://github.com/CafeBazaar/Poolakey'
+        vcsUrl = 'https://github.com/CafeBazaar/Poolakey.git'
         licenses = ["Apache-2.0"]
         publish = true
         publicDownloadNumbers = true

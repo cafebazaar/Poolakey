@@ -6,7 +6,7 @@ android {
     compileSdkVersion buildVersions.compileSdkVersion
     buildToolsVersion buildVersions.buildToolsVersion
     defaultConfig {
-        applicationId "com.phelat.poolakeysample"
+        applicationId "ir.cafebazaar.poolakeysample"
         minSdkVersion buildVersions.minSdkVersion
         targetSdkVersion buildVersions.targetSdkVersion
         versionCode 1
