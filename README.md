@@ -8,7 +8,7 @@ To start working with Poolakey, you need to add its dependency into your `build.
 ### Dependency
 ```groovy
 dependencies {
-    implementation "com.phelat:poolakey:[latest_version]"
+    implementation "ir.cafebazaar:poolakey:[latest_version]"
 }
 ```
 ### How to use
@@ -20,9 +20,9 @@ Yes, you've read that right! Poolakey supports Reactive Extension framework. Jus
 ```groovy
 dependencies {
     // RxJava 3
-    implementation "com.phelat:poolakey-rx3:[latest_version]"
+    implementation "ir.cafebazaar:poolakey-rx3:[latest_version]"
     // RxJava 2
-    implementation "com.phelat:poolakey-rx:[latest_version]"
+    implementation "ir.cafebazaar:poolakey-rx:[latest_version]"
 }
 ```
 And instead of using Poolakey's callbacks, use the reactive fuctions:
