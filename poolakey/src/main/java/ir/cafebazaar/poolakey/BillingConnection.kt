@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
+import android.os.DeadObjectException
 import android.os.IBinder
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
@@ -62,38 +63,37 @@ internal class BillingConnection(
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        IInAppBillingService.Stub.asInterface(service)
-            ?.takeIf(
-                thisIsTrue = {
-                    isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.IN_APP,
-                        inAppBillingService = it
-                    )
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(IAPNotSupportedException())
-                }
-            )
-            ?.takeIf(
-                thisIsTrue = {
-                    !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.SUBSCRIPTION,
-                        inAppBillingService = it
-                    )
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(SubsNotSupportedException())
-                }
-            )
-            ?.also { billingService = it }
-            ?.also { callback?.connectionSucceed?.invoke() }
+        try {
+            IInAppBillingService.Stub.asInterface(service)
+                ?.also { billingService = it }
+                ?.takeIf(
+                    thisIsTrue = {
+                        isPurchaseTypeSupported(purchaseType = PurchaseType.IN_APP)
+                    },
+                    andIfNot = {
+                        callback?.connectionFailed?.invoke(IAPNotSupportedException())
+                    }
+                )
+                ?.takeIf(
+                    thisIsTrue = {
+                        !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
+                            purchaseType = PurchaseType.SUBSCRIPTION
+                        )
+                    },
+                    andIfNot = {
+                        callback?.connectionFailed?.invoke(SubsNotSupportedException())
+                    }
+                )
+                ?.also { callback?.connectionSucceed?.invoke() }
+        } catch (ignored: DeadObjectException) {
+            // onServiceDisconnected will get called so no need to do anything
+        }
     }
 
     private fun isPurchaseTypeSupported(
-        purchaseType: PurchaseType,
-        inAppBillingService: IInAppBillingService
+        purchaseType: PurchaseType
     ): Boolean {
-        val supportState = inAppBillingService.isBillingSupported(
+        val supportState = billingService?.isBillingSupported(
             Billing.IN_APP_BILLING_VERSION,
             context.packageName,
             purchaseType.type
