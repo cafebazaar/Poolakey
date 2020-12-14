@@ -3,12 +3,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion buildVersions.compileSdkVersion
+    buildToolsVersion buildVersions.buildToolsVersion
     defaultConfig {
-        applicationId "com.phelat.poolakeysample"
-        minSdkVersion 14
-        targetSdkVersion 29
+        applicationId "ir.cafebazaar.poolakeysample"
+        minSdkVersion buildVersions.minSdkVersion
+        targetSdkVersion buildVersions.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
     }
@@ -23,6 +23,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
@@ -34,7 +41,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$libraryVersions.appcompat"
 
     implementation project(":poolakey")
-    implementation project(":poolakey-rx")
+    implementation project(":poolakey-rx3")
 
 }
 preBuild.dependsOn "detekt"

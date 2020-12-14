@@ -8,11 +8,11 @@ ext {
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion buildVersions.compileSdkVersion
+    buildToolsVersion buildVersions.buildToolsVersion
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion buildVersions.minSdkVersion
+        targetSdkVersion buildVersions.targetSdkVersion
         versionCode 1
         versionName poolakeyVersion
         consumerProguardFiles 'consumer-rules.pro'
@@ -34,6 +34,13 @@ android {
             }
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
@@ -45,8 +52,10 @@ dependencies {
     api "androidx.fragment:fragment:$libraryVersions.fragment"
 
     api "io.reactivex.rxjava2:rxkotlin:$libraryVersions.rxkotlin"
+    api "io.reactivex.rxjava2:rxjava:$libraryVersions.rxjava"
 
     implementation project(":poolakey")
+    implementation project(":poolakey-rxbase")
 
 }
 

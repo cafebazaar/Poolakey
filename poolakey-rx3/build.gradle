@@ -1,0 +1,63 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.dokka'
+
+ext {
+    package_id = 'Poolakey-Rx3'
+    artifact_id = 'poolakey-rx3'
+}
+
+android {
+    compileSdkVersion buildVersions.compileSdkVersion
+    buildToolsVersion buildVersions.buildToolsVersion
+    defaultConfig {
+        minSdkVersion buildVersions.minSdkVersion
+        targetSdkVersion buildVersions.targetSdkVersion
+        versionCode 1
+        versionName poolakeyVersion
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    dokka {
+        outputFormat = 'html'
+        outputDirectory = "$buildDir/kotlindoc"
+        configuration {
+            skipEmptyPackages = true
+            externalDocumentationLink {
+                url = new URL("file://${project(":poolakey-rx3").buildDir}/kotlindoc/poolakey/")
+                packageListUrl = new URL(url, "package-list")
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
+
+    api "androidx.fragment:fragment:$libraryVersions.fragment"
+
+    api "io.reactivex.rxjava3:rxkotlin:$libraryVersions.rxkotlin3"
+    api "io.reactivex.rxjava3:rxjava:$libraryVersions.rxjava3"
+
+    implementation project(":poolakey")
+    implementation project(":poolakey-rxbase")
+
+}
+
+apply from: "$rootDir/bintray/install-bintray.gradle"
+apply from: "$rootDir/bintray/config-bintray.gradle"

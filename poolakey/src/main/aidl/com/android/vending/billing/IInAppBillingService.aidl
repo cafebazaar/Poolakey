@@ -34,4 +34,12 @@ interface IInAppBillingService {
 
     int consumePurchase(int apiVersion, String packageName, String purchaseToken);
 
+    Bundle getBuyIntentV2(int apiVersion,
+        String packageName,
+        String sku,
+        String type,
+        String developerPayload);
+
+    Bundle getPurchaseConfig(int apiVersion);
+
 }

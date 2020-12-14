@@ -9,11 +9,11 @@ ext {
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion buildVersions.compileSdkVersion
+    buildToolsVersion buildVersions.buildToolsVersion
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion buildVersions.minSdkVersion
+        targetSdkVersion buildVersions.targetSdkVersion
         versionCode 1
         versionName poolakeyVersion
         consumerProguardFiles 'consumer-rules.pro'
@@ -30,6 +30,13 @@ android {
         configuration {
             skipEmptyPackages = true
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
