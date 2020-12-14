@@ -18,6 +18,13 @@ android {
         versionName poolakeyVersion
         consumerProguardFiles 'consumer-rules.pro'
     }
+
+    Properties properties = new Properties()
+    properties.load(rootProject.file('bazaar.properties').newDataInputStream())
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'BAZAAR_HASH', "\"${properties.getProperty('bazaarReleaseHash')}\""
+    }
     buildTypes {
         release {
             minifyEnabled false
