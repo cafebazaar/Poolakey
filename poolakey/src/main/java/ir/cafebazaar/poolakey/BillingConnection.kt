@@ -21,11 +21,13 @@ import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
+import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
+import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
@@ -43,7 +45,7 @@ internal class BillingConnection(
 
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
-        Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
+        Intent(BILLING_SERVICE_ACTION).apply { `package` = Const.BAZAAR_PACKAGE_NAME }
             .takeIf(
                 thisIsTrue = {
                     context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
@@ -51,8 +53,14 @@ internal class BillingConnection(
                 andIfNot = {
                     callback?.connectionFailed?.invoke(BazaarNotFoundException())
                 }
-            )
-            ?.also {
+            )?.takeIf(
+                thisIsTrue = {
+                    Security.verifyBazaarIsInstalled(context)
+                },
+                andIfNot = {
+                    callback?.connectionFailed?.invoke(BazaarNotFoundException())
+                }
+            )?.also {
                 try {
                     context.bindService(it, this, Context.BIND_AUTO_CREATE)
                 } catch (e: SecurityException) {
@@ -246,6 +254,5 @@ internal class BillingConnection(
 
     companion object {
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
-        private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
     }
 }
