@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.Signature
 import android.os.Build
-import ir.cafebazaar.poolakey.constant.BazaarIntent.BAZAAR_PACKAGE_NAME
+import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.getPackageInfo
 import java.io.ByteArrayInputStream
 import java.io.InputStream
