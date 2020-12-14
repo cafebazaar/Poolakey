@@ -30,7 +30,7 @@ object Security {
                 ":73:F0:0D:90:44:64:02:BF:C2:B2:AC:2C:39:9E:6C:81:09:8A:35:49:5F:91:F7:0B:4C:F3" +
                 ":02:01:03"
 
-    @SuppressLint("PackageManagerGetSignatures")
+
     fun verifyBazaarIsInstalled(context: Context): Boolean {
 
         if (getPackageInfo(context, BAZAAR_PACKAGE_NAME) == null) {
@@ -40,6 +40,8 @@ object Security {
         val packageManager: PackageManager = context.packageManager
         val packageName = BAZAAR_PACKAGE_NAME
 
+        @Suppress("DEPRECATION")
+        @SuppressLint("PackageManagerGetSignatures")
         val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val packageInfo = packageManager.getPackageInfo(
                 packageName,
@@ -54,6 +56,7 @@ object Security {
             packageInfo.signatures
         }
 
+        var certificateMatch = true
         for (sig in signatures) {
             val input: InputStream = ByteArrayInputStream(sig.toByteArray())
             val certificateFactory: CertificateFactory = CertificateFactory.getInstance("X509")
@@ -62,11 +65,11 @@ object Security {
             val publicKey: PublicKey = certificate.publicKey
             val certificateHex = byte2HexFormatted(publicKey.encoded)
             if (bazaarCertificateHex != certificateHex) {
-                return false
+                certificateMatch = false
             }
         }
 
-        return true
+        return certificateMatch
     }
 
     private fun byte2HexFormatted(array: ByteArray): String {
