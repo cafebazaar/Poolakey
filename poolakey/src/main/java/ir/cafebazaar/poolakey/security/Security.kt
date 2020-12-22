@@ -45,8 +45,8 @@ internal object Security {
         for (signature in signatures) {
             val input: InputStream = ByteArrayInputStream(signature.toByteArray())
             val certificateFactory: CertificateFactory = CertificateFactory.getInstance("X509")
-            val certificate: X509Certificate =
-                certificateFactory.generateCertificate(input) as X509Certificate
+            val certificate: X509Certificate = certificateFactory
+                .generateCertificate(input) as X509Certificate
             val publicKey: PublicKey = certificate.publicKey
             val certificateHex = byte2HexFormatted(publicKey.encoded)
             if (BuildConfig.BAZAAR_HASH != certificateHex) {
