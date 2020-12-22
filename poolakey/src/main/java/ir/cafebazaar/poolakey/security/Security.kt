@@ -42,8 +42,8 @@ internal object Security {
         }
 
         var certificateMatch = true
-        for (sig in signatures) {
-            val input: InputStream = ByteArrayInputStream(sig.toByteArray())
+        for (signature in signatures) {
+            val input: InputStream = ByteArrayInputStream(signature.toByteArray())
             val certificateFactory: CertificateFactory = CertificateFactory.getInstance("X509")
             val certificate: X509Certificate =
                 certificateFactory.generateCertificate(input) as X509Certificate
