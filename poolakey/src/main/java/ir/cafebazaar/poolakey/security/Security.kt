@@ -17,8 +17,6 @@ import java.util.*
 
 object Security {
 
-    private const val bazaarCertificateHex: String = BuildConfig.BAZAAR_HASH
-
     fun verifyBazaarIsInstalled(context: Context): Boolean {
 
         if (getPackageInfo(context, BAZAAR_PACKAGE_NAME) == null) {
@@ -26,19 +24,18 @@ object Security {
         }
 
         val packageManager: PackageManager = context.packageManager
-        val packageName = BAZAAR_PACKAGE_NAME
 
         @Suppress("DEPRECATION")
         @SuppressLint("PackageManagerGetSignatures")
         val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val packageInfo = packageManager.getPackageInfo(
-                packageName,
+                BAZAAR_PACKAGE_NAME,
                 PackageManager.GET_SIGNING_CERTIFICATES
             )
             packageInfo.signingInfo.apkContentsSigners
         } else {
             val packageInfo = packageManager.getPackageInfo(
-                packageName,
+                BAZAAR_PACKAGE_NAME,
                 PackageManager.GET_SIGNATURES
             )
             packageInfo.signatures
@@ -52,8 +49,9 @@ object Security {
                 certificateFactory.generateCertificate(input) as X509Certificate
             val publicKey: PublicKey = certificate.publicKey
             val certificateHex = byte2HexFormatted(publicKey.encoded)
-            if (bazaarCertificateHex != certificateHex) {
+            if (BuildConfig.BAZAAR_HASH != certificateHex) {
                 certificateMatch = false
+                break
             }
         }
 
