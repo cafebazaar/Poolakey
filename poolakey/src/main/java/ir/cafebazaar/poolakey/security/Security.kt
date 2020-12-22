@@ -68,7 +68,7 @@ internal object Security {
             } else if (length > 2) {
                 suggestedHex = suggestedHex.substring(length - 2, length)
             }
-            stringBuilder.append(suggestedHex.toUpperCase(Locale.getDefault()))
+            stringBuilder.append(suggestedHex.toUpperCase(Locale.US))
             if (index < array.size - 1) {
                 stringBuilder.append(':')
             }
