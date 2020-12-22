@@ -15,7 +15,7 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
 
-object Security {
+internal object Security {
 
     fun verifyBazaarIsInstalled(context: Context): Boolean {
 
