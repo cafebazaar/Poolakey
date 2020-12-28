@@ -4,7 +4,7 @@ ext {
             'kotlin'   : '1.4.20',
             'appcompat': '1.2.0',
             'rxkotlin' : '2.4.0',
-            'rxkotlin3': '3.0.0',
+            'rxkotlin3': '3.0.1',
             'rxjava'   : '2.2.19',
             'rxjava3'  : '3.0.5',
             'fragment' : '1.2.5'
