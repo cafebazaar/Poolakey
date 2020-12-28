@@ -2,7 +2,7 @@ ext {
 
     libraryVersions = [
             'kotlin'   : '1.4.20',
-            'appcompat': '1.1.0',
+            'appcompat': '1.2.0',
             'rxkotlin' : '2.4.0',
             'rxkotlin3': '3.0.0',
             'rxjava'   : '2.2.19',
