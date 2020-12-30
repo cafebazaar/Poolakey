@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
+import android.os.DeadObjectException
 import android.os.IBinder
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
@@ -20,11 +21,13 @@ import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
+import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
+import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
@@ -42,7 +45,7 @@ internal class BillingConnection(
 
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
-        Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
+        Intent(BILLING_SERVICE_ACTION).apply { `package` = Const.BAZAAR_PACKAGE_NAME }
             .takeIf(
                 thisIsTrue = {
                     context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
@@ -50,8 +53,14 @@ internal class BillingConnection(
                 andIfNot = {
                     callback?.connectionFailed?.invoke(BazaarNotFoundException())
                 }
-            )
-            ?.also {
+            )?.takeIf(
+                thisIsTrue = {
+                    Security.verifyBazaarIsInstalled(context)
+                },
+                andIfNot = {
+                    callback?.connectionFailed?.invoke(BazaarNotFoundException())
+                }
+            )?.also {
                 try {
                     context.bindService(it, this, Context.BIND_AUTO_CREATE)
                 } catch (e: SecurityException) {
@@ -62,38 +71,37 @@ internal class BillingConnection(
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        IInAppBillingService.Stub.asInterface(service)
-            ?.takeIf(
-                thisIsTrue = {
-                    isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.IN_APP,
-                        inAppBillingService = it
-                    )
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(IAPNotSupportedException())
-                }
-            )
-            ?.takeIf(
-                thisIsTrue = {
-                    !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.SUBSCRIPTION,
-                        inAppBillingService = it
-                    )
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(SubsNotSupportedException())
-                }
-            )
-            ?.also { billingService = it }
-            ?.also { callback?.connectionSucceed?.invoke() }
+        try {
+            IInAppBillingService.Stub.asInterface(service)
+                ?.also { billingService = it }
+                ?.takeIf(
+                    thisIsTrue = {
+                        isPurchaseTypeSupported(purchaseType = PurchaseType.IN_APP)
+                    },
+                    andIfNot = {
+                        callback?.connectionFailed?.invoke(IAPNotSupportedException())
+                    }
+                )
+                ?.takeIf(
+                    thisIsTrue = {
+                        !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
+                            purchaseType = PurchaseType.SUBSCRIPTION
+                        )
+                    },
+                    andIfNot = {
+                        callback?.connectionFailed?.invoke(SubsNotSupportedException())
+                    }
+                )
+                ?.also { callback?.connectionSucceed?.invoke() }
+        } catch (ignored: DeadObjectException) {
+            // onServiceDisconnected will get called so no need to do anything
+        }
     }
 
     private fun isPurchaseTypeSupported(
-        purchaseType: PurchaseType,
-        inAppBillingService: IInAppBillingService
+        purchaseType: PurchaseType
     ): Boolean {
-        val supportState = inAppBillingService.isBillingSupported(
+        val supportState = billingService?.isBillingSupported(
             Billing.IN_APP_BILLING_VERSION,
             context.packageName,
             purchaseType.type
@@ -246,6 +254,5 @@ internal class BillingConnection(
 
     companion object {
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
-        private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
     }
 }
