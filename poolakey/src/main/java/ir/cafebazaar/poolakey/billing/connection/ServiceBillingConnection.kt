@@ -25,6 +25,7 @@ import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.security.PurchaseVerifier
+import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
@@ -66,7 +67,7 @@ internal class ServiceBillingConnection(
                 }
             )?.takeIf(
                 thisIsTrue = {
-                    ir.cafebazaar.poolakey.security.Security.verifyBazaarIsInstalled(context)
+                    Security.verifyBazaarIsInstalled(context)
                 },
                 andIfNot = {
                     callback.connectionFailed.invoke(BazaarNotFoundException())
