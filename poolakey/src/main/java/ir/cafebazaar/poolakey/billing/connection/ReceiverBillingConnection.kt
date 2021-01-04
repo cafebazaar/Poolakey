@@ -12,6 +12,8 @@ import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
+import ir.cafebazaar.poolakey.exception.DisconnectException
+import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
 import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
@@ -98,14 +100,18 @@ internal class ReceiverBillingConnection(
                         isBundleSignatureValid(intent.extras)
                     },
                     andIfNot = {
-                        // TODO invalid signature received
+                        callbackReference?.get()?.connectionFailed?.invoke(
+                            PurchaseHijackedException()
+                        )
                     }
                 )?.takeIf(
                     thisIsTrue = {
                         disconnected
                     },
                     andIfNot = {
-                        // TODO connection disposed
+                        callbackReference?.get()?.connectionFailed?.invoke(
+                            DisconnectException()
+                        )
                     }
                 )?.let { action ->
                     onActionReceived(action, intent.extras)
