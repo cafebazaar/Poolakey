@@ -5,9 +5,11 @@ import android.os.IBinder
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
-import ir.cafebazaar.poolakey.billing.BillingFunction
+import ir.cafebazaar.poolakey.billing.consume.ConsumeFunction
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
+import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunction
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunctionRequest
+import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
@@ -20,19 +22,31 @@ import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
+import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
-import ir.cafebazaar.poolakey.security.Security
+import ir.cafebazaar.poolakey.security.PurchaseVerifier
 import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
 
 internal class ServiceBillingConnection(
+    context: Context,
+    mainThread: PoolakeyThread<() -> Unit>,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val paymentConfiguration: PaymentConfiguration,
-    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
-    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>,
-    private val queryFunction: BillingFunction<QueryFunctionRequest>
+    private val paymentConfiguration: PaymentConfiguration
 ) : BillingConnectionCommunicator, ServiceConnection {
+
+    private val purchaseFunction = PurchaseFunction(context)
+
+    private val consumeFunction = ConsumeFunction(mainThread, context)
+
+    private val queryFunction = QueryFunction(
+        RawDataToPurchaseInfo(),
+        PurchaseVerifier(),
+        paymentConfiguration,
+        mainThread,
+        context
+    )
 
     private var billingService: IInAppBillingService? = null
     private var callbackReference: WeakReference<ConnectionCallback>? = null

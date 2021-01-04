@@ -4,14 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.Fragment
-import ir.cafebazaar.poolakey.billing.consume.ConsumeFunction
-import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunction
-import ir.cafebazaar.poolakey.billing.query.QueryFunction
-import ir.cafebazaar.poolakey.callback.ConnectionCallback
-import ir.cafebazaar.poolakey.callback.ConsumeCallback
-import ir.cafebazaar.poolakey.callback.PurchaseCallback
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
-import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.*
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
@@ -22,34 +15,18 @@ import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 class Payment(context: Context, private val config: PaymentConfiguration) {
 
-    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
-
     private val backgroundThread: PoolakeyThread<Runnable> = BackgroundThread()
-
     private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
-
-    private val purchaseVerifier = PurchaseVerifier()
-
-    private val purchaseFunction = PurchaseFunction(context)
-
-    private val consumeFunction = ConsumeFunction(mainThread, context)
-
-    private val queryFunction = QueryFunction(
-        rawDataToPurchaseInfo,
-        purchaseVerifier,
-        config,
-        mainThread,
-        context
-    )
 
     private val connection = BillingConnection(
         context = context,
         paymentConfiguration = config,
         backgroundThread = backgroundThread,
-        purchaseFunction = purchaseFunction,
-        consumeFunction = consumeFunction,
-        queryFunction = queryFunction
+        mainThread = mainThread
     )
+
+    private val purchaseVerifier = PurchaseVerifier()
+    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)
 

@@ -3,13 +3,9 @@ package ir.cafebazaar.poolakey
 import android.app.Activity
 import android.content.Context
 import androidx.fragment.app.Fragment
-import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.billing.PurchaseBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
-import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
-import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunctionRequest
-import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
@@ -22,9 +18,7 @@ internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
-    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>,
-    private val queryFunction: BillingFunction<QueryFunctionRequest>
+    private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
     private var callback: ConnectionCallback? = null
@@ -35,11 +29,10 @@ internal class BillingConnection(
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
 
         val serviceCommunicator = ServiceBillingConnection(
+            context,
+            mainThread,
             backgroundThread,
-            paymentConfiguration,
-            purchaseFunction,
-            consumeFunction,
-            queryFunction
+            paymentConfiguration
         )
 
         val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
