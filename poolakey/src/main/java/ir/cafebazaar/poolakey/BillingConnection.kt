@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.billing.PurchaseBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
+import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
@@ -35,9 +36,19 @@ internal class BillingConnection(
             paymentConfiguration
         )
 
+        val receiverConnection = ReceiverBillingConnection(paymentConfiguration)
+
         val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
-        if (canConnect) {
-            billingCommunicator = serviceCommunicator
+
+        billingCommunicator = if (canConnect) {
+            serviceCommunicator
+        } else {
+            receiverConnection.startConnection(
+                context,
+                requireNotNull(callback)
+            )
+
+            receiverConnection
         }
         return requireNotNull(callback)
     }
