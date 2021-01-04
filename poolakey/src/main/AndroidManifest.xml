@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ir.cafebazaar.poolakey">
 
+    <queries>
+        <package android:name="com.farsitel.bazaar" />
+    </queries>
+
     <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />
 
 </manifest>
