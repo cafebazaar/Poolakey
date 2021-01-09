@@ -108,9 +108,7 @@ internal class ServiceBillingConnection(
             ?.also { callbackReference?.get()?.connectionSucceed?.invoke() }
     }
 
-    override fun isPurchaseTypeSupported(
-        purchaseType: PurchaseType
-    ): Boolean {
+    private fun isPurchaseTypeSupported(purchaseType: PurchaseType): Boolean {
         return contextReference?.get()?.let { context ->
             val supportState = billingService?.isBillingSupported(
                 Billing.IN_APP_BILLING_VERSION,

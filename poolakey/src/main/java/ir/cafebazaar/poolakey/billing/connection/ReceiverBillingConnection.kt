@@ -9,20 +9,24 @@ import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
+import ir.cafebazaar.poolakey.constant.BazaarIntent
+import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
-import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
-import ir.cafebazaar.poolakey.exception.DisconnectException
-import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
+import ir.cafebazaar.poolakey.exception.*
 import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
+import ir.cafebazaar.poolakey.thread.PoolakeyThread
+import ir.cafebazaar.poolakey.util.AbortableCountDownLatch
 import java.lang.ref.WeakReference
+import java.util.concurrent.TimeUnit
 
 internal class ReceiverBillingConnection(
-    private val paymentConfiguration: PaymentConfiguration
+    private val paymentConfiguration: PaymentConfiguration,
+    private val backgroundThread: PoolakeyThread<Runnable>,
 ) : BillingConnectionCommunicator {
 
     private var callbackReference: WeakReference<ConnectionCallback>? = null
@@ -46,7 +50,7 @@ internal class ReceiverBillingConnection(
         if (canConnectWithReceiverComponent(bazaarVersionCode)) {
             createReceiverConnection()
             registerBroadcast()
-            trySendPingToBazaar()
+            backgroundThread.execute(Runnable { isPurchaseTypeSupported() })
             return true
         } else if (bazaarVersionCode > 0) {
             callback.connectionFailed.invoke(BazaarNotSupportedException())
@@ -59,8 +63,25 @@ internal class ReceiverBillingConnection(
         return bazaarVersionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
     }
 
-    override fun isPurchaseTypeSupported(purchaseType: PurchaseType): Boolean {
-        TODO("Not yet implemented")
+    private fun isPurchaseTypeSupported() {
+        getNewIntentForBroadcast().apply {
+            action = ACTION_BILLING_SUPPORT
+            putExtra(KEY_API_VERSION, Billing.IN_APP_BILLING_VERSION)
+        }.run {
+            sendBroadcast(this)
+        }
+    }
+
+    private fun awaitOnLatchToReceiveResponse(
+        countDownLatch: AbortableCountDownLatch,
+        onFinished: () -> Unit
+    ) {
+        try {
+            countDownLatch.await(COUNT_LATCH_TIMEOUT, COUNT_LATCH_TIMEOUT_UNIT)
+        } catch (ignore: Exception) {
+        }
+
+        onFinished.invoke()
     }
 
     override fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
@@ -122,29 +143,45 @@ internal class ReceiverBillingConnection(
 
     private fun onActionReceived(action: String, extras: Bundle?) {
         when (action) {
-            ACTION_RECEIVE_PING -> {
-                onPingActionReceived()
+            ACTION_BILLING_SUPPORT -> {
+                onBillingSupportActionReceiver(extras)
             }
         }
     }
 
-    private fun onPingActionReceived() {
-        callbackReference?.get()?.connectionSucceed?.invoke()
+    private fun onBillingSupportActionReceiver(extras: Bundle?) {
+        val isResponseSucceed = isResponseSucceed(extras)
+        val isSubscriptionSupport = isSubscriptionSupport(extras)
+
+        when {
+            isResponseSucceed && isSubscriptionSupport -> {
+                callbackReference?.get()?.connectionSucceed?.invoke()
+            }
+            !isResponseSucceed -> {
+                callbackReference?.get()?.connectionFailed?.invoke(IAPNotSupportedException())
+            }
+            else -> {
+                callbackReference?.get()?.connectionFailed?.invoke(SubsNotSupportedException())
+            }
+        }
+    }
+
+    private fun isSubscriptionSupport(extras: Bundle?): Boolean {
+        val isSubscriptionSupport = extras?.getBoolean(KEY_SUBSCRIPTION_SUPPORT) ?: false
+        return !paymentConfiguration.shouldSupportSubscription || isSubscriptionSupport
+    }
+
+    private fun isResponseSucceed(extras: Bundle?): Boolean {
+        return extras?.getInt(RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
     }
 
     private fun isBundleSignatureValid(extras: Bundle?): Boolean {
         return getSecureSignature() == extras?.getString(KEY_SECURE)
     }
 
-    private fun trySendPingToBazaar() {
-        val intent: Intent = getNewIntentForBroadcast()
-        intent.action = ACTION_PING
-        contextReference?.get()?.sendBroadcast(intent)
-    }
-
     private fun registerBroadcast() {
         val intentFilter = IntentFilter()
-        intentFilter.addAction(ACTION_RECEIVE_PING)
+        intentFilter.addAction(ACTION_RECEIVE_BILLING_SUPPORT)
         contextReference?.get()?.registerReceiver(receiverConnection, intentFilter)
     }
 
@@ -166,6 +203,10 @@ internal class ReceiverBillingConnection(
         return rsaKey ?: DEFAULT_SECURE_SIGNATURE
     }
 
+    private fun sendBroadcast(intent: Intent) {
+        contextReference?.get()?.sendBroadcast(intent)
+    }
+
     companion object {
         private const val BAZAAR_WITH_RECEIVER_CONNECTION_VERSION = 801301
 
@@ -173,10 +214,20 @@ internal class ReceiverBillingConnection(
         private const val ACTION_BAZAAR_BASE = "com.farsitel.bazaar."
         private const val ACTION_BAZAAR_POST = ".iab"
 
-        private const val ACTION_PING: String = ACTION_BAZAAR_BASE + "ping"
-        private const val ACTION_RECEIVE_PING = ACTION_PING + ACTION_BAZAAR_POST
+        private const val ACTION_BILLING_SUPPORT = ACTION_BAZAAR_BASE + "billingSupport"
 
+        private const val ACTION_RECEIVE_BILLING_SUPPORT =
+            ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
+
+        private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"
+        private const val KEY_API_VERSION = "apiVersion"
         private const val KEY_SECURE = "secure"
+        private const val RESPONSE_CODE = "RESPONSE_CODE"
+
+        private const val DEFAULT_LATCH_COUNT = 1
+        private const val COUNT_LATCH_TIMEOUT = 60L
+        private val COUNT_LATCH_TIMEOUT_UNIT = TimeUnit.SECONDS
+        private const val COUNT_LATCH_TIME = 1
     }
 }

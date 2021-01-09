@@ -17,10 +17,6 @@ internal interface BillingConnectionCommunicator {
         callback: ConnectionCallback
     ): Boolean
 
-    fun isPurchaseTypeSupported(
-        purchaseType: PurchaseType
-    ): Boolean
-
     fun consume(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
