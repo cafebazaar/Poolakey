@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
+import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
@@ -18,6 +19,7 @@ internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
     private val backgroundThread: PoolakeyThread<Runnable>,
+    private val queryFunction: QueryFunction,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
@@ -32,11 +34,13 @@ internal class BillingConnection(
             context,
             mainThread,
             backgroundThread,
-            paymentConfiguration
+            paymentConfiguration,
+            queryFunction
         )
 
         val receiverConnection = ReceiverBillingConnection(
             paymentConfiguration,
+            queryFunction,
             backgroundThread
         )
 
@@ -61,7 +65,7 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        runOnCommunicator("purchase") {
+        runOnCommunicator(TAG_PURCHASE) {
             requireNotNull(billingCommunicator).purchase(
                 activity,
                 purchaseRequest,
@@ -77,7 +81,7 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        runOnCommunicator("purchase") {
+        runOnCommunicator(TAG_PURCHASE) {
             requireNotNull(billingCommunicator).purchase(
                 fragment,
                 purchaseRequest,
@@ -91,7 +95,7 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) {
-        runOnCommunicator("consume") {
+        runOnCommunicator(TAG_CONSUME) {
             requireNotNull(billingCommunicator).consume(
                 purchaseToken,
                 callback
@@ -103,7 +107,7 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) {
-        runOnCommunicator("queryPurchasedProducts") {
+        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) {
             requireNotNull(billingCommunicator).queryPurchasedProducts(
                 purchaseType,
                 callback
@@ -112,7 +116,7 @@ internal class BillingConnection(
     }
 
     private fun stopConnection() {
-        runOnCommunicator("stopConnection") {
+        runOnCommunicator(TAG_STOP_CONNECTION) {
             requireNotNull(billingCommunicator).stopConnection()
             requireNotNull(billingCommunicator).disconnect()
             disconnect()
@@ -140,5 +144,12 @@ internal class BillingConnection(
         callback?.connectionFailed?.invoke(
             IllegalStateException("You call $methodName but communicator is not initialized yet")
         )
+    }
+
+    companion object {
+        private const val TAG_STOP_CONNECTION = "stopConnection"
+        private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
+        private const val TAG_CONSUME = "consume"
+        private const val TAG_PURCHASE = "purchase"
     }
 }

@@ -9,6 +9,8 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
+import ir.cafebazaar.poolakey.billing.query.QueryFunction
+import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
@@ -19,7 +21,12 @@ import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
-import ir.cafebazaar.poolakey.exception.*
+import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
+import ir.cafebazaar.poolakey.exception.ConsumeFailedException
+import ir.cafebazaar.poolakey.exception.DisconnectException
+import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
+import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
+import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
@@ -30,10 +37,13 @@ import java.lang.ref.WeakReference
 
 internal class ReceiverBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
+    private val queryFunction: QueryFunction,
     private val backgroundThread: PoolakeyThread<Runnable>,
 ) : BillingConnectionCommunicator {
 
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
+    private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
+
     private var callbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
@@ -55,16 +65,21 @@ internal class ReceiverBillingConnection(
             sdkAwareVersionCode(it)
         } ?: 0L
 
-        if (canConnectWithReceiverComponent(bazaarVersionCode)) {
-            createReceiverConnection()
-            registerBroadcast()
-            backgroundThread.execute(Runnable { isPurchaseTypeSupported() })
-            return true
-        } else if (bazaarVersionCode > 0) {
-            callback.connectionFailed.invoke(BazaarNotSupportedException())
+        return when {
+            canConnectWithReceiverComponent(bazaarVersionCode) -> {
+                createReceiverConnection()
+                registerBroadcast()
+                backgroundThread.execute(Runnable { isPurchaseTypeSupported() })
+                true
+            }
+            bazaarVersionCode > 0 -> {
+                callback.connectionFailed.invoke(BazaarNotSupportedException())
+                false
+            }
+            else -> {
+                false
+            }
         }
-
-        return false
     }
 
     private fun canConnectWithReceiverComponent(bazaarVersionCode: Long): Boolean {
@@ -94,7 +109,13 @@ internal class ReceiverBillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) {
-        TODO("Not yet implemented")
+        queryCallback = callback
+        getNewIntentForBroadcast().apply {
+            action = ACTION_QUERY_PURCHASES
+            putExtra(KEY_ITEM_TYPE, purchaseType.type)
+        }.run {
+            sendBroadcast(this)
+        }
     }
 
     override fun purchase(
@@ -188,6 +209,21 @@ internal class ReceiverBillingConnection(
             ACTION_RECEIVE_PURCHASE -> {
                 onPurchaseReceived(extras)
             }
+            ACTION_RECEIVE_QUERY_PURCHASES -> {
+                onQueryPurchaseReceived(extras)
+            }
+        }
+    }
+
+    private fun onQueryPurchaseReceived(extras: Bundle?) {
+        queryCallback?.let {
+            queryFunction.function(
+                QueryFunctionRequest(
+                    "",
+                    { _, _ -> extras },
+                    it
+                )
+            )
         }
     }
 
@@ -306,6 +342,7 @@ internal class ReceiverBillingConnection(
         intentFilter.addAction(ACTION_RECEIVE_BILLING_SUPPORT)
         intentFilter.addAction(ACTION_RECEIVE_CONSUME)
         intentFilter.addAction(ACTION_RECEIVE_PURCHASE)
+        intentFilter.addAction(ACTION_RECEIVE_QUERY_PURCHASES)
         contextReference?.get()?.registerReceiver(receiverConnection, intentFilter)
     }
 
@@ -342,12 +379,14 @@ internal class ReceiverBillingConnection(
         private const val ACTION_BILLING_SUPPORT = ACTION_BAZAAR_BASE + "billingSupport"
         private const val ACTION_CONSUME: String = ACTION_BAZAAR_BASE + "consume"
         private const val ACTION_PURCHASE: String = ACTION_BAZAAR_BASE + "purchase"
-
-        private const val ACTION_RECEIVE_BILLING_SUPPORT =
-            ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
+        private const val ACTION_QUERY_PURCHASES: String = ACTION_BAZAAR_BASE + "getPurchase"
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_BILLING_SUPPORT =
+            ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_QUERY_PURCHASES =
+            ACTION_QUERY_PURCHASES + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"

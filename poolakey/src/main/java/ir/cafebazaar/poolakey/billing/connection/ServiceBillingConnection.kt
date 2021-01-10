@@ -1,7 +1,12 @@
 package ir.cafebazaar.poolakey.billing.connection
 
 import android.app.Activity
-import android.content.*
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentSender
+import android.content.ServiceConnection
+import android.os.Bundle
 import android.os.IBinder
 import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
@@ -24,32 +29,23 @@ import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
-import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
-import ir.cafebazaar.poolakey.security.PurchaseVerifier
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
 
 internal class ServiceBillingConnection(
-    context: Context,
+    private val context: Context,
     mainThread: PoolakeyThread<() -> Unit>,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val paymentConfiguration: PaymentConfiguration
+    private val paymentConfiguration: PaymentConfiguration,
+    private val queryFunction: QueryFunction
 ) : BillingConnectionCommunicator, ServiceConnection {
 
     private val purchaseFunction = PurchaseFunction(context)
 
     private val consumeFunction = ConsumeFunction(mainThread, context)
-
-    private val queryFunction = QueryFunction(
-        RawDataToPurchaseInfo(),
-        PurchaseVerifier(),
-        paymentConfiguration,
-        mainThread,
-        context
-    )
 
     private var billingService: IInAppBillingService? = null
     private var callbackReference: WeakReference<ConnectionCallback>? = null
@@ -139,8 +135,11 @@ internal class ServiceBillingConnection(
         callback: PurchaseQueryCallback.() -> Unit
     ) = withService(runOnBackground = true) {
         queryFunction.function(
-            billingService = this,
-            request = QueryFunctionRequest(purchaseType, callback)
+            request = QueryFunctionRequest(
+                purchaseType.type,
+                ::getQueryPurchasedBundle,
+                callback
+            )
         )
     } ifServiceIsDisconnected {
         PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
@@ -237,6 +236,18 @@ internal class ServiceBillingConnection(
         )
     } ifServiceIsDisconnected {
         PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
+    }
+
+    private fun getQueryPurchasedBundle(
+        purchaseType: String,
+        continuation: String?
+    ): Bundle? {
+        return billingService?.getPurchases(
+            Billing.IN_APP_BILLING_VERSION,
+            context.packageName,
+            purchaseType,
+            continuation
+        )
     }
 
     private inline fun withService(
