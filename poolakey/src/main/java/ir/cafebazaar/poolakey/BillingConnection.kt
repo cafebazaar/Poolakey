@@ -3,7 +3,6 @@ package ir.cafebazaar.poolakey
 import android.app.Activity
 import android.content.Context
 import androidx.fragment.app.Fragment
-import ir.cafebazaar.poolakey.billing.PurchaseBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
@@ -36,7 +35,10 @@ internal class BillingConnection(
             paymentConfiguration
         )
 
-        val receiverConnection = ReceiverBillingConnection(paymentConfiguration)
+        val receiverConnection = ReceiverBillingConnection(
+            paymentConfiguration,
+            backgroundThread
+        )
 
         val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
 
@@ -60,8 +62,7 @@ internal class BillingConnection(
         callback: PurchaseIntentCallback.() -> Unit
     ) {
         runOnCommunicator("purchase") {
-            PurchaseBillingConnection.purchase(
-                requireNotNull(billingCommunicator),
+            requireNotNull(billingCommunicator).purchase(
                 activity,
                 purchaseRequest,
                 purchaseType,
@@ -77,8 +78,7 @@ internal class BillingConnection(
         callback: PurchaseIntentCallback.() -> Unit
     ) {
         runOnCommunicator("purchase") {
-            PurchaseBillingConnection.purchase(
-                requireNotNull(billingCommunicator),
+            requireNotNull(billingCommunicator).purchase(
                 fragment,
                 purchaseRequest,
                 purchaseType,

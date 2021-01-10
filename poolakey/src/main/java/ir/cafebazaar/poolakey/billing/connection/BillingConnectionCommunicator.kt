@@ -1,8 +1,8 @@
 package ir.cafebazaar.poolakey.billing.connection
 
+import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.IntentSender
+import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
@@ -28,11 +28,17 @@ internal interface BillingConnectionCommunicator {
     )
 
     fun purchase(
+        activity: Activity,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit,
-        fireIntentSender: (IntentSender) -> Unit,
-        fireIntent: (Intent) -> Unit
+        callback: PurchaseIntentCallback.() -> Unit
+    )
+
+    fun purchase(
+        fragment: Fragment,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
     )
 
     fun stopConnection()

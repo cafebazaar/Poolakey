@@ -1,8 +1,14 @@
 package ir.cafebazaar.poolakey.billing.connection
 
-import android.content.*
+import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
+import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
@@ -20,9 +26,7 @@ import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
-import ir.cafebazaar.poolakey.util.AbortableCountDownLatch
 import java.lang.ref.WeakReference
-import java.util.concurrent.TimeUnit
 
 internal class ReceiverBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
@@ -35,6 +39,9 @@ internal class ReceiverBillingConnection(
 
     private var receiverConnection: BroadcastReceiver? = null
     private var disconnected: Boolean = false
+
+    private var purchaseFragmentWeakReference: WeakReference<PurchaseWeakHolder<Fragment>>? = null
+    private var purchaseActivityWeakReference: WeakReference<PurchaseWeakHolder<Activity>>? = null
 
     override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
         callbackReference = WeakReference(callback)
@@ -72,18 +79,6 @@ internal class ReceiverBillingConnection(
         }
     }
 
-    private fun awaitOnLatchToReceiveResponse(
-        countDownLatch: AbortableCountDownLatch,
-        onFinished: () -> Unit
-    ) {
-        try {
-            countDownLatch.await(COUNT_LATCH_TIMEOUT, COUNT_LATCH_TIMEOUT_UNIT)
-        } catch (ignore: Exception) {
-        }
-
-        onFinished.invoke()
-    }
-
     override fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
         consumeCallback = callback
 
@@ -103,14 +98,48 @@ internal class ReceiverBillingConnection(
     }
 
     override fun purchase(
+        activity: Activity,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit,
-        fireIntentSender: (IntentSender) -> Unit,
-        fireIntent: (Intent) -> Unit
+        callback: PurchaseIntentCallback.() -> Unit
     ) {
-        TODO("Not yet implemented")
+        purchaseActivityWeakReference = WeakReference(
+            PurchaseWeakHolder(activity, purchaseRequest.requestCode, callback)
+        )
+
+        sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
     }
+
+    override fun purchase(
+        fragment: Fragment,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        purchaseFragmentWeakReference = WeakReference(
+            PurchaseWeakHolder(fragment, purchaseRequest.requestCode, callback)
+        )
+
+        sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
+    }
+
+    private fun sendPurchaseBroadcast(
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        getNewIntentForBroadcast().apply {
+            action = ACTION_PURCHASE
+            putExtra(KEY_SKU, purchaseRequest.productId)
+            putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
+            putExtra(KEY_ITEM_TYPE, purchaseType.type)
+
+        }.run {
+            sendBroadcast(this)
+        }
+    }
+
 
     override fun stopConnection() {
         TODO("Not yet implemented")
@@ -150,13 +179,82 @@ internal class ReceiverBillingConnection(
 
     private fun onActionReceived(action: String, extras: Bundle?) {
         when (action) {
-            ACTION_BILLING_SUPPORT -> {
+            ACTION_RECEIVE_BILLING_SUPPORT -> {
                 onBillingSupportActionReceived(extras)
             }
             ACTION_RECEIVE_CONSUME -> {
                 onConsumeActionReceived(extras)
             }
+            ACTION_RECEIVE_PURCHASE -> {
+                onPurchaseReceived(extras)
+            }
         }
+    }
+
+    private fun onPurchaseReceived(extras: Bundle?) {
+        if (isResponseSucceed(extras)) {
+            when {
+                purchaseActivityWeakReference?.get() != null -> {
+                    startPurchaseActivityWithActivity(
+                        requireNotNull(purchaseActivityWeakReference?.get()),
+                        getPurchaseIntent(extras)
+                    )
+                }
+                purchaseFragmentWeakReference?.get() != null -> {
+                    startPurchaseActivityWithFragment(
+                        requireNotNull(purchaseFragmentWeakReference?.get()),
+                        getPurchaseIntent(extras)
+                    )
+                }
+                else -> {
+                    // TODO handle this
+                }
+            }
+        } else {
+            getPurchaseCallback()?.let { purchaseCallback ->
+                PurchaseIntentCallback()
+                    .apply(purchaseCallback)
+                    .failedToBeginFlow.invoke(DisconnectException())
+            }
+        }
+    }
+
+    private fun getPurchaseCallback(): (PurchaseIntentCallback.() -> Unit)? {
+        return when {
+            purchaseActivityWeakReference?.get() != null -> {
+                purchaseActivityWeakReference?.get()?.callback
+            }
+            purchaseFragmentWeakReference?.get() != null -> {
+                purchaseActivityWeakReference?.get()?.callback
+            }
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun startPurchaseActivityWithActivity(
+        purchaseWeakHolder: PurchaseWeakHolder<Activity>,
+        purchaseIntent: Intent?
+    ) {
+        purchaseWeakHolder.component.startActivityForResult(
+            purchaseIntent,
+            purchaseWeakHolder.requestCode
+        )
+    }
+
+    private fun startPurchaseActivityWithFragment(
+        purchaseWeakHolder: PurchaseWeakHolder<Fragment>,
+        purchaseIntent: Intent?
+    ) {
+        purchaseWeakHolder.component.startActivityForResult(
+            purchaseIntent,
+            purchaseWeakHolder.requestCode
+        )
+    }
+
+    private fun getPurchaseIntent(extras: Bundle?): Intent? {
+        return extras?.getParcelable(KEY_RESPONSE_BUY_INTENT)
     }
 
     private fun onConsumeActionReceived(extras: Bundle?) {
@@ -206,6 +304,8 @@ internal class ReceiverBillingConnection(
     private fun registerBroadcast() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(ACTION_RECEIVE_BILLING_SUPPORT)
+        intentFilter.addAction(ACTION_RECEIVE_CONSUME)
+        intentFilter.addAction(ACTION_RECEIVE_PURCHASE)
         contextReference?.get()?.registerReceiver(receiverConnection, intentFilter)
     }
 
@@ -241,22 +341,23 @@ internal class ReceiverBillingConnection(
 
         private const val ACTION_BILLING_SUPPORT = ACTION_BAZAAR_BASE + "billingSupport"
         private const val ACTION_CONSUME: String = ACTION_BAZAAR_BASE + "consume"
+        private const val ACTION_PURCHASE: String = ACTION_BAZAAR_BASE + "purchase"
 
         private const val ACTION_RECEIVE_BILLING_SUPPORT =
             ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"
         private const val KEY_API_VERSION = "apiVersion"
+        private const val KEY_SKU = "sku"
+        private const val KEY_ITEM_TYPE = "itemType"
+        private const val KEY_DEVELOPER_PAYLOAD = "developerPayload"
         private const val KEY_SECURE = "secure"
+        private const val KEY_RESPONSE_BUY_INTENT = "BUY_INTENT"
         private const val RESPONSE_CODE = "RESPONSE_CODE"
         private const val KEY_TOKEN = "token"
-
-        private const val DEFAULT_LATCH_COUNT = 1
-        private const val COUNT_LATCH_TIMEOUT = 60L
-        private val COUNT_LATCH_TIMEOUT_UNIT = TimeUnit.SECONDS
-        private const val COUNT_LATCH_TIME = 1
     }
 }

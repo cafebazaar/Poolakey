@@ -1,7 +1,9 @@
 package ir.cafebazaar.poolakey.billing.connection
 
+import android.app.Activity
 import android.content.*
 import android.os.IBinder
+import androidx.fragment.app.Fragment
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
@@ -145,6 +147,78 @@ internal class ServiceBillingConnection(
     }
 
     override fun purchase(
+        activity: Activity,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+
+        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
+            activity.startIntentSenderForResult(
+                intentSender,
+                purchaseRequest.requestCode,
+                Intent(),
+                0,
+                0,
+                0
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        val intentFire: (Intent) -> Unit = { intent ->
+            activity.startActivityForResult(
+                intent,
+                purchaseRequest.requestCode
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        purchase(
+            purchaseRequest,
+            purchaseType,
+            callback,
+            intentSenderFire,
+            intentFire
+        )
+    }
+
+    override fun purchase(
+        fragment: Fragment,
+        purchaseRequest: PurchaseRequest,
+        purchaseType: PurchaseType,
+        callback: PurchaseIntentCallback.() -> Unit
+    ) {
+        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
+            fragment.startIntentSenderForResult(
+                intentSender,
+                purchaseRequest.requestCode,
+                Intent(),
+                0,
+                0,
+                0,
+                null
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        val intentFire: (Intent) -> Unit = { intent ->
+            fragment.startActivityForResult(
+                intent,
+                purchaseRequest.requestCode
+            )
+            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        }
+
+        purchase(
+            purchaseRequest,
+            purchaseType,
+            callback,
+            intentSenderFire,
+            intentFire
+        )
+    }
+
+    private fun purchase(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit,
