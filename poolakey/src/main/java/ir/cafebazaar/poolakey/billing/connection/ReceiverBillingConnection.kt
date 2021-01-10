@@ -29,6 +29,7 @@ internal class ReceiverBillingConnection(
     private val backgroundThread: PoolakeyThread<Runnable>,
 ) : BillingConnectionCommunicator {
 
+    private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var callbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
@@ -66,7 +67,6 @@ internal class ReceiverBillingConnection(
     private fun isPurchaseTypeSupported() {
         getNewIntentForBroadcast().apply {
             action = ACTION_BILLING_SUPPORT
-            putExtra(KEY_API_VERSION, Billing.IN_APP_BILLING_VERSION)
         }.run {
             sendBroadcast(this)
         }
@@ -85,7 +85,14 @@ internal class ReceiverBillingConnection(
     }
 
     override fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
-        TODO("Not yet implemented")
+        consumeCallback = callback
+
+        getNewIntentForBroadcast().apply {
+            action = ACTION_CONSUME
+            putExtra(KEY_TOKEN, purchaseToken)
+        }.run {
+            sendBroadcast(this)
+        }
     }
 
     override fun queryPurchasedProducts(
@@ -144,12 +151,29 @@ internal class ReceiverBillingConnection(
     private fun onActionReceived(action: String, extras: Bundle?) {
         when (action) {
             ACTION_BILLING_SUPPORT -> {
-                onBillingSupportActionReceiver(extras)
+                onBillingSupportActionReceived(extras)
+            }
+            ACTION_RECEIVE_CONSUME -> {
+                onConsumeActionReceived(extras)
             }
         }
     }
 
-    private fun onBillingSupportActionReceiver(extras: Bundle?) {
+    private fun onConsumeActionReceived(extras: Bundle?) {
+        if (consumeCallback == null) {
+            return
+        }
+
+        ConsumeCallback().apply(requireNotNull(consumeCallback)).run {
+            if (isResponseSucceed(extras)) {
+                consumeSucceed.invoke()
+            } else {
+                consumeFailed.invoke(ConsumeFailedException())
+            }
+        }
+    }
+
+    private fun onBillingSupportActionReceived(extras: Bundle?) {
         val isResponseSucceed = isResponseSucceed(extras)
         val isSubscriptionSupport = isSubscriptionSupport(extras)
 
@@ -189,6 +213,7 @@ internal class ReceiverBillingConnection(
         val bundle = Bundle().apply {
             putString(KEY_PACKAGE_NAME, contextReference?.get()?.packageName)
             putString(KEY_SECURE, getSecureSignature())
+            putInt(KEY_API_VERSION, Billing.IN_APP_BILLING_VERSION)
         }
         return Intent().apply {
             `package` = BAZAAR_PACKAGE_NAME
@@ -215,15 +240,19 @@ internal class ReceiverBillingConnection(
         private const val ACTION_BAZAAR_POST = ".iab"
 
         private const val ACTION_BILLING_SUPPORT = ACTION_BAZAAR_BASE + "billingSupport"
+        private const val ACTION_CONSUME: String = ACTION_BAZAAR_BASE + "consume"
 
         private const val ACTION_RECEIVE_BILLING_SUPPORT =
             ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
+
+        private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"
         private const val KEY_API_VERSION = "apiVersion"
         private const val KEY_SECURE = "secure"
         private const val RESPONSE_CODE = "RESPONSE_CODE"
+        private const val KEY_TOKEN = "token"
 
         private const val DEFAULT_LATCH_COUNT = 1
         private const val COUNT_LATCH_TIMEOUT = 60L
