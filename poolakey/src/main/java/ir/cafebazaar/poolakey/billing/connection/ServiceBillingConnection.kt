@@ -1,11 +1,7 @@
 package ir.cafebazaar.poolakey.billing.connection
 
 import android.app.Activity
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentSender
-import android.content.ServiceConnection
+import android.content.*
 import android.os.Bundle
 import android.os.IBinder
 import androidx.fragment.app.Fragment
@@ -281,7 +277,7 @@ internal class ServiceBillingConnection(
         disconnect()
     }
 
-    override fun disconnect() {
+    private fun disconnect() {
         billingService = null
     }
 

@@ -118,7 +118,6 @@ internal class BillingConnection(
     private fun stopConnection() {
         runOnCommunicator(TAG_STOP_CONNECTION) {
             requireNotNull(billingCommunicator).stopConnection()
-            requireNotNull(billingCommunicator).disconnect()
             disconnect()
         }
     }

@@ -1,10 +1,8 @@
 package ir.cafebazaar.poolakey.billing.connection
 
 import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
@@ -21,13 +19,10 @@ import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
-import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
-import ir.cafebazaar.poolakey.exception.ConsumeFailedException
-import ir.cafebazaar.poolakey.exception.DisconnectException
-import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
-import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
-import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
+import ir.cafebazaar.poolakey.exception.*
 import ir.cafebazaar.poolakey.getPackageInfo
+import ir.cafebazaar.poolakey.receiver.BillingReceiver
+import ir.cafebazaar.poolakey.receiver.BillingReceiverCommunicator
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
@@ -47,7 +42,7 @@ internal class ReceiverBillingConnection(
     private var callbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
-    private var receiverConnection: BroadcastReceiver? = null
+    private var receiverCommunicator: BillingReceiverCommunicator? = null
     private var disconnected: Boolean = false
 
     private var purchaseFragmentWeakReference: WeakReference<PurchaseWeakHolder<Fragment>>? = null
@@ -163,17 +158,17 @@ internal class ReceiverBillingConnection(
 
 
     override fun stopConnection() {
-        TODO("Not yet implemented")
-    }
-
-    override fun disconnect() {
         disconnected = true
+        receiverCommunicator?.let {
+            BillingReceiver.removeObserver(it)
+        }
+        receiverCommunicator = null
     }
 
     private fun createReceiverConnection() {
-        receiverConnection = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                intent.action?.takeIf(
+        receiverCommunicator = object : BillingReceiverCommunicator {
+            override fun onNewBroadcastReceived(intent: Intent?) {
+                intent?.action?.takeIf(
                     thisIsTrue = {
                         isBundleSignatureValid(intent.extras)
                     },
@@ -338,12 +333,7 @@ internal class ReceiverBillingConnection(
     }
 
     private fun registerBroadcast() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(ACTION_RECEIVE_BILLING_SUPPORT)
-        intentFilter.addAction(ACTION_RECEIVE_CONSUME)
-        intentFilter.addAction(ACTION_RECEIVE_PURCHASE)
-        intentFilter.addAction(ACTION_RECEIVE_QUERY_PURCHASES)
-        contextReference?.get()?.registerReceiver(receiverConnection, intentFilter)
+        BillingReceiver.addObserver(requireNotNull(receiverCommunicator))
     }
 
     private fun getNewIntentForBroadcast(): Intent {
