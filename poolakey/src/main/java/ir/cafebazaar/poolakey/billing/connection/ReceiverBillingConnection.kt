@@ -83,6 +83,51 @@ internal class ReceiverBillingConnection(
         return bazaarVersionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
     }
 
+    private fun createReceiverConnection() {
+        receiverCommunicator = object : BillingReceiverCommunicator {
+            override fun onNewBroadcastReceived(intent: Intent?) {
+                intent?.action?.takeIf(
+                    thisIsTrue = {
+                        isBundleSignatureValid(intent.extras)
+                    },
+                    andIfNot = {
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                            PurchaseHijackedException()
+                        )
+                    }
+                )?.takeIf(
+                    thisIsTrue = {
+                        !disconnected
+                    },
+                    andIfNot = {
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                            DisconnectException()
+                        )
+                    }
+                )?.let { action ->
+                    onActionReceived(action, intent.extras)
+                }
+            }
+        }
+    }
+
+    private fun onActionReceived(action: String, extras: Bundle?) {
+        when (action) {
+            ACTION_RECEIVE_BILLING_SUPPORT -> {
+                onBillingSupportActionReceived(extras)
+            }
+            ACTION_RECEIVE_CONSUME -> {
+                onConsumeActionReceived(extras)
+            }
+            ACTION_RECEIVE_PURCHASE -> {
+                onPurchaseReceived(extras)
+            }
+            ACTION_RECEIVE_QUERY_PURCHASES -> {
+                onQueryPurchaseReceived(extras)
+            }
+        }
+    }
+
     private fun isPurchaseTypeSupported() {
         getNewIntentForBroadcast().apply {
             action = ACTION_BILLING_SUPPORT
@@ -178,51 +223,6 @@ internal class ReceiverBillingConnection(
 
         purchaseFragmentWeakReference = null
         purchaseActivityWeakReference = null
-    }
-
-    private fun createReceiverConnection() {
-        receiverCommunicator = object : BillingReceiverCommunicator {
-            override fun onNewBroadcastReceived(intent: Intent?) {
-                intent?.action?.takeIf(
-                    thisIsTrue = {
-                        isBundleSignatureValid(intent.extras)
-                    },
-                    andIfNot = {
-                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
-                            PurchaseHijackedException()
-                        )
-                    }
-                )?.takeIf(
-                    thisIsTrue = {
-                        !disconnected
-                    },
-                    andIfNot = {
-                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
-                            DisconnectException()
-                        )
-                    }
-                )?.let { action ->
-                    onActionReceived(action, intent.extras)
-                }
-            }
-        }
-    }
-
-    private fun onActionReceived(action: String, extras: Bundle?) {
-        when (action) {
-            ACTION_RECEIVE_BILLING_SUPPORT -> {
-                onBillingSupportActionReceived(extras)
-            }
-            ACTION_RECEIVE_CONSUME -> {
-                onConsumeActionReceived(extras)
-            }
-            ACTION_RECEIVE_PURCHASE -> {
-                onPurchaseReceived(extras)
-            }
-            ACTION_RECEIVE_QUERY_PURCHASES -> {
-                onQueryPurchaseReceived(extras)
-            }
-        }
     }
 
     private fun onQueryPurchaseReceived(extras: Bundle?) {
