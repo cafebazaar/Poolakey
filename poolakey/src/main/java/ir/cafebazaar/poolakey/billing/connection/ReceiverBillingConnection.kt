@@ -59,7 +59,7 @@ internal class ReceiverBillingConnection(
             return false
         }
 
-        val bazaarVersionCode = getPackageInfo(context, Const.BAZAAR_PACKAGE_NAME)?.let {
+        val bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
             sdkAwareVersionCode(it)
         } ?: 0L
 
