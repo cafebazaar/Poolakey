@@ -69,7 +69,7 @@ internal class ReceiverBillingConnection(
             canConnectWithReceiverComponent(bazaarVersionCode) -> {
                 createReceiverConnection()
                 registerBroadcast()
-                backgroundThread.execute(Runnable { isPurchaseTypeSupported() })
+                isPurchaseTypeSupported()
                 true
             }
             bazaarVersionCode > 0 -> {
@@ -184,7 +184,7 @@ internal class ReceiverBillingConnection(
                     }
                 )?.takeIf(
                     thisIsTrue = {
-                        disconnected
+                        !disconnected
                     },
                     andIfNot = {
                         callbackReference?.get()?.connectionFailed?.invoke(
