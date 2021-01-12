@@ -17,7 +17,6 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ConsumeFailedException
@@ -42,7 +41,7 @@ internal class ReceiverBillingConnection(
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
 
-    private var callbackReference: WeakReference<ConnectionCallback>? = null
+    private var connectionCallbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
     private var receiverCommunicator: BillingReceiverCommunicator? = null
@@ -52,7 +51,7 @@ internal class ReceiverBillingConnection(
     private var purchaseActivityWeakReference: WeakReference<PurchaseWeakHolder<Activity>>? = null
 
     override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
-        callbackReference = WeakReference(callback)
+        connectionCallbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
         if (!Security.verifyBazaarIsInstalled(context)) {
@@ -162,10 +161,23 @@ internal class ReceiverBillingConnection(
 
     override fun stopConnection() {
         disconnected = true
+
+        cleanReferences()
+
         receiverCommunicator?.let {
             BillingReceiver.removeObserver(it)
         }
         receiverCommunicator = null
+    }
+
+    private fun cleanReferences() {
+        consumeCallback = null
+        queryCallback = null
+        connectionCallbackReference = null
+        contextReference = null
+
+        purchaseFragmentWeakReference = null
+        purchaseActivityWeakReference = null
     }
 
     private fun createReceiverConnection() {
@@ -176,7 +188,7 @@ internal class ReceiverBillingConnection(
                         isBundleSignatureValid(intent.extras)
                     },
                     andIfNot = {
-                        callbackReference?.get()?.connectionFailed?.invoke(
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
                             PurchaseHijackedException()
                         )
                     }
@@ -185,7 +197,7 @@ internal class ReceiverBillingConnection(
                         !disconnected
                     },
                     andIfNot = {
-                        callbackReference?.get()?.connectionFailed?.invoke(
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
                             DisconnectException()
                         )
                     }
@@ -311,13 +323,17 @@ internal class ReceiverBillingConnection(
 
         when {
             isResponseSucceed && isSubscriptionSupport -> {
-                callbackReference?.get()?.connectionSucceed?.invoke()
+                connectionCallbackReference?.get()?.connectionSucceed?.invoke()
             }
             !isResponseSucceed -> {
-                callbackReference?.get()?.connectionFailed?.invoke(IAPNotSupportedException())
+                connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                    IAPNotSupportedException()
+                )
             }
             else -> {
-                callbackReference?.get()?.connectionFailed?.invoke(SubsNotSupportedException())
+                connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                    SubsNotSupportedException()
+                )
             }
         }
     }
