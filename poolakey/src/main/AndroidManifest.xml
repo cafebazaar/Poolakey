@@ -10,7 +10,6 @@
     <application>
         <receiver android:name=".receiver.BillingReceiver">
             <intent-filter>
-                <action android:name="com.farsitel.bazaar.ping" />
                 <action android:name="com.farsitel.bazaar.purchase" />
                 <action android:name="com.farsitel.bazaar.billingSupport" />
                 <action android:name="com.farsitel.bazaar.consume" />
