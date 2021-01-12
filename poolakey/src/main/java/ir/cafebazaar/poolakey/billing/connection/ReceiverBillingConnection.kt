@@ -32,13 +32,11 @@ import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
-import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
 
 internal class ReceiverBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
-    private val queryFunction: QueryFunction,
-    private val backgroundThread: PoolakeyThread<Runnable>,
+    private val queryFunction: QueryFunction
 ) : BillingConnectionCommunicator {
 
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null

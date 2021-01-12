@@ -40,8 +40,7 @@ internal class BillingConnection(
 
         val receiverConnection = ReceiverBillingConnection(
             paymentConfiguration,
-            queryFunction,
-            backgroundThread
+            queryFunction
         )
 
         val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
