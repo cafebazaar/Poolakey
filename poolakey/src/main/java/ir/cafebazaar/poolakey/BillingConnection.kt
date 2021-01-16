@@ -35,7 +35,8 @@ internal class BillingConnection(
             mainThread,
             backgroundThread,
             paymentConfiguration,
-            queryFunction
+            queryFunction,
+            ::disconnect
         )
 
         val receiverConnection = ReceiverBillingConnection(

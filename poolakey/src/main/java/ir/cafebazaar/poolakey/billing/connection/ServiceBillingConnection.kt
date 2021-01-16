@@ -40,7 +40,8 @@ internal class ServiceBillingConnection(
     mainThread: PoolakeyThread<() -> Unit>,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val paymentConfiguration: PaymentConfiguration,
-    private val queryFunction: QueryFunction
+    private val queryFunction: QueryFunction,
+    private val onServiceDisconnected: () -> Unit
 ) : BillingConnectionCommunicator, ServiceConnection {
 
     private val purchaseFunction = PurchaseFunction(context)
@@ -279,6 +280,7 @@ internal class ServiceBillingConnection(
 
     override fun onServiceDisconnected(name: ComponentName?) {
         disconnect()
+        onServiceDisconnected.invoke()
     }
 
     private fun disconnect() {
