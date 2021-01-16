@@ -198,7 +198,7 @@ internal class ReceiverBillingConnection(
     override fun stopConnection() {
         disconnected = true
 
-        cleanReferences()
+        clearReferences()
 
         receiverCommunicator?.let {
             BillingReceiver.removeObserver(it)
@@ -206,7 +206,7 @@ internal class ReceiverBillingConnection(
         receiverCommunicator = null
     }
 
-    private fun cleanReferences() {
+    private fun clearReferences() {
         consumeCallback = null
         queryCallback = null
         connectionCallbackReference = null
