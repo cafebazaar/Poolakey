@@ -27,7 +27,7 @@ internal class BillingReceiver : BroadcastReceiver() {
 
     companion object {
 
-        private val observerLock = Object()
+        private val observerLock = Any()
         private val observers = mutableListOf<BillingReceiverCommunicator>()
 
         fun addObserver(communicator: BillingReceiverCommunicator) {
