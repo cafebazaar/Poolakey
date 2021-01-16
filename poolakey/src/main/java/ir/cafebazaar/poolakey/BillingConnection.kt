@@ -125,6 +125,7 @@ internal class BillingConnection(
         callback?.disconnected?.invoke()
         callback = null
         backgroundThread.dispose()
+        billingCommunicator = null
     }
 
     private fun runOnCommunicator(
