@@ -378,9 +378,9 @@ internal class ReceiverBillingConnection(
         private const val ACTION_BAZAAR_POST = ".iab"
 
         private const val ACTION_BILLING_SUPPORT = ACTION_BAZAAR_BASE + "billingSupport"
-        private const val ACTION_CONSUME: String = ACTION_BAZAAR_BASE + "consume"
-        private const val ACTION_PURCHASE: String = ACTION_BAZAAR_BASE + "purchase"
-        private const val ACTION_QUERY_PURCHASES: String = ACTION_BAZAAR_BASE + "getPurchase"
+        private const val ACTION_CONSUME = ACTION_BAZAAR_BASE + "consume"
+        private const val ACTION_PURCHASE = ACTION_BAZAAR_BASE + "purchase"
+        private const val ACTION_QUERY_PURCHASES = ACTION_BAZAAR_BASE + "getPurchase"
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
