@@ -221,9 +221,9 @@ internal class ReceiverBillingConnection(
         queryCallback?.let {
             queryFunction.function(
                 QueryFunctionRequest(
-                    "",
-                    { _, _ -> extras },
-                    it
+                    purchaseType = "",
+                    queryBundle = { _, _ -> extras },
+                    callback = it
                 )
             )
         }
