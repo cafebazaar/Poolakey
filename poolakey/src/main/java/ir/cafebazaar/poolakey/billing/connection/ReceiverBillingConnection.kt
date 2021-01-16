@@ -200,9 +200,7 @@ internal class ReceiverBillingConnection(
 
         clearReferences()
 
-        receiverCommunicator?.let {
-            BillingReceiver.removeObserver(it)
-        }
+        receiverCommunicator?.let(BillingReceiver::removeObserver)
         receiverCommunicator = null
     }
 
