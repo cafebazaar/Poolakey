@@ -42,6 +42,4 @@ internal interface BillingConnectionCommunicator {
     )
 
     fun stopConnection()
-
-    fun disconnect()
 }

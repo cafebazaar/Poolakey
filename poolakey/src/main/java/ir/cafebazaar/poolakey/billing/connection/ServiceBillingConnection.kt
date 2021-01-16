@@ -281,7 +281,7 @@ internal class ServiceBillingConnection(
         disconnect()
     }
 
-    override fun disconnect() {
+    private fun disconnect() {
         billingService = null
     }
 

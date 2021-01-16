@@ -40,8 +40,7 @@ internal class BillingConnection(
 
         val receiverConnection = ReceiverBillingConnection(
             paymentConfiguration,
-            queryFunction,
-            backgroundThread
+            queryFunction
         )
 
         val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
@@ -118,7 +117,6 @@ internal class BillingConnection(
     private fun stopConnection() {
         runOnCommunicator(TAG_STOP_CONNECTION) {
             requireNotNull(billingCommunicator).stopConnection()
-            requireNotNull(billingCommunicator).disconnect()
             disconnect()
         }
     }

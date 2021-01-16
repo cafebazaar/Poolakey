@@ -1,10 +1,8 @@
 package ir.cafebazaar.poolakey.billing.connection
 
 import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
@@ -19,7 +17,6 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ConsumeFailedException
@@ -28,40 +25,40 @@ import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.getPackageInfo
+import ir.cafebazaar.poolakey.receiver.BillingReceiver
+import ir.cafebazaar.poolakey.receiver.BillingReceiverCommunicator
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
-import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
 
 internal class ReceiverBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
-    private val queryFunction: QueryFunction,
-    private val backgroundThread: PoolakeyThread<Runnable>,
+    private val queryFunction: QueryFunction
 ) : BillingConnectionCommunicator {
 
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
 
-    private var callbackReference: WeakReference<ConnectionCallback>? = null
+    private var connectionCallbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
-    private var receiverConnection: BroadcastReceiver? = null
+    private var receiverCommunicator: BillingReceiverCommunicator? = null
     private var disconnected: Boolean = false
 
     private var purchaseFragmentWeakReference: WeakReference<PurchaseWeakHolder<Fragment>>? = null
     private var purchaseActivityWeakReference: WeakReference<PurchaseWeakHolder<Activity>>? = null
 
     override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
-        callbackReference = WeakReference(callback)
+        connectionCallbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
         if (!Security.verifyBazaarIsInstalled(context)) {
             return false
         }
 
-        val bazaarVersionCode = getPackageInfo(context, Const.BAZAAR_PACKAGE_NAME)?.let {
+        val bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
             sdkAwareVersionCode(it)
         } ?: 0L
 
@@ -69,7 +66,7 @@ internal class ReceiverBillingConnection(
             canConnectWithReceiverComponent(bazaarVersionCode) -> {
                 createReceiverConnection()
                 registerBroadcast()
-                backgroundThread.execute(Runnable { isPurchaseTypeSupported() })
+                isPurchaseTypeSupported()
                 true
             }
             bazaarVersionCode > 0 -> {
@@ -84,6 +81,51 @@ internal class ReceiverBillingConnection(
 
     private fun canConnectWithReceiverComponent(bazaarVersionCode: Long): Boolean {
         return bazaarVersionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
+    }
+
+    private fun createReceiverConnection() {
+        receiverCommunicator = object : BillingReceiverCommunicator {
+            override fun onNewBroadcastReceived(intent: Intent?) {
+                intent?.action?.takeIf(
+                    thisIsTrue = {
+                        isBundleSignatureValid(intent.extras)
+                    },
+                    andIfNot = {
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                            PurchaseHijackedException()
+                        )
+                    }
+                )?.takeIf(
+                    thisIsTrue = {
+                        !disconnected
+                    },
+                    andIfNot = {
+                        connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                            DisconnectException()
+                        )
+                    }
+                )?.let { action ->
+                    onActionReceived(action, intent.extras)
+                }
+            }
+        }
+    }
+
+    private fun onActionReceived(action: String, extras: Bundle?) {
+        when (action) {
+            ACTION_RECEIVE_BILLING_SUPPORT -> {
+                onBillingSupportActionReceived(extras)
+            }
+            ACTION_RECEIVE_CONSUME -> {
+                onConsumeActionReceived(extras)
+            }
+            ACTION_RECEIVE_PURCHASE -> {
+                onPurchaseReceived(extras)
+            }
+            ACTION_RECEIVE_QUERY_PURCHASES -> {
+                onQueryPurchaseReceived(extras)
+            }
+        }
     }
 
     private fun isPurchaseTypeSupported() {
@@ -163,56 +205,24 @@ internal class ReceiverBillingConnection(
 
 
     override fun stopConnection() {
-        TODO("Not yet implemented")
-    }
-
-    override fun disconnect() {
         disconnected = true
+
+        cleanReferences()
+
+        receiverCommunicator?.let {
+            BillingReceiver.removeObserver(it)
+        }
+        receiverCommunicator = null
     }
 
-    private fun createReceiverConnection() {
-        receiverConnection = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                intent.action?.takeIf(
-                    thisIsTrue = {
-                        isBundleSignatureValid(intent.extras)
-                    },
-                    andIfNot = {
-                        callbackReference?.get()?.connectionFailed?.invoke(
-                            PurchaseHijackedException()
-                        )
-                    }
-                )?.takeIf(
-                    thisIsTrue = {
-                        disconnected
-                    },
-                    andIfNot = {
-                        callbackReference?.get()?.connectionFailed?.invoke(
-                            DisconnectException()
-                        )
-                    }
-                )?.let { action ->
-                    onActionReceived(action, intent.extras)
-                }
-            }
-        }
-    }
+    private fun cleanReferences() {
+        consumeCallback = null
+        queryCallback = null
+        connectionCallbackReference = null
+        contextReference = null
 
-    private fun onActionReceived(action: String, extras: Bundle?) {
-        when (action) {
-            ACTION_RECEIVE_BILLING_SUPPORT -> {
-                onBillingSupportActionReceived(extras)
-            }
-            ACTION_RECEIVE_CONSUME -> {
-                onConsumeActionReceived(extras)
-            }
-            ACTION_RECEIVE_PURCHASE -> {
-                onPurchaseReceived(extras)
-            }
-            ACTION_RECEIVE_QUERY_PURCHASES -> {
-                onQueryPurchaseReceived(extras)
-            }
-        }
+        purchaseFragmentWeakReference = null
+        purchaseActivityWeakReference = null
     }
 
     private fun onQueryPurchaseReceived(extras: Bundle?) {
@@ -313,13 +323,17 @@ internal class ReceiverBillingConnection(
 
         when {
             isResponseSucceed && isSubscriptionSupport -> {
-                callbackReference?.get()?.connectionSucceed?.invoke()
+                connectionCallbackReference?.get()?.connectionSucceed?.invoke()
             }
             !isResponseSucceed -> {
-                callbackReference?.get()?.connectionFailed?.invoke(IAPNotSupportedException())
+                connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                    IAPNotSupportedException()
+                )
             }
             else -> {
-                callbackReference?.get()?.connectionFailed?.invoke(SubsNotSupportedException())
+                connectionCallbackReference?.get()?.connectionFailed?.invoke(
+                    SubsNotSupportedException()
+                )
             }
         }
     }
@@ -338,12 +352,7 @@ internal class ReceiverBillingConnection(
     }
 
     private fun registerBroadcast() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(ACTION_RECEIVE_BILLING_SUPPORT)
-        intentFilter.addAction(ACTION_RECEIVE_CONSUME)
-        intentFilter.addAction(ACTION_RECEIVE_PURCHASE)
-        intentFilter.addAction(ACTION_RECEIVE_QUERY_PURCHASES)
-        contextReference?.get()?.registerReceiver(receiverConnection, intentFilter)
+        BillingReceiver.addObserver(requireNotNull(receiverCommunicator))
     }
 
     private fun getNewIntentForBroadcast(): Intent {
