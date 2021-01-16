@@ -210,7 +210,10 @@ internal class ReceiverBillingConnection(
         connectionCallbackReference = null
         contextReference = null
 
+        purchaseFragmentWeakReference?.clear()
         purchaseFragmentWeakReference = null
+
+        purchaseActivityWeakReference?.clear()
         purchaseActivityWeakReference = null
     }
 
