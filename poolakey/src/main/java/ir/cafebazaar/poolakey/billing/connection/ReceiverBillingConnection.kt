@@ -245,7 +245,7 @@ internal class ReceiverBillingConnection(
                     )
                 }
                 else -> {
-                    // TODO handle this
+                    // invalid state, we receive purchase but all reference is null, might be connection disconnected
                 }
             }
         } else {
