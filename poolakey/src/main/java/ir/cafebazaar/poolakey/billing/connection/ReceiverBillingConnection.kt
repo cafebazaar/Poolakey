@@ -131,9 +131,7 @@ internal class ReceiverBillingConnection(
     private fun isPurchaseTypeSupported() {
         getNewIntentForBroadcast().apply {
             action = ACTION_BILLING_SUPPORT
-        }.run {
-            sendBroadcast(this)
-        }
+        }.run(::sendBroadcast)
     }
 
     override fun consume(purchaseToken: String, callback: ConsumeCallback.() -> Unit) {
@@ -142,9 +140,7 @@ internal class ReceiverBillingConnection(
         getNewIntentForBroadcast().apply {
             action = ACTION_CONSUME
             putExtra(KEY_TOKEN, purchaseToken)
-        }.run {
-            sendBroadcast(this)
-        }
+        }.run(::sendBroadcast)
     }
 
     override fun queryPurchasedProducts(
@@ -155,9 +151,7 @@ internal class ReceiverBillingConnection(
         getNewIntentForBroadcast().apply {
             action = ACTION_QUERY_PURCHASES
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
-        }.run {
-            sendBroadcast(this)
-        }
+        }.run(::sendBroadcast)
     }
 
     override fun purchase(
@@ -198,9 +192,7 @@ internal class ReceiverBillingConnection(
             putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
 
-        }.run {
-            sendBroadcast(this)
-        }
+        }.run(::sendBroadcast)
     }
 
 
