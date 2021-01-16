@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 
 internal class BillingReceiver : BroadcastReceiver() {
+
     override fun onReceive(context: Context?, intent: Intent?) {
         Intent().apply {
             action = intent!!.action + ".iab"
