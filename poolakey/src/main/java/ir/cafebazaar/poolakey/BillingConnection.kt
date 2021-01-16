@@ -142,7 +142,7 @@ internal class BillingConnection(
 
     private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
         callback?.connectionFailed?.invoke(
-            IllegalStateException("You call $methodName but communicator is not initialized yet")
+            IllegalStateException("You called $methodName but communicator is not initialized yet")
         )
     }
 
