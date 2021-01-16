@@ -23,9 +23,12 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
     private val backgroundThread: PoolakeyThread<Runnable> = BackgroundThread()
     private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
 
+    private val purchaseVerifier = PurchaseVerifier()
+    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
+
     private val queryFunction = QueryFunction(
-        RawDataToPurchaseInfo(),
-        PurchaseVerifier(),
+        rawDataToPurchaseInfo,
+        purchaseVerifier,
         config,
         mainThread,
     )
@@ -37,9 +40,6 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
         backgroundThread = backgroundThread,
         mainThread = mainThread
     )
-
-    private val purchaseVerifier = PurchaseVerifier()
-    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)
 
