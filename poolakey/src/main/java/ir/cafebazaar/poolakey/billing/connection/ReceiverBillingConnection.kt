@@ -191,7 +191,6 @@ internal class ReceiverBillingConnection(
             putExtra(KEY_SKU, purchaseRequest.productId)
             putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
-
         }.run(::sendBroadcast)
     }
 
