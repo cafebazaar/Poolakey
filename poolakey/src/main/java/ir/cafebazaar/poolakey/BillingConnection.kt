@@ -1,112 +1,62 @@
 package ir.cafebazaar.poolakey
 
 import android.app.Activity
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.IntentSender
-import android.content.ServiceConnection
-import android.os.DeadObjectException
-import android.os.IBinder
 import androidx.fragment.app.Fragment
-import com.android.vending.billing.IInAppBillingService
-import ir.cafebazaar.poolakey.billing.BillingFunction
-import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
-import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunctionRequest
-import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
+import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
+import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
+import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
+import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
-import ir.cafebazaar.poolakey.constant.BazaarIntent
-import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const
-import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
-import ir.cafebazaar.poolakey.exception.DisconnectException
-import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
-import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
-import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 internal class BillingConnection(
     private val context: Context,
     private val paymentConfiguration: PaymentConfiguration,
     private val backgroundThread: PoolakeyThread<Runnable>,
-    private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
-    private val consumeFunction: BillingFunction<ConsumeFunctionRequest>,
-    private val queryFunction: BillingFunction<QueryFunctionRequest>
-) : ServiceConnection {
+    private val queryFunction: QueryFunction,
+    private val mainThread: PoolakeyThread<() -> Unit>
+) {
 
     private var callback: ConnectionCallback? = null
 
-    private var billingService: IInAppBillingService? = null
+    private var billingCommunicator: BillingConnectionCommunicator? = null
 
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
-        Intent(BILLING_SERVICE_ACTION).apply { `package` = Const.BAZAAR_PACKAGE_NAME }
-            .takeIf(
-                thisIsTrue = {
-                    context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(BazaarNotFoundException())
-                }
-            )?.takeIf(
-                thisIsTrue = {
-                    Security.verifyBazaarIsInstalled(context)
-                },
-                andIfNot = {
-                    callback?.connectionFailed?.invoke(BazaarNotFoundException())
-                }
-            )?.also {
-                try {
-                    context.bindService(it, this, Context.BIND_AUTO_CREATE)
-                } catch (e: SecurityException) {
-                    callback?.connectionFailed?.invoke(e)
-                }
-            }
-        return requireNotNull(callback)
-    }
 
-    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        try {
-            IInAppBillingService.Stub.asInterface(service)
-                ?.also { billingService = it }
-                ?.takeIf(
-                    thisIsTrue = {
-                        isPurchaseTypeSupported(purchaseType = PurchaseType.IN_APP)
-                    },
-                    andIfNot = {
-                        callback?.connectionFailed?.invoke(IAPNotSupportedException())
-                    }
-                )
-                ?.takeIf(
-                    thisIsTrue = {
-                        !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
-                            purchaseType = PurchaseType.SUBSCRIPTION
-                        )
-                    },
-                    andIfNot = {
-                        callback?.connectionFailed?.invoke(SubsNotSupportedException())
-                    }
-                )
-                ?.also { callback?.connectionSucceed?.invoke() }
-        } catch (ignored: DeadObjectException) {
-            // onServiceDisconnected will get called so no need to do anything
-        }
-    }
-
-    private fun isPurchaseTypeSupported(
-        purchaseType: PurchaseType
-    ): Boolean {
-        val supportState = billingService?.isBillingSupported(
-            Billing.IN_APP_BILLING_VERSION,
-            context.packageName,
-            purchaseType.type
+        val serviceCommunicator = ServiceBillingConnection(
+            context,
+            mainThread,
+            backgroundThread,
+            paymentConfiguration,
+            queryFunction,
+            ::disconnect
         )
-        return supportState == BazaarIntent.RESPONSE_RESULT_OK
+
+        val receiverConnection = ReceiverBillingConnection(
+            paymentConfiguration,
+            queryFunction
+        )
+
+        val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
+
+        billingCommunicator = if (canConnect) {
+            serviceCommunicator
+        } else {
+            receiverConnection.startConnection(
+                context,
+                requireNotNull(callback)
+            )
+
+            receiverConnection
+        }
+        return requireNotNull(callback)
     }
 
     fun purchase(
@@ -115,28 +65,14 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-
-        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
-            activity.startIntentSenderForResult(
-                intentSender,
-                purchaseRequest.requestCode,
-                Intent(),
-                0,
-                0,
-                0
+        runOnCommunicator(TAG_PURCHASE) {
+            requireNotNull(billingCommunicator).purchase(
+                activity,
+                purchaseRequest,
+                purchaseType,
+                callback
             )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
         }
-
-        val intentFire: (Intent) -> Unit = { intent ->
-            activity.startActivityForResult(
-                intent,
-                purchaseRequest.requestCode
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
-        }
-
-        purchase(purchaseRequest, purchaseType, callback, intentSenderFire, intentFire)
     }
 
     fun purchase(
@@ -145,114 +81,75 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
-            fragment.startIntentSenderForResult(
-                intentSender,
-                purchaseRequest.requestCode,
-                Intent(),
-                0,
-                0,
-                0,
-                null
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
-        }
-
-        val intentFire: (Intent) -> Unit = { intent ->
-            fragment.startActivityForResult(
-                intent,
-                purchaseRequest.requestCode
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
-        }
-
-        purchase(purchaseRequest, purchaseType, callback, intentSenderFire, intentFire)
-    }
-
-    private fun purchase(
-        purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit,
-        fireIntentSender: (IntentSender) -> Unit,
-        fireIntent: (Intent) -> Unit
-    ) = withService {
-        purchaseFunction.function(
-            billingService = this,
-            request = PurchaseFunctionRequest(
+        runOnCommunicator(TAG_PURCHASE) {
+            requireNotNull(billingCommunicator).purchase(
+                fragment,
                 purchaseRequest,
                 purchaseType,
-                callback,
-                fireIntentSender,
-                fireIntent
+                callback
             )
-        )
-    } ifServiceIsDisconnected {
-        PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
+        }
     }
 
     fun consume(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
-    ) = withService(runOnBackground = true) {
-        consumeFunction.function(
-            billingService = this,
-            request = ConsumeFunctionRequest(purchaseToken, callback)
-        )
-    } ifServiceIsDisconnected {
-        ConsumeCallback().apply(callback).consumeFailed.invoke(DisconnectException())
+    ) {
+        runOnCommunicator(TAG_CONSUME) {
+            requireNotNull(billingCommunicator).consume(
+                purchaseToken,
+                callback
+            )
+        }
     }
 
     fun queryPurchasedProducts(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
-    ) = withService(runOnBackground = true) {
-        queryFunction.function(
-            billingService = this,
-            request = QueryFunctionRequest(purchaseType, callback)
-        )
-    } ifServiceIsDisconnected {
-        PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
+    ) {
+        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) {
+            requireNotNull(billingCommunicator).queryPurchasedProducts(
+                purchaseType,
+                callback
+            )
+        }
     }
 
     private fun stopConnection() {
-        if (billingService != null) {
-            context.unbindService(this)
+        runOnCommunicator(TAG_STOP_CONNECTION) {
+            requireNotNull(billingCommunicator).stopConnection()
             disconnect()
         }
     }
 
-    override fun onServiceDisconnected(name: ComponentName?) {
-        disconnect()
-    }
-
     private fun disconnect() {
-        billingService = null
         callback?.disconnected?.invoke()
         callback = null
         backgroundThread.dispose()
+        billingCommunicator = null
     }
 
-    private inline fun withService(
-        runOnBackground: Boolean = false,
-        crossinline service: IInAppBillingService.() -> Unit
-    ): ConnectionState {
-        return billingService?.also {
-            if (runOnBackground) {
-                backgroundThread.execute(Runnable { service.invoke(it) })
-            } else {
-                service.invoke(it)
-            }
-        }?.let { ConnectionState.Connected }
-            ?: run { ConnectionState.Disconnected }
-    }
-
-    private inline infix fun ConnectionState.ifServiceIsDisconnected(block: () -> Unit) {
-        if (this is ConnectionState.Disconnected) {
-            block.invoke()
+    private fun runOnCommunicator(
+        methodName: String,
+        ifConnected: () -> Unit
+    ) {
+        if (billingCommunicator == null) {
+            raiseErrorForCommunicatorNotInitialized(methodName)
+        } else {
+            ifConnected.invoke()
         }
     }
 
+    private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
+        callback?.connectionFailed?.invoke(
+            IllegalStateException("You called $methodName but communicator is not initialized yet")
+        )
+    }
+
     companion object {
-        private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
+        private const val TAG_STOP_CONNECTION = "stopConnection"
+        private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
+        private const val TAG_CONSUME = "consume"
+        private const val TAG_PURCHASE = "purchase"
     }
 }

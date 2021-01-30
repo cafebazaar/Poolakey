@@ -1,15 +1,11 @@
 package ir.cafebazaar.poolakey.billing.query
 
-import android.content.Context
 import android.os.Bundle
 import android.os.RemoteException
-import com.android.vending.billing.IInAppBillingService
-import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
-import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.entity.PurchaseInfo
 import ir.cafebazaar.poolakey.exception.ResultNotOkayException
 import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
@@ -22,22 +18,13 @@ internal class QueryFunction(
     private val purchaseVerifier: PurchaseVerifier,
     private val paymentConfiguration: PaymentConfiguration,
     private val mainThread: PoolakeyThread<() -> Unit>,
-    private val context: Context
-) : BillingFunction<QueryFunctionRequest> {
+) {
 
-    override fun function(
-        billingService: IInAppBillingService,
-        request: QueryFunctionRequest
-    ): Unit = with(request) {
+    fun function(request: QueryFunctionRequest): Unit = with(request) {
         try {
             var continuationToken: String? = null
             do {
-                billingService.getPurchases(
-                    Billing.IN_APP_BILLING_VERSION,
-                    context.packageName,
-                    purchaseType.type,
-                    continuationToken
-                )?.takeIf(
+                queryBundle(purchaseType, continuationToken)?.takeIf(
                     thisIsTrue = { bundle ->
                         bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
                     },
