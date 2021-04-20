@@ -9,6 +9,7 @@ import io.reactivex.rxjava3.core.Single
 import ir.cafebazaar.poolakey.Connection
 import ir.cafebazaar.poolakey.Payment
 import ir.cafebazaar.poolakey.entity.PurchaseInfo
+import ir.cafebazaar.poolakey.entity.SkuDetails
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.rxbase.exception.PurchaseCanceledException
 
@@ -150,6 +151,15 @@ fun Payment.getSubscribedProducts(): Single<List<PurchaseInfo>> {
         getSubscribedProducts {
             querySucceed { emitter.onSuccess(it) }
             queryFailed { emitter.onError(it) }
+        }
+    }
+}
+
+fun Payment.getSkuDetails(purchaseType: String, skuIds: List<String>): Single<List<SkuDetails>> {
+    return Single.create { emitter ->
+        getSkuDetails(purchaseType, skuIds) {
+            getSkuDetailsSucceed { emitter.onSuccess(it) }
+            getSkuDetailsFailed { emitter.onError(it) }
         }
     }
 }
