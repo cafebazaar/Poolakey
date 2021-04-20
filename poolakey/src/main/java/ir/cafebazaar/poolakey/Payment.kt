@@ -199,12 +199,17 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
         connection.queryPurchasedProducts(PurchaseType.SUBSCRIPTION, callback)
     }
 
+    /**
+     * You can use this function to get detail of sku's,
+     * @param purchaseType Type of sku's that be one of `inapp` and `subs`
+     * @param callback You have to use callback in order to get detail of requested sku's.
+     */
     fun getSkuDetails(
-        purchaseType: String,
+        purchaseType: PurchaseType,
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
     ) {
-        connection.getSkuDetail(PurchaseType.fromValue(purchaseType), skuIds, callback)
+        connection.getSkuDetail(purchaseType, skuIds, callback)
     }
 
     /**
