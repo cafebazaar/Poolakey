@@ -156,7 +156,17 @@ fun Payment.getSubscribedProducts(): Single<List<PurchaseInfo>> {
     }
 }
 
-fun Payment.getSkuDetails(purchaseType: PurchaseType, skuIds: List<String>): Single<List<SkuDetails>> {
+
+/**
+ * You can use this function to get detail of sku's,
+ * @param purchaseType Type of sku's that you want to query
+ * @param skuIds This contain all sku id's that you want to get info about it.
+ * @return Single that you can subscribe to it and get the detail of requested sku's.
+ */
+fun Payment.getSkuDetails(
+    purchaseType: PurchaseType,
+    skuIds: List<String>
+): Single<List<SkuDetails>> {
     return Single.create { emitter ->
         getSkuDetails(purchaseType, skuIds) {
             getSkuDetailsSucceed { emitter.onSuccess(it) }

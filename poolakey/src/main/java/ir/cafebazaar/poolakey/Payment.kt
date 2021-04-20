@@ -201,7 +201,8 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
 
     /**
      * You can use this function to get detail of sku's,
-     * @param purchaseType Type of sku's that be one of `inapp` and `subs`
+     * @param purchaseType Type of sku's that you want to query
+     * @param skuIds This contain all sku id's that you want to get info about it.
      * @param callback You have to use callback in order to get detail of requested sku's.
      */
     fun getSkuDetails(
