@@ -13,8 +13,10 @@ import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunctionRequest
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
+import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
+import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
@@ -33,7 +35,8 @@ internal class BillingConnection(
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val purchaseFunction: BillingFunction<PurchaseFunctionRequest>,
     private val consumeFunction: BillingFunction<ConsumeFunctionRequest>,
-    private val queryFunction: BillingFunction<QueryFunctionRequest>
+    private val queryFunction: BillingFunction<QueryFunctionRequest>,
+    private val skuDetailFunction: BillingFunction<SkuDetailFunctionRequest>
 ) : ServiceConnection {
 
     private var callback: ConnectionCallback? = null
@@ -204,6 +207,17 @@ internal class BillingConnection(
         )
     } ifServiceIsDisconnected {
         PurchaseQueryCallback().apply(callback).queryFailed.invoke(DisconnectException())
+    }
+
+    fun getSkuDetail(
+        purchaseType: PurchaseType,
+        skuIds: List<String>,
+        callback: GetSkuDetailsCallback.() -> Unit
+    ) = withService(runOnBackground = true) {
+        skuDetailFunction.function(
+            billingService = this,
+            request = SkuDetailFunctionRequest(purchaseType, skuIds, callback)
+        )
     }
 
     private fun stopConnection() {
