@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import ir.cafebazaar.poolakey.Connection
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.Payment
+import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
@@ -98,7 +99,7 @@ class MainActivity : AppCompatActivity() {
         getSkuDetailInAppButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSkuDetails(
-                    purchaseType = "inapp",
+                    purchaseType = PurchaseType.IN_APP,
                     skuIds = listOf(skuValueInput.text.toString())
                 ) {
                     getSkuDetailsSucceed {
@@ -114,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         getSkuDetailSubscriptionButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSkuDetails(
-                    purchaseType = "subs",
+                    purchaseType = PurchaseType.SUBSCRIPTION,
                     skuIds = listOf(skuValueInput.text.toString())
                 ) {
                     getSkuDetailsSucceed {
