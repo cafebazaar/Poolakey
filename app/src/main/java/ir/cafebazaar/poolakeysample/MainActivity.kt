@@ -97,33 +97,41 @@ class MainActivity : AppCompatActivity() {
     private fun setGetSkuDetailClickListener() {
 
         getSkuDetailInAppButton.setOnClickListener {
-            if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.getSkuDetails(
-                    purchaseType = PurchaseType.IN_APP,
-                    skuIds = listOf(skuValueInput.text.toString())
-                ) {
-                    getSkuDetailsSucceed {
-                        toast(it.toString())
-                    }
-                    getSkuDetailsFailed {
-                        toast(R.string.general_query_get_sku_detail_failed_message)
-                    }
-                }
-            }
+            onGetSkuDetailInAppClicked()
         }
 
         getSkuDetailSubscriptionButton.setOnClickListener {
-            if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.getSkuDetails(
-                    purchaseType = PurchaseType.SUBSCRIPTION,
-                    skuIds = listOf(skuValueInput.text.toString())
-                ) {
-                    getSkuDetailsSucceed {
-                        toast(it.toString())
-                    }
-                    getSkuDetailsFailed {
-                        toast(R.string.general_query_get_sku_detail_failed_message)
-                    }
+            onGetSkuDetailSubscriptionClicked()
+        }
+    }
+
+    private fun onGetSkuDetailSubscriptionClicked() {
+        if (paymentConnection.getState() == ConnectionState.Connected) {
+            payment.getSkuDetails(
+                purchaseType = PurchaseType.SUBSCRIPTION,
+                skuIds = listOf(skuValueInput.text.toString())
+            ) {
+                getSkuDetailsSucceed {
+                    toast(it.toString())
+                }
+                getSkuDetailsFailed {
+                    toast(R.string.general_query_get_sku_detail_failed_message)
+                }
+            }
+        }
+    }
+
+    private fun onGetSkuDetailInAppClicked() {
+        if (paymentConnection.getState() == ConnectionState.Connected) {
+            payment.getSkuDetails(
+                purchaseType = PurchaseType.IN_APP,
+                skuIds = listOf(skuValueInput.text.toString())
+            ) {
+                getSkuDetailsSucceed {
+                    toast(it.toString())
+                }
+                getSkuDetailsFailed {
+                    toast(R.string.general_query_get_sku_detail_failed_message)
                 }
             }
         }
