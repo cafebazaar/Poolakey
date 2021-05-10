@@ -35,28 +35,12 @@ internal class GetSkuDetailFunction(
                 context.packageName,
                 request.purchaseType.type,
                 skuBundle
-            )?.takeIf(
-                thisIsTrue = { bundle ->
-                    bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
-                },
-                andIfNot = {
-                    mainThread.execute {
-                        GetSkuDetailsCallback().apply(callback)
-                            .getSkuDetailsFailed
-                            .invoke(ResultNotOkayException())
-                    }
-                }
-            )?.takeIf(
-                thisIsTrue = { bundle ->
-                    bundle.containsKey(BazaarIntent.RESPONSE_GET_SKU_DETAILS_LIST)
-                },
-                andIfNot = {
-                    mainThread.execute {
-                        GetSkuDetailsCallback().apply(callback)
-                            .getSkuDetailsFailed
-                            .invoke(IllegalStateException("Missing data from the received result"))
-                    }
-                }
+            )?.takeIfIsResponseOKOrThrowException(
+                mainThread,
+                callback
+            )?.takeIfBundleContainsCorrectResponseKeyOrThrowException(
+                mainThread,
+                callback
             )?.let { bundle ->
                 extractSkuDetailDataFromBundle(bundle, request.purchaseType)
             }?.also { items ->
@@ -79,4 +63,40 @@ internal class GetSkuDetailFunction(
             SkuDetails.fromJson(purchaseType, it)
         }
     }
+}
+
+private fun Bundle.takeIfBundleContainsCorrectResponseKeyOrThrowException(
+    mainThread: PoolakeyThread<() -> Unit>,
+    callback: GetSkuDetailsCallback.() -> Unit
+): Bundle? {
+    return takeIf(
+        thisIsTrue = { bundle ->
+            bundle.containsKey(BazaarIntent.RESPONSE_GET_SKU_DETAILS_LIST)
+        },
+        andIfNot = {
+            mainThread.execute {
+                GetSkuDetailsCallback().apply(callback)
+                    .getSkuDetailsFailed
+                    .invoke(IllegalStateException("Missing data from the received result"))
+            }
+        }
+    )
+}
+
+private fun Bundle.takeIfIsResponseOKOrThrowException(
+    mainThread: PoolakeyThread<() -> Unit>,
+    callback: GetSkuDetailsCallback.() -> Unit
+): Bundle? {
+    return takeIf(
+        thisIsTrue = { bundle ->
+            bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
+        },
+        andIfNot = {
+            mainThread.execute {
+                GetSkuDetailsCallback().apply(callback)
+                    .getSkuDetailsFailed
+                    .invoke(ResultNotOkayException())
+            }
+        }
+    )
 }
