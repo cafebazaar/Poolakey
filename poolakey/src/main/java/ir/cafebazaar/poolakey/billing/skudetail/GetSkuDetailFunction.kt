@@ -18,6 +18,7 @@ internal class GetSkuDetailFunction(
     private val context: Context,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) : BillingFunction<SkuDetailFunctionRequest> {
+
     override fun function(
         billingService: IInAppBillingService,
         request: SkuDetailFunctionRequest
