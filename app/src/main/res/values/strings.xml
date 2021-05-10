@@ -11,7 +11,7 @@
     <string name="general_service_connection_failed_text">Service: Failed to Connect</string>
     <string name="general_query_purchase_text">Check if user purchased this item</string>
     <string name="general_query_subscription_text">Check if user subscribed this item</string>
-    <string name="general_get_sku_detail_inapp_text">Get Sku detail of inApp item</string>
+    <string name="general_get_sku_detail_inapp_text">Get Sku detail of in-app item</string>
     <string name="general_get_sku_detail_sub_text">Get Sku detail of subscription item</string>
 
     <string name="general_purchase_flow_began_message">Purchase flow began</string>
