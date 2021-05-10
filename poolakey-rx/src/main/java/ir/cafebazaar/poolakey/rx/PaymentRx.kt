@@ -8,7 +8,6 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import ir.cafebazaar.poolakey.Connection
 import ir.cafebazaar.poolakey.Payment
-import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.entity.PurchaseInfo
 import ir.cafebazaar.poolakey.entity.SkuDetails
 import ir.cafebazaar.poolakey.request.PurchaseRequest
@@ -156,19 +155,32 @@ fun Payment.getSubscribedProducts(): Single<List<PurchaseInfo>> {
     }
 }
 
-
 /**
- * You can use this function to get detail of sku's,
- * @param purchaseType Type of sku's that you want to query
+ * You can use this function to get detail of inApp sku's,
  * @param skuIds This contain all sku id's that you want to get info about it.
  * @return Single that you can subscribe to it and get the detail of requested sku's.
  */
-fun Payment.getSkuDetails(
-    purchaseType: PurchaseType,
+fun Payment.getInAppSkuDetails(
     skuIds: List<String>
 ): Single<List<SkuDetails>> {
     return Single.create { emitter ->
-        getSkuDetails(purchaseType, skuIds) {
+        getInAppSkuDetails(skuIds) {
+            getSkuDetailsSucceed { emitter.onSuccess(it) }
+            getSkuDetailsFailed { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to get detail of subscriptions sku's,
+ * @param skuIds This contain all sku id's that you want to get info about it.
+ * @return Single that you can subscribe to it and get the detail of requested sku's.
+ */
+fun Payment.getSubscriptionSkuDetails(
+    skuIds: List<String>
+): Single<List<SkuDetails>> {
+    return Single.create { emitter ->
+        getSubscriptionSkuDetails(skuIds) {
             getSkuDetailsSucceed { emitter.onSuccess(it) }
             getSkuDetailsFailed { emitter.onError(it) }
         }

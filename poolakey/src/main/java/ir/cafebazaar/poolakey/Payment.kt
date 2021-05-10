@@ -200,17 +200,27 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
     }
 
     /**
-     * You can use this function to get detail of sku's,
-     * @param purchaseType Type of sku's that you want to query
+     * You can use this function to get detail of inApp product sku's,
      * @param skuIds This contain all sku id's that you want to get info about it.
      * @param callback You have to use callback in order to get detail of requested sku's.
      */
-    fun getSkuDetails(
-        purchaseType: PurchaseType,
+    fun getInAppSkuDetails(
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
     ) {
-        connection.getSkuDetail(purchaseType, skuIds, callback)
+        connection.getSkuDetail(PurchaseType.IN_APP, skuIds, callback)
+    }
+
+    /**
+     * You can use this function to get detail of subscription product sku's,
+     * @param skuIds This contain all sku id's that you want to get info about it.
+     * @param callback You have to use callback in order to get detail of requested sku's.
+     */
+    fun getSubscriptionSkuDetails(
+        skuIds: List<String>,
+        callback: GetSkuDetailsCallback.() -> Unit
+    ) {
+        connection.getSkuDetail(PurchaseType.SUBSCRIPTION, skuIds, callback)
     }
 
     /**
