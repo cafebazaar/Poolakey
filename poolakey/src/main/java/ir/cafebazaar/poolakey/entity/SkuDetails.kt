@@ -1,11 +1,9 @@
 package ir.cafebazaar.poolakey.entity
 
-import ir.cafebazaar.poolakey.PurchaseType
 import org.json.JSONObject
 
 class SkuDetails private constructor(
     val sku: String,
-    val itemType: String,
     val type: String,
     val price: String,
     val title: String,
@@ -23,12 +21,11 @@ class SkuDetails private constructor(
     }
 
     companion object {
-        internal fun fromJson(purchaseType: PurchaseType, json: String): SkuDetails {
+        internal fun fromJson(json: String): SkuDetails {
             val jsonObject = JSONObject(json)
             return with(jsonObject) {
                 SkuDetails(
                     optString("productId"),
-                    purchaseType.type,
                     optString("type"),
                     optString("price"),
                     optString("title"),

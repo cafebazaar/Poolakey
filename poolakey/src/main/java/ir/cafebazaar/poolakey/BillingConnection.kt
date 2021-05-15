@@ -3,12 +3,12 @@ package ir.cafebazaar.poolakey
 import android.app.Activity
 import android.content.Context
 import androidx.fragment.app.Fragment
-import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
-import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
+import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
+import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
@@ -23,7 +23,7 @@ internal class BillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val queryFunction: QueryFunction,
-    private val skuDetailFunction: BillingFunction<SkuDetailFunctionRequest>
+    private val skuDetailFunction: GetSkuDetailFunction,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
@@ -40,6 +40,7 @@ internal class BillingConnection(
             backgroundThread,
             paymentConfiguration,
             queryFunction,
+            skuDetailFunction,
             ::disconnect
         )
 
@@ -123,11 +124,13 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
-    ) = withService(runOnBackground = true) {
-        skuDetailFunction.function(
-            billingService = this,
-            request = SkuDetailFunctionRequest(purchaseType, skuIds, callback)
-        )
+    ) {
+        runOnCommunicator(TAG_GET_SKU_DETAIL) {
+            requireNotNull(billingCommunicator).getSkuDetails(
+                SkuDetailFunctionRequest(purchaseType, skuIds, callback),
+                callback
+            )
+        }
     }
 
     private fun stopConnection() {
@@ -166,5 +169,6 @@ internal class BillingConnection(
         private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
         private const val TAG_CONSUME = "consume"
         private const val TAG_PURCHASE = "purchase"
+        private const val TAG_GET_SKU_DETAIL = "skuDetial"
     }
 }

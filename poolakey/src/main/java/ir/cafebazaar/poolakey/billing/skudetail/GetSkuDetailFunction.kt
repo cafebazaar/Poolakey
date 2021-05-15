@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.os.RemoteException
 import com.android.vending.billing.IInAppBillingService
-import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
@@ -42,7 +41,7 @@ internal class GetSkuDetailFunction(
                 mainThread,
                 callback
             )?.let { bundle ->
-                extractSkuDetailDataFromBundle(bundle, request.purchaseType)
+                extractSkuDetailDataFromBundle(bundle)
             }?.also { items ->
                 mainThread.execute {
                     GetSkuDetailsCallback().apply(callback).getSkuDetailsSucceed.invoke(items)
@@ -54,14 +53,13 @@ internal class GetSkuDetailFunction(
             }
         }
     }
+}
 
-    private fun extractSkuDetailDataFromBundle(
-        bundle: Bundle,
-        purchaseType: PurchaseType
-    ): List<SkuDetails>? {
-        return bundle.getStringArrayList(BazaarIntent.RESPONSE_GET_SKU_DETAILS_LIST)?.map {
-            SkuDetails.fromJson(purchaseType, it)
-        }
+internal fun extractSkuDetailDataFromBundle(
+    bundle: Bundle
+): List<SkuDetails>? {
+    return bundle.getStringArrayList(BazaarIntent.RESPONSE_GET_SKU_DETAILS_LIST)?.map {
+        SkuDetails.fromJson(it)
     }
 }
 
