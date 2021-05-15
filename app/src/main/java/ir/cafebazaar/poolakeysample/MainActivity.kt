@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
                         requestCode = PURCHASE_REQUEST_CODE,
-                        payload = ""
+                        payload = "payload"
                     )
                 ) {
                     purchaseFlowBegan {
