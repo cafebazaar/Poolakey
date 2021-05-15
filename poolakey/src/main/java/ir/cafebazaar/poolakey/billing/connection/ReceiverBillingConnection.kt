@@ -336,7 +336,12 @@ internal class ReceiverBillingConnection(
         }
 
         if (isResponseSucceed(extras)) {
-            extractSkuDetailDataFromBundle(requireNotNull(extras))
+            val response = extractSkuDetailDataFromBundle(requireNotNull(extras))
+            GetSkuDetailsCallback()
+                .apply(requireNotNull(skuDetailCallback))
+                .getSkuDetailsSucceed.invoke(requireNotNull(response))
+
+
         } else {
             GetSkuDetailsCallback().apply(requireNotNull(skuDetailCallback)).run {
                 getSkuDetailsFailed.invoke(ResultNotOkayException())
