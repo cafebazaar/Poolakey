@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.Fragment
-import ir.cafebazaar.poolakey.billing.consume.ConsumeFunction
-import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
@@ -24,24 +22,17 @@ import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 class Payment(context: Context, private val config: PaymentConfiguration) {
 
-    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
-
     private val backgroundThread: PoolakeyThread<Runnable> = BackgroundThread()
-
     private val mainThread: PoolakeyThread<() -> Unit> = MainThread()
 
     private val purchaseVerifier = PurchaseVerifier()
-
-    private val purchaseFunction = PurchaseFunction(context)
-
-    private val consumeFunction = ConsumeFunction(mainThread, context)
+    private val rawDataToPurchaseInfo = RawDataToPurchaseInfo()
 
     private val queryFunction = QueryFunction(
         rawDataToPurchaseInfo,
         purchaseVerifier,
         config,
         mainThread,
-        context
     )
 
     private val getSkuFunction = GetSkuDetailFunction(
@@ -52,11 +43,10 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
     private val connection = BillingConnection(
         context = context,
         paymentConfiguration = config,
-        backgroundThread = backgroundThread,
-        purchaseFunction = purchaseFunction,
-        consumeFunction = consumeFunction,
         queryFunction = queryFunction,
-        skuDetailFunction = getSkuFunction
+        backgroundThread = backgroundThread,
+        skuDetailFunction = getSkuFunction,
+        mainThread = mainThread
     )
 
     private val purchaseResultParser = PurchaseResultParser(rawDataToPurchaseInfo, purchaseVerifier)

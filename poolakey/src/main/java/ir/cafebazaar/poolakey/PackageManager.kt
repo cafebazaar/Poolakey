@@ -9,3 +9,12 @@ internal fun getPackageInfo(context: Context, packageName: String): PackageInfo?
 } catch (ignored: Exception) {
     null
 }
+
+@Suppress("DEPRECATION")
+internal fun sdkAwareVersionCode(packageInfo: PackageInfo): Long {
+    return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode
+    } else {
+        packageInfo.versionCode.toLong()
+    }
+}
