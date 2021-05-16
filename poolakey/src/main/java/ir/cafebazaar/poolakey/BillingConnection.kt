@@ -7,8 +7,11 @@ import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
+import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
+import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
+import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
@@ -20,6 +23,7 @@ internal class BillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val queryFunction: QueryFunction,
+    private val skuDetailFunction: GetSkuDetailFunction,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
@@ -36,6 +40,7 @@ internal class BillingConnection(
             backgroundThread,
             paymentConfiguration,
             queryFunction,
+            skuDetailFunction,
             ::disconnect
         )
 
@@ -115,6 +120,19 @@ internal class BillingConnection(
         }
     }
 
+    fun getSkuDetail(
+        purchaseType: PurchaseType,
+        skuIds: List<String>,
+        callback: GetSkuDetailsCallback.() -> Unit
+    ) {
+        runOnCommunicator(TAG_GET_SKU_DETAIL) {
+            requireNotNull(billingCommunicator).getSkuDetails(
+                SkuDetailFunctionRequest(purchaseType, skuIds, callback),
+                callback
+            )
+        }
+    }
+
     private fun stopConnection() {
         runOnCommunicator(TAG_STOP_CONNECTION) {
             requireNotNull(billingCommunicator).stopConnection()
@@ -151,5 +169,6 @@ internal class BillingConnection(
         private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
         private const val TAG_CONSUME = "consume"
         private const val TAG_PURCHASE = "purchase"
+        private const val TAG_GET_SKU_DETAIL = "skuDetial"
     }
 }
