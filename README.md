@@ -8,9 +8,20 @@ To start working with Poolakey, you need to add its dependency into your `build.
 ### Dependency
 ```groovy
 dependencies {
-    implementation "ir.cafebazaar:poolakey:[latest_version]"
+    implementation "com.github.cafebazaar:Poolakey:[latest_version]"
 }
 ```
+
+Then you need to add jitpack as your maven repository in `build.gradle`  file:
+
+```groovy
+repositories {
+        google()
+        jcenter()
+        maven { url 'https://jitpack.io' }
+    }
+```
+
 ### How to use
 For more information regarding the usage of Poolakey, please check out the [wiki](https://github.com/cafebazaar/Poolakey/wiki) page.
 ### Sample
@@ -20,11 +31,12 @@ Yes, you've read that right! Poolakey supports Reactive Extension framework. Jus
 ```groovy
 dependencies {
     // RxJava 3
-    implementation "ir.cafebazaar:poolakey-rx3:[latest_version]"
+    implementation "com.github.cafebazaar:Poolakey-rx3:[latest_version]"
     // RxJava 2
-    implementation "ir.cafebazaar:poolakey-rx:[latest_version]"
+    implementation "com.github.cafebazaar:Poolakey-rx:[latest_version]"
 }
 ```
+
 And instead of using Poolakey's callbacks, use the reactive fuctions:
 ```kotlin
 payment.getPurchasedProducts()
