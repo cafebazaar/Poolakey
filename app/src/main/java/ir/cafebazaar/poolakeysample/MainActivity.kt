@@ -13,6 +13,8 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
+import kotlinx.android.synthetic.main.activity_main.getSkuDetailInAppButton
+import kotlinx.android.synthetic.main.activity_main.getSkuDetailSubscriptionButton
 import kotlinx.android.synthetic.main.activity_main.purchaseButton
 import kotlinx.android.synthetic.main.activity_main.queryPurchasedItemsButton
 import kotlinx.android.synthetic.main.activity_main.querySubscribedItemsButton
@@ -36,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         startPaymentConnection()
+        setViewClickListener()
+    }
+
+    private fun setViewClickListener() {
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.purchaseProduct(
@@ -43,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
                         requestCode = PURCHASE_REQUEST_CODE,
-                        payload = ""
+                        payload = "payload"
                     )
                 ) {
                     purchaseFlowBegan {
@@ -82,6 +88,48 @@ class MainActivity : AppCompatActivity() {
         querySubscribedItemsButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSubscribedProducts(handlePurchaseQueryCallback())
+            }
+        }
+        setGetSkuDetailClickListener()
+    }
+
+    private fun setGetSkuDetailClickListener() {
+
+        getSkuDetailInAppButton.setOnClickListener {
+            onGetSkuDetailInAppClicked()
+        }
+
+        getSkuDetailSubscriptionButton.setOnClickListener {
+            onGetSkuDetailSubscriptionClicked()
+        }
+    }
+
+    private fun onGetSkuDetailSubscriptionClicked() {
+        if (paymentConnection.getState() == ConnectionState.Connected) {
+            payment.getSubscriptionSkuDetails(
+                skuIds = listOf(skuValueInput.text.toString())
+            ) {
+                getSkuDetailsSucceed {
+                    toast(it.toString())
+                }
+                getSkuDetailsFailed {
+                    toast(R.string.general_query_get_sku_detail_failed_message)
+                }
+            }
+        }
+    }
+
+    private fun onGetSkuDetailInAppClicked() {
+        if (paymentConnection.getState() == ConnectionState.Connected) {
+            payment.getInAppSkuDetails(
+                skuIds = listOf(skuValueInput.text.toString())
+            ) {
+                getSkuDetailsSucceed {
+                    toast(it.toString())
+                }
+                getSkuDetailsFailed {
+                    toast(R.string.general_query_get_sku_detail_failed_message)
+                }
             }
         }
     }
@@ -142,6 +190,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toast(@StringRes message: Int) {
+        toast(getString(message))
+    }
+
+    private fun toast(message: String) {
         Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
     }
 
