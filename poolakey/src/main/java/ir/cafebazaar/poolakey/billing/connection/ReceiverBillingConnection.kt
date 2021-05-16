@@ -19,6 +19,7 @@ import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
+import ir.cafebazaar.poolakey.constant.BazaarIntent.REQUEST_SKU_DETAILS_LIST
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
@@ -196,7 +197,7 @@ internal class ReceiverBillingConnection(
         getNewIntentForBroadcast().apply {
             action = ACTION_GET_SKU_DETAIL
             putExtra(KEY_ITEM_TYPE, request.purchaseType.type)
-            putStringArrayListExtra(KEY_GET_SKU_DETAILS_ITEM_LIST, ArrayList(request.skuIds))
+            putStringArrayListExtra(REQUEST_SKU_DETAILS_LIST, ArrayList(request.skuIds))
         }.run(::sendBroadcast)
     }
 
@@ -340,8 +341,6 @@ internal class ReceiverBillingConnection(
             GetSkuDetailsCallback()
                 .apply(requireNotNull(skuDetailCallback))
                 .getSkuDetailsSucceed.invoke(requireNotNull(response))
-
-
         } else {
             GetSkuDetailsCallback().apply(requireNotNull(skuDetailCallback)).run {
                 getSkuDetailsFailed.invoke(ResultNotOkayException())
@@ -440,7 +439,6 @@ internal class ReceiverBillingConnection(
         private const val KEY_DEVELOPER_PAYLOAD = "developerPayload"
         private const val KEY_SECURE = "secure"
         private const val KEY_RESPONSE_BUY_INTENT = "BUY_INTENT"
-        private const val KEY_GET_SKU_DETAILS_ITEM_LIST = "ITEM_ID_LIST"
         private const val RESPONSE_CODE = "RESPONSE_CODE"
         private const val KEY_TOKEN = "token"
     }
