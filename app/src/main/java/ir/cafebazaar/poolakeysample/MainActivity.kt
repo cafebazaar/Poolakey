@@ -49,7 +49,8 @@ class MainActivity : AppCompatActivity() {
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
                         requestCode = PURCHASE_REQUEST_CODE,
-                        payload = "payload"
+                        payload = "payload",
+                        discount = null
                     )
                 ) {
                     purchaseFlowBegan {
@@ -68,7 +69,8 @@ class MainActivity : AppCompatActivity() {
                     request = PurchaseRequest(
                         productId = skuValueInput.text.toString(),
                         requestCode = SUBSCRIBE_REQUEST_CODE,
-                        payload = ""
+                        payload = "",
+                        discount = null
                     )
                 ) {
                     purchaseFlowBegan {
