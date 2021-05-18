@@ -9,13 +9,17 @@ import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
+import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
+import ir.cafebazaar.poolakey.billing.skudetail.extractSkuDetailDataFromBundle
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
+import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
+import ir.cafebazaar.poolakey.constant.BazaarIntent.REQUEST_SKU_DETAILS_LIST
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
@@ -23,6 +27,7 @@ import ir.cafebazaar.poolakey.exception.ConsumeFailedException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
+import ir.cafebazaar.poolakey.exception.ResultNotOkayException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.receiver.BillingReceiver
@@ -40,6 +45,7 @@ internal class ReceiverBillingConnection(
 
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
+    private var skuDetailCallback: (GetSkuDetailsCallback.() -> Unit)? = null
 
     private var connectionCallbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
@@ -125,6 +131,9 @@ internal class ReceiverBillingConnection(
             ACTION_RECEIVE_QUERY_PURCHASES -> {
                 onQueryPurchaseReceived(extras)
             }
+            ACTION_RECEIVE_SKU_DETAILS -> {
+                onGetSkuDetailsReceived(extras)
+            }
         }
     }
 
@@ -180,6 +189,18 @@ internal class ReceiverBillingConnection(
         sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
     }
 
+    override fun getSkuDetails(
+        request: SkuDetailFunctionRequest,
+        callback: GetSkuDetailsCallback.() -> Unit
+    ) {
+        skuDetailCallback = callback
+        getNewIntentForBroadcast().apply {
+            action = ACTION_GET_SKU_DETAIL
+            putExtra(KEY_ITEM_TYPE, request.purchaseType.type)
+            putStringArrayListExtra(REQUEST_SKU_DETAILS_LIST, ArrayList(request.skuIds))
+        }.run(::sendBroadcast)
+    }
+
     private fun sendPurchaseBroadcast(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -207,6 +228,7 @@ internal class ReceiverBillingConnection(
     private fun clearReferences() {
         consumeCallback = null
         queryCallback = null
+        skuDetailCallback = null
         connectionCallbackReference = null
         contextReference = null
 
@@ -309,6 +331,23 @@ internal class ReceiverBillingConnection(
         }
     }
 
+    private fun onGetSkuDetailsReceived(extras: Bundle?) {
+        if (skuDetailCallback == null) {
+            return
+        }
+
+        if (isResponseSucceed(extras)) {
+            val response = extractSkuDetailDataFromBundle(requireNotNull(extras))
+            GetSkuDetailsCallback()
+                .apply(requireNotNull(skuDetailCallback))
+                .getSkuDetailsSucceed.invoke(requireNotNull(response))
+        } else {
+            GetSkuDetailsCallback().apply(requireNotNull(skuDetailCallback)).run {
+                getSkuDetailsFailed.invoke(ResultNotOkayException())
+            }
+        }
+    }
+
     private fun onBillingSupportActionReceived(extras: Bundle?) {
         val isResponseSucceed = isResponseSucceed(extras)
         val isSubscriptionSupport = isSubscriptionSupport(extras)
@@ -381,6 +420,7 @@ internal class ReceiverBillingConnection(
         private const val ACTION_CONSUME = ACTION_BAZAAR_BASE + "consume"
         private const val ACTION_PURCHASE = ACTION_BAZAAR_BASE + "purchase"
         private const val ACTION_QUERY_PURCHASES = ACTION_BAZAAR_BASE + "getPurchase"
+        private const val ACTION_GET_SKU_DETAIL = ACTION_BAZAAR_BASE + "skuDetail"
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
@@ -388,6 +428,8 @@ internal class ReceiverBillingConnection(
             ACTION_BILLING_SUPPORT + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_QUERY_PURCHASES =
             ACTION_QUERY_PURCHASES + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_SKU_DETAILS =
+            ACTION_GET_SKU_DETAIL + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"
