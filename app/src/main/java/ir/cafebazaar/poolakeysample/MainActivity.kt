@@ -13,6 +13,7 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
+import kotlinx.android.synthetic.main.activity_main.developerDiscount
 import kotlinx.android.synthetic.main.activity_main.getSkuDetailInAppButton
 import kotlinx.android.synthetic.main.activity_main.getSkuDetailSubscriptionButton
 import kotlinx.android.synthetic.main.activity_main.purchaseButton
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
                         productId = skuValueInput.text.toString(),
                         requestCode = PURCHASE_REQUEST_CODE,
                         payload = "payload",
-                        discount = null
+                        discount = developerDiscount.text.toString()
                     )
                 ) {
                     purchaseFlowBegan {
