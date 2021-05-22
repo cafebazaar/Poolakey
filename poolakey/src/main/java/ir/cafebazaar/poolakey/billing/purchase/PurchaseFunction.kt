@@ -56,14 +56,6 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
-
-        if (purchaseRequest.discount.isNullOrEmpty().not()) {
-            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
-                BazaarNotSupportedException()
-            )
-            return
-        }
-
         getBuyIntentV3FromBillingService(
             billingService,
             purchaseRequest,
@@ -82,6 +74,14 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
+
+        if (purchaseRequest.discount.isNullOrEmpty().not()) {
+            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
+                BazaarNotSupportedException()
+            )
+            return
+        }
+
         getBuyIntentV2FromBillingService(
             billingService,
             purchaseRequest,
