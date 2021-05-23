@@ -11,6 +11,7 @@ import ir.cafebazaar.poolakey.Payment
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
+import ir.cafebazaar.poolakey.exception.DeveloperDiscountNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
 import kotlinx.android.synthetic.main.activity_main.developerDiscount
@@ -45,42 +46,22 @@ class MainActivity : AppCompatActivity() {
     private fun setViewClickListener() {
         purchaseButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.purchaseProduct(
-                    activity = this,
-                    request = PurchaseRequest(
-                        productId = skuValueInput.text.toString(),
-                        requestCode = PURCHASE_REQUEST_CODE,
-                        payload = "payload",
-                        discount = developerDiscount.text.toString()
-                    )
-                ) {
-                    purchaseFlowBegan {
-                        toast(R.string.general_purchase_flow_began_message)
-                    }
-                    failedToBeginFlow {
-                        toast(R.string.general_purchase_failed_message)
-                    }
-                }
+                purchaseProduct(
+                    productId = skuValueInput.text.toString(),
+                    requestCode = PURCHASE_REQUEST_CODE,
+                    payload = "payload",
+                    discount = developerDiscount.text.toString()
+                )
             }
         }
         subscribeButton.setOnClickListener {
             if (paymentConnection.getState() == ConnectionState.Connected) {
-                payment.subscribeProduct(
-                    activity = this@MainActivity,
-                    request = PurchaseRequest(
-                        productId = skuValueInput.text.toString(),
-                        requestCode = SUBSCRIBE_REQUEST_CODE,
-                        payload = "",
-                        discount = null
-                    )
-                ) {
-                    purchaseFlowBegan {
-                        toast(R.string.general_purchase_flow_began_message)
-                    }
-                    failedToBeginFlow {
-                        toast(R.string.general_purchase_failed_message)
-                    }
-                }
+                subscribeProduct(
+                    productId = skuValueInput.text.toString(),
+                    requestCode = SUBSCRIBE_REQUEST_CODE,
+                    payload = "",
+                    discount = developerDiscount.text.toString()
+                )
             }
         }
         queryPurchasedItemsButton.setOnClickListener {
@@ -94,6 +75,66 @@ class MainActivity : AppCompatActivity() {
             }
         }
         setGetSkuDetailClickListener()
+    }
+
+    private fun subscribeProduct(
+        productId: String,
+        requestCode: Int,
+        payload: String,
+        discount: String?
+    ) {
+        payment.subscribeProduct(
+            activity = this@MainActivity,
+            request = PurchaseRequest(
+                productId = skuValueInput.text.toString(),
+                requestCode = SUBSCRIBE_REQUEST_CODE,
+                payload = "",
+                discount = discount
+            )
+        ) {
+            purchaseFlowBegan {
+                toast(R.string.general_purchase_flow_began_message)
+            }
+            failedToBeginFlow {
+                // bazaar need to update, in this case we only launch purchase without discount
+                if (it is DeveloperDiscountNotSupportedException) {
+                    toast(R.string.general_purchase_failed_developer_discount_message)
+                    subscribeProduct(productId, requestCode, payload, null)
+                } else {
+                    toast(R.string.general_purchase_failed_message)
+                }
+            }
+        }
+    }
+
+    private fun purchaseProduct(
+        productId: String,
+        requestCode: Int,
+        payload: String,
+        discount: String?
+    ) {
+        payment.purchaseProduct(
+            activity = this,
+            request = PurchaseRequest(
+                productId = productId,
+                requestCode = requestCode,
+                payload = payload,
+                discount = discount
+            )
+        ) {
+            purchaseFlowBegan {
+                toast(R.string.general_purchase_flow_began_message)
+            }
+            failedToBeginFlow {
+                // bazaar need to update, in this case we only launch purchase without discount
+                if (it is DeveloperDiscountNotSupportedException) {
+                    toast(R.string.general_purchase_failed_developer_discount_message)
+                    purchaseProduct(productId, requestCode, payload, null)
+                } else {
+                    toast(R.string.general_purchase_failed_message)
+                }
+            }
+        }
     }
 
     private fun setGetSkuDetailClickListener() {
