@@ -8,7 +8,7 @@ To start working with Poolakey, you need to add its dependency into your `build.
 ### Dependency
 ```groovy
 dependencies {
-    implementation "com.github.cafebazaar:Poolakey:[latest_version]"
+    implementation "com.github.cafebazaar.Poolakey:poolakey:[latest_version]"
 }
 ```
 
@@ -31,9 +31,9 @@ Yes, you've read that right! Poolakey supports Reactive Extension framework. Jus
 ```groovy
 dependencies {
     // RxJava 3
-    implementation "com.github.cafebazaar:Poolakey-rx3:[latest_version]"
+    implementation "com.github.cafebazaar.Poolakey:Poolakey-rx3:[latest_version]"
     // RxJava 2
-    implementation "com.github.cafebazaar:Poolakey-rx:[latest_version]"
+    implementation "com.github.cafebazaar.Poolakey:Poolakey-rx:[latest_version]"
 }
 ```
 
