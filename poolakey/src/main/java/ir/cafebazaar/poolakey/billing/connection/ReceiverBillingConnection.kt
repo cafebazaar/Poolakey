@@ -213,7 +213,7 @@ internal class ReceiverBillingConnection(
             putExtra(KEY_SKU, purchaseRequest.productId)
             putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
-            putExtra(KEY_DEVELOPER_DISCOUNT, purchaseRequest.purchaseExtraData())
+            putExtra(KEY_EXTRA_INFO, purchaseRequest.purchaseExtraData())
         }.run(::sendBroadcast)
     }
 
@@ -438,7 +438,7 @@ internal class ReceiverBillingConnection(
         private const val KEY_SKU = "sku"
         private const val KEY_ITEM_TYPE = "itemType"
         private const val KEY_DEVELOPER_PAYLOAD = "developerPayload"
-        private const val KEY_DEVELOPER_DISCOUNT = "developerDiscount"
+        private const val KEY_EXTRA_INFO = "extraInfo"
         private const val KEY_SECURE = "secure"
         private const val KEY_RESPONSE_BUY_INTENT = "BUY_INTENT"
         private const val RESPONSE_CODE = "RESPONSE_CODE"
