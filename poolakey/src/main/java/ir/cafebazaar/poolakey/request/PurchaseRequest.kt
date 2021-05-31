@@ -7,11 +7,11 @@ data class PurchaseRequest(
     val productId: String,
     val requestCode: Int,
     val payload: String? = null,
-    val discount: String?
+    val dynamicPriceToken: String?
 )
 
 internal fun PurchaseRequest.purchaseExtraData(): Bundle {
     return Bundle().apply {
-        putString(BazaarIntent.RESPONSE_DEVELOPER_DISCOUNT, discount)
+        putString(BazaarIntent.RESPONSE_DYNAMIC_PRICE_TOKEN, dynamicPriceToken)
     }
 }

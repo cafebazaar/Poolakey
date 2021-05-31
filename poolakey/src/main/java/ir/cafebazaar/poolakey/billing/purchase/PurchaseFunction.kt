@@ -11,7 +11,7 @@ import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.exception.DeveloperDiscountNotSupportedException
+import ir.cafebazaar.poolakey.exception.DynamicPriceNotSupportedException
 import ir.cafebazaar.poolakey.exception.ResultNotOkayException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.request.purchaseExtraData
@@ -75,9 +75,9 @@ internal class PurchaseFunction(
         intentResponseIsNullError: () -> Unit
     ) {
 
-        if (purchaseRequest.discount.isNullOrEmpty().not()) {
+        if (purchaseRequest.dynamicPriceToken.isNullOrEmpty().not()) {
             PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
-                DeveloperDiscountNotSupportedException()
+                DynamicPriceNotSupportedException()
             )
             return
         }
@@ -100,9 +100,9 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
-        if (purchaseRequest.discount.isNullOrEmpty().not()) {
+        if (purchaseRequest.dynamicPriceToken.isNullOrEmpty().not()) {
             PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
-                DeveloperDiscountNotSupportedException()
+                DynamicPriceNotSupportedException()
             )
             return
         }

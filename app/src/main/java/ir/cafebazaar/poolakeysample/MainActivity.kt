@@ -11,7 +11,7 @@ import ir.cafebazaar.poolakey.Payment
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
-import ir.cafebazaar.poolakey.exception.DeveloperDiscountNotSupportedException
+import ir.cafebazaar.poolakey.exception.DynamicPriceNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
 import kotlinx.android.synthetic.main.activity_main.developerDiscount
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                 productId = skuValueInput.text.toString(),
                 requestCode = SUBSCRIBE_REQUEST_CODE,
                 payload = "",
-                discount = discount
+                dynamicPriceToken = discount
             )
         ) {
             purchaseFlowBegan {
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             }
             failedToBeginFlow {
                 // bazaar need to update, in this case we only launch purchase without discount
-                if (it is DeveloperDiscountNotSupportedException) {
+                if (it is DynamicPriceNotSupportedException) {
                     toast(R.string.general_purchase_failed_developer_discount_message)
                     subscribeProduct(productId, requestCode, payload, null)
                 } else {
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 productId = productId,
                 requestCode = requestCode,
                 payload = payload,
-                discount = discount
+                dynamicPriceToken = discount
             )
         ) {
             purchaseFlowBegan {
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             }
             failedToBeginFlow {
                 // bazaar need to update, in this case we only launch purchase without discount
-                if (it is DeveloperDiscountNotSupportedException) {
+                if (it is DynamicPriceNotSupportedException) {
                     toast(R.string.general_purchase_failed_developer_discount_message)
                     purchaseProduct(productId, requestCode, payload, null)
                 } else {
