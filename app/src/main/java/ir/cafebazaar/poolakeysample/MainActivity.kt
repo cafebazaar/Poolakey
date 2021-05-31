@@ -14,7 +14,7 @@ import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.exception.DynamicPriceNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
-import kotlinx.android.synthetic.main.activity_main.developerDiscount
+import kotlinx.android.synthetic.main.activity_main.dynamicPriceToken
 import kotlinx.android.synthetic.main.activity_main.getSkuDetailInAppButton
 import kotlinx.android.synthetic.main.activity_main.getSkuDetailSubscriptionButton
 import kotlinx.android.synthetic.main.activity_main.purchaseButton
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                     productId = skuValueInput.text.toString(),
                     requestCode = PURCHASE_REQUEST_CODE,
                     payload = "payload",
-                    discount = developerDiscount.text.toString()
+                    discount = dynamicPriceToken.text.toString()
                 )
             }
         }
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                     productId = skuValueInput.text.toString(),
                     requestCode = SUBSCRIBE_REQUEST_CODE,
                     payload = "",
-                    discount = developerDiscount.text.toString()
+                    discount = dynamicPriceToken.text.toString()
                 )
             }
         }
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             failedToBeginFlow {
                 // bazaar need to update, in this case we only launch purchase without discount
                 if (it is DynamicPriceNotSupportedException) {
-                    toast(R.string.general_purchase_failed_developer_discount_message)
+                    toast(R.string.general_purchase_failed_dynamic_price_token_message)
                     subscribeProduct(productId, requestCode, payload, null)
                 } else {
                     toast(R.string.general_purchase_failed_message)
@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
             failedToBeginFlow {
                 // bazaar need to update, in this case we only launch purchase without discount
                 if (it is DynamicPriceNotSupportedException) {
-                    toast(R.string.general_purchase_failed_developer_discount_message)
+                    toast(R.string.general_purchase_failed_dynamic_price_token_message)
                     purchaseProduct(productId, requestCode, payload, null)
                 } else {
                     toast(R.string.general_purchase_failed_message)
