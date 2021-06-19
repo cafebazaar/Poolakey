@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                     productId = skuValueInput.text.toString(),
                     requestCode = PURCHASE_REQUEST_CODE,
                     payload = "payload",
-                    discount = dynamicPriceToken.text.toString()
+                    dynamicPriceToken = dynamicPriceToken.text.toString()
                 )
             }
         }
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                     productId = skuValueInput.text.toString(),
                     requestCode = SUBSCRIBE_REQUEST_CODE,
                     payload = "",
-                    discount = dynamicPriceToken.text.toString()
+                    dynamicPriceToken = dynamicPriceToken.text.toString()
                 )
             }
         }
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         productId: String,
         requestCode: Int,
         payload: String,
-        discount: String?
+        dynamicPriceToken: String?
     ) {
         payment.subscribeProduct(
             activity = this@MainActivity,
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                 productId = skuValueInput.text.toString(),
                 requestCode = SUBSCRIBE_REQUEST_CODE,
                 payload = "",
-                dynamicPriceToken = discount
+                dynamicPriceToken = dynamicPriceToken
             )
         ) {
             purchaseFlowBegan {
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         productId: String,
         requestCode: Int,
         payload: String,
-        discount: String?
+        dynamicPriceToken: String?
     ) {
         payment.purchaseProduct(
             activity = this,
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 productId = productId,
                 requestCode = requestCode,
                 payload = payload,
-                dynamicPriceToken = discount
+                dynamicPriceToken = dynamicPriceToken
             )
         ) {
             purchaseFlowBegan {
