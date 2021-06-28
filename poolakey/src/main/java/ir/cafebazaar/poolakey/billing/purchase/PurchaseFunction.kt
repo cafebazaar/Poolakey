@@ -37,14 +37,14 @@ internal class PurchaseFunction(
             }
 
             when {
-                doesClientSupportIntentV3(purchaseConfigBundle) -> {
-                    fireBuyIntentV3(billingService, intentResponseIsNullError)
+                isBazaarSupportIntentV3(purchaseConfigBundle) -> {
+                    launchBuyIntentV3(billingService, intentResponseIsNullError)
                 }
-                doesClientSupportIntentV2(purchaseConfigBundle) -> {
-                    fireBuyIntentV2(billingService, intentResponseIsNullError)
+                isBazaarSupportIntentV2(purchaseConfigBundle) -> {
+                    launchBuyIntentV2(billingService, intentResponseIsNullError)
                 }
                 else -> {
-                    fireBuyIntent(billingService, intentResponseIsNullError)
+                    launchBuyIntent(billingService, intentResponseIsNullError)
                 }
             }
         } catch (e: RemoteException) {
@@ -52,7 +52,7 @@ internal class PurchaseFunction(
         }
     }
 
-    private fun PurchaseFunctionRequest.fireBuyIntentV3(
+    private fun PurchaseFunctionRequest.launchBuyIntentV3(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
@@ -66,11 +66,11 @@ internal class PurchaseFunction(
                 bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
             }, andIfNot = intentResponseIsNullError
         )?.getParcelable<Intent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-            fireIntentWithIntent.invoke(purchaseIntent)
+            launchIntent.invoke(purchaseIntent)
         }
     }
 
-    private fun PurchaseFunctionRequest.fireBuyIntentV2(
+    private fun PurchaseFunctionRequest.launchBuyIntentV2(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
@@ -92,11 +92,11 @@ internal class PurchaseFunction(
                 bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
             }, andIfNot = intentResponseIsNullError
         )?.getParcelable<Intent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-            fireIntentWithIntent.invoke(purchaseIntent)
+            launchIntent.invoke(purchaseIntent)
         }
     }
 
-    private fun PurchaseFunctionRequest.fireBuyIntent(
+    private fun PurchaseFunctionRequest.launchBuyIntent(
         billingService: IInAppBillingService,
         intentResponseIsNullError: () -> Unit
     ) {
@@ -117,7 +117,7 @@ internal class PurchaseFunction(
                 bundle.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY) != null
             }, andIfNot = intentResponseIsNullError
         )?.getParcelable<PendingIntent>(INTENT_RESPONSE_BUY)?.also { purchaseIntent ->
-            fireIntentWithIntentSender.invoke(purchaseIntent.intentSender)
+            launchIntentWithIntentSender.invoke(purchaseIntent.intentSender)
         }
     }
 
@@ -172,11 +172,11 @@ internal class PurchaseFunction(
         }
     )
 
-    private fun doesClientSupportIntentV2(purchaseConfigBundle: Bundle?): Boolean {
+    private fun isBazaarSupportIntentV2(purchaseConfigBundle: Bundle?): Boolean {
         return purchaseConfigBundle?.getBoolean(INTENT_V2_SUPPORT) ?: false
     }
 
-    private fun doesClientSupportIntentV3(purchaseConfigBundle: Bundle?): Boolean {
+    private fun isBazaarSupportIntentV3(purchaseConfigBundle: Bundle?): Boolean {
         return purchaseConfigBundle?.getBoolean(INTENT_V3_SUPPORT) ?: false
     }
 
