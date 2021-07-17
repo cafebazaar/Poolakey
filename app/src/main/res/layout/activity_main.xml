@@ -27,6 +27,13 @@
             android:hint="@string/general_product_id_hint"
             android:padding="16dp" />
 
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/dynamicPriceToken"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="@string/general_dynamic_price_token_hint"
+            android:padding="16dp" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/consumeSwitch"
             android:layout_width="match_parent"
