@@ -33,6 +33,7 @@ import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.receiver.BillingReceiver
 import ir.cafebazaar.poolakey.receiver.BillingReceiverCommunicator
 import ir.cafebazaar.poolakey.request.PurchaseRequest
+import ir.cafebazaar.poolakey.request.purchaseExtraData
 import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
@@ -212,9 +213,9 @@ internal class ReceiverBillingConnection(
             putExtra(KEY_SKU, purchaseRequest.productId)
             putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
+            putExtra(KEY_EXTRA_INFO, purchaseRequest.purchaseExtraData())
         }.run(::sendBroadcast)
     }
-
 
     override fun stopConnection() {
         disconnected = true
@@ -437,6 +438,7 @@ internal class ReceiverBillingConnection(
         private const val KEY_SKU = "sku"
         private const val KEY_ITEM_TYPE = "itemType"
         private const val KEY_DEVELOPER_PAYLOAD = "developerPayload"
+        private const val KEY_EXTRA_INFO = "extraInfo"
         private const val KEY_SECURE = "secure"
         private const val KEY_RESPONSE_BUY_INTENT = "BUY_INTENT"
         private const val RESPONSE_CODE = "RESPONSE_CODE"
