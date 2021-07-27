@@ -11,6 +11,6 @@ internal class PurchaseFunctionRequest(
     val purchaseRequest: PurchaseRequest,
     val purchaseType: PurchaseType,
     val callback: PurchaseIntentCallback.() -> Unit,
-    val fireIntentWithIntentSender: (IntentSender) -> Unit,
-    val fireIntentWithIntent: (Intent) -> Unit
+    val launchIntentWithIntentSender: (IntentSender) -> Unit,
+    val launchIntent: (Intent) -> Unit
 ) : FunctionRequest

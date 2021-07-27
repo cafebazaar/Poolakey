@@ -6,6 +6,7 @@
     <string name="general_subscribe_text">Subscribe</string>
     <string name="general_consume_purchase_text">Consume Purchase</string>
     <string name="general_product_id_hint">Product id</string>
+    <string name="general_dynamic_price_token_hint">Dynamic price token</string>
     <string name="general_service_connection_not_connected_text">Service: Not Connected</string>
     <string name="general_service_connection_connected_text">Service: Connected</string>
     <string name="general_service_connection_failed_text">Service: Failed to Connect</string>
@@ -18,6 +19,7 @@
     <string name="general_purchase_succeed_message">Purchase succeed</string>
     <string name="general_purchase_cancelled_message">Purchase Cancelled</string>
     <string name="general_purchase_failed_message">Purchase failed</string>
+    <string name="general_purchase_failed_dynamic_price_token_message">Dynamic price token not supported in this bazaar version</string>
     <string name="general_consume_succeed_message">Consume succeed</string>
     <string name="general_consume_failed_message">Consume failed</string>
     <string name="general_query_purchased_items_failed_message">Query failed</string>
