@@ -11,11 +11,14 @@ import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.skudetail.extractSkuDetailDataFromBundle
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
+import ir.cafebazaar.poolakey.billing.trialsubscription.extractTrialSubscriptionDataFromBundle
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
@@ -47,6 +50,7 @@ internal class ReceiverBillingConnection(
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
     private var skuDetailCallback: (GetSkuDetailsCallback.() -> Unit)? = null
+    private var checkTrialSubscriptionCallback: (CheckTrialSubscriptionCallback.() -> Unit)? = null
 
     private var connectionCallbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
@@ -135,6 +139,9 @@ internal class ReceiverBillingConnection(
             ACTION_RECEIVE_SKU_DETAILS -> {
                 onGetSkuDetailsReceived(extras)
             }
+            ACTION_RECEIVE_CHECK_TRIAL_SUBSCRIPTION -> {
+                onCheckTrialSubscriptionReceived(extras)
+            }
         }
     }
 
@@ -202,6 +209,16 @@ internal class ReceiverBillingConnection(
         }.run(::sendBroadcast)
     }
 
+    override fun checkTrialSubscription(
+        request: CheckTrialSubscriptionFunctionRequest,
+        callback: CheckTrialSubscriptionCallback.() -> Unit
+    ) {
+        checkTrialSubscriptionCallback = callback
+        getNewIntentForBroadcast().apply {
+            action = ACTION_CHECK_TRIAL_SUBSCRIPTION
+        }.run(::sendBroadcast)
+    }
+
     private fun sendPurchaseBroadcast(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -230,6 +247,7 @@ internal class ReceiverBillingConnection(
         consumeCallback = null
         queryCallback = null
         skuDetailCallback = null
+        checkTrialSubscriptionCallback = null
         connectionCallbackReference = null
         contextReference = null
 
@@ -349,6 +367,23 @@ internal class ReceiverBillingConnection(
         }
     }
 
+    private fun onCheckTrialSubscriptionReceived(extras: Bundle?) {
+        if (checkTrialSubscriptionCallback == null) {
+            return
+        }
+
+        if (isResponseSucceed(extras)) {
+            val response = extractTrialSubscriptionDataFromBundle(requireNotNull(extras))
+            CheckTrialSubscriptionCallback()
+                .apply(requireNotNull(checkTrialSubscriptionCallback))
+                .checkTrialSubscriptionSucceed.invoke(requireNotNull(response))
+        } else {
+            CheckTrialSubscriptionCallback().apply(requireNotNull(checkTrialSubscriptionCallback)).run {
+                checkTrialSubscriptionFailed.invoke(ResultNotOkayException())
+            }
+        }
+    }
+
     private fun onBillingSupportActionReceived(extras: Bundle?) {
         val isResponseSucceed = isResponseSucceed(extras)
         val isSubscriptionSupport = isSubscriptionSupport(extras)
@@ -422,6 +457,7 @@ internal class ReceiverBillingConnection(
         private const val ACTION_PURCHASE = ACTION_BAZAAR_BASE + "purchase"
         private const val ACTION_QUERY_PURCHASES = ACTION_BAZAAR_BASE + "getPurchase"
         private const val ACTION_GET_SKU_DETAIL = ACTION_BAZAAR_BASE + "skuDetail"
+        private const val ACTION_CHECK_TRIAL_SUBSCRIPTION = ACTION_BAZAAR_BASE + "checkTrialSubscription"
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
@@ -431,6 +467,8 @@ internal class ReceiverBillingConnection(
             ACTION_QUERY_PURCHASES + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_SKU_DETAILS =
             ACTION_GET_SKU_DETAIL + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_CHECK_TRIAL_SUBSCRIPTION =
+            ACTION_CHECK_TRIAL_SUBSCRIPTION + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"
