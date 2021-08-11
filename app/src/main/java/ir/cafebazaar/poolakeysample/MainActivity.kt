@@ -13,6 +13,7 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.exception.DynamicPriceNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
+import kotlinx.android.synthetic.main.activity_main.checkTrialSubscriptionButton
 import kotlinx.android.synthetic.main.activity_main.consumeSwitch
 import kotlinx.android.synthetic.main.activity_main.dynamicPriceToken
 import kotlinx.android.synthetic.main.activity_main.getSkuDetailInAppButton
@@ -73,6 +74,9 @@ class MainActivity : AppCompatActivity() {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 payment.getSubscribedProducts(handlePurchaseQueryCallback())
             }
+        }
+        checkTrialSubscriptionButton.setOnClickListener {
+            onCheckTrialSubscriptionClicked()
         }
         setGetSkuDetailClickListener()
     }
@@ -163,6 +167,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onCheckTrialSubscriptionClicked() {
+        if (paymentConnection.getState() == ConnectionState.Connected) {
+            payment.checkTrialSubscription {
+                checkTrialSubscriptionSucceed {
+                    toast(it.toString())
+                }
+                checkTrialSubscriptionFailed {
+                    toast(R.string.general_check_trial_subscription_failed_message)
+                }
+            }
+        }
+    }
+
     private fun onGetSkuDetailInAppClicked() {
         if (paymentConnection.getState() == ConnectionState.Connected) {
             payment.getInAppSkuDetails(
@@ -247,8 +264,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+
         private const val PURCHASE_REQUEST_CODE = 1000
         private const val SUBSCRIBE_REQUEST_CODE = 1001
     }
-
 }
