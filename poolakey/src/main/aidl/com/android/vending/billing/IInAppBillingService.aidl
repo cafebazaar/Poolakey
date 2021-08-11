@@ -24,6 +24,8 @@ interface IInAppBillingService {
 
     Bundle getSkuDetails(int apiVersion, String packageName, String type, in Bundle skusBundle);
 
+    Bundle checkTrialSubscription(int apiVersion, String packageName);
+
     Bundle getBuyIntent(int apiVersion,
         String packageName,
         String sku,
