@@ -6,12 +6,14 @@ import android.content.Intent
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.mapper.RawDataToPurchaseInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
@@ -40,12 +42,18 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
         mainThread
     )
 
+    private val checkTrialSubscriptionFunction = CheckTrialSubscriptionFunction(
+        context,
+        mainThread
+    )
+
     private val connection = BillingConnection(
         context = context,
         paymentConfiguration = config,
         queryFunction = queryFunction,
         backgroundThread = backgroundThread,
         skuDetailFunction = getSkuFunction,
+        checkTrialSubscriptionFunction = checkTrialSubscriptionFunction,
         mainThread = mainThread
     )
 
@@ -214,6 +222,16 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
     }
 
     /**
+     * You can use this function to check trial subscription,
+     * @param callback You have to use callback in order to get notified about check trial subscription result.
+     */
+    fun checkTrialSubscription(
+        callback: CheckTrialSubscriptionCallback.() -> Unit
+    ) {
+        connection.checkTrialSubscription(callback)
+    }
+
+    /**
      * You have to use this function in order to check if user purchased or subscribed the product.
      * Note that even if the purchase was successful, it's highly recommended to double check the
      * purchase via Bazaar's REST API: http://developers.cafebazaar.ir/fa/docs/developer-api-v2-introduction/
@@ -256,6 +274,7 @@ class Payment(context: Context, private val config: PaymentConfiguration) {
     }
 
     companion object {
+
         @Volatile
         private var requestCode: Int = -1
     }
