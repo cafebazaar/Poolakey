@@ -20,14 +20,18 @@ import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
+import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
@@ -45,6 +49,7 @@ internal class ServiceBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
     private val queryFunction: QueryFunction,
     private val getSkuDetailFunction: GetSkuDetailFunction,
+    private val checkTrialSubscriptionFunction: CheckTrialSubscriptionFunction,
     private val onServiceDisconnected: () -> Unit
 ) : BillingConnectionCommunicator, ServiceConnection {
 
@@ -234,6 +239,20 @@ internal class ServiceBillingConnection(
         GetSkuDetailsCallback().apply(callback).getSkuDetailsFailed.invoke(DisconnectException())
     }
 
+    override fun checkTrialSubscription(
+        request: CheckTrialSubscriptionFunctionRequest,
+        callback: CheckTrialSubscriptionCallback.() -> Unit
+    ) = withService(runOnBackground = true) {
+        checkTrialSubscriptionFunction.function(
+            billingService = this,
+            request = request
+        )
+    } ifServiceIsDisconnected {
+        CheckTrialSubscriptionCallback().apply(callback).checkTrialSubscriptionFailed.invoke(
+            DisconnectException()
+        )
+    }
+
     private fun purchase(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -305,6 +324,5 @@ internal class ServiceBillingConnection(
 
     companion object {
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
-        private const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
     }
 }
