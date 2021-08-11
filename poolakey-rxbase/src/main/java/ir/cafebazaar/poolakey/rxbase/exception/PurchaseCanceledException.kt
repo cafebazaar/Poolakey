@@ -4,7 +4,7 @@ import java.lang.Exception
 
 class PurchaseCanceledException : Exception() {
 
-    override val message: String?
+    override val message: String
         get() = "Purchase canceled by user"
 
 }
