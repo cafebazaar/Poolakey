@@ -14,6 +14,7 @@
     <string name="general_query_subscription_text">Check if user subscribed this item</string>
     <string name="general_get_sku_detail_inapp_text">Get Sku detail of in-app item</string>
     <string name="general_get_sku_detail_sub_text">Get Sku detail of subscription item</string>
+    <string name="general_check_trial_subscription_text">Check Trial subscription</string>
 
     <string name="general_purchase_flow_began_message">Purchase flow began</string>
     <string name="general_purchase_succeed_message">Purchase succeed</string>
@@ -24,6 +25,7 @@
     <string name="general_consume_failed_message">Consume failed</string>
     <string name="general_query_purchased_items_failed_message">Query failed</string>
     <string name="general_query_get_sku_detail_failed_message">Get sku detail failed</string>
+    <string name="general_check_trial_subscription_failed_message">Check Trial Subscription failed</string>
     <string name="general_user_purchased_item_message">User has bought this item</string>
     <string name="general_user_did_not_purchased_item_message">User has not bought this item</string>
 
