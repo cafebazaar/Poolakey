@@ -8,12 +8,9 @@ import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ResultNotOkayException
-import ir.cafebazaar.poolakey.getPackageInfo
-import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
@@ -25,52 +22,53 @@ internal class CheckTrialSubscriptionFunction(
     override fun function(
         billingService: IInAppBillingService,
         request: CheckTrialSubscriptionFunctionRequest
-    ) {
-        with(request) {
-            if (isBazaarSupportCheckTrialSubscription().not()) {
+    ): Unit = with(request) {
+        try {
+            val featureConfigBundle = billingService.featureConfig
+
+            if (isBazaarSupportCheckTrialSub(featureConfigBundle).not()) {
                 CheckTrialSubscriptionCallback().apply(callback)
                     .checkTrialSubscriptionFailed
                     .invoke(BazaarNotSupportedException())
-                return
+                return@with
             }
 
-            try {
-                billingService.checkTrialSubscription(
-                    Billing.IN_APP_BILLING_VERSION,
-                    context.packageName,
-                )?.takeIfIsResponseOKOrThrowException(
-                    mainThread,
-                    callback
-                )?.takeIfBundleContainsCorrectResponseKeyOrThrowException(
-                    mainThread,
-                    callback
-                )?.let { bundle ->
-                    extractTrialSubscriptionDataFromBundle(bundle)
-                }?.also { items ->
-                    mainThread.execute {
-                        CheckTrialSubscriptionCallback().apply(callback).checkTrialSubscriptionSucceed.invoke(
-                            items
-                        )
-                    }
-                }
-            } catch (e: RemoteException) {
+            billingService.checkTrialSubscription(
+                Billing.IN_APP_BILLING_VERSION,
+                context.packageName,
+            )?.takeIfIsResponseOKOrThrowException(
+                mainThread,
+                callback
+            )?.takeIfBundleContainsCorrectResponseKeyOrThrowException(
+                mainThread,
+                callback
+            )?.let { bundle ->
+                extractTrialSubscriptionDataFromBundle(bundle)
+            }?.also { items ->
                 mainThread.execute {
                     CheckTrialSubscriptionCallback().apply(callback)
-                        .checkTrialSubscriptionFailed.invoke(e)
+                        .checkTrialSubscriptionSucceed
+                        .invoke(items)
                 }
+            }
+        } catch (e: RemoteException) {
+            mainThread.execute {
+                CheckTrialSubscriptionCallback().apply(callback)
+                    .checkTrialSubscriptionFailed.invoke(e)
             }
         }
     }
 
-    private fun isBazaarSupportCheckTrialSubscription(): Boolean {
-        return getPackageInfo(context, Const.BAZAAR_PACKAGE_NAME)?.let {
-            sdkAwareVersionCode(it)
-        } ?: 0L > BAZAAR_CHECK_TRIAL_SUB_SUPPORT_VERSION
+    private fun isBazaarSupportCheckTrialSub(featureConfigBundle: Bundle?): Boolean {
+        return featureConfigBundle?.getBoolean(
+            INTENT_TRIAL_SUBSCRIPTION_SUPPORT,
+            false
+        ) ?: false
     }
 
     companion object {
 
-        private const val BAZAAR_CHECK_TRIAL_SUB_SUPPORT_VERSION = 1300801
+        private const val INTENT_TRIAL_SUBSCRIPTION_SUPPORT = "INTENT_TRIAL_SUBSCRIPTION_SUPPORT"
     }
 }
 
