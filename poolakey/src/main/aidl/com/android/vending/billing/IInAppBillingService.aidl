@@ -49,7 +49,7 @@ interface IInAppBillingService {
         String developerPayload,
         in Bundle extraData);
 
-    Bundle checkTrialSubscription(int apiVersion, String packageName);
+    Bundle checkTrialSubscription(String packageName);
 
     Bundle getFeatureConfig();
 }

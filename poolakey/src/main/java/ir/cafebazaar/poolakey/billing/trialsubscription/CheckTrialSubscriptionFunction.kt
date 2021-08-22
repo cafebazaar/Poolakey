@@ -8,7 +8,6 @@ import ir.cafebazaar.poolakey.billing.BillingFunction
 import ir.cafebazaar.poolakey.billing.FeatureConfig.isCheckTrialSubscriptionAvailable
 import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
-import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ResultNotOkayException
@@ -35,7 +34,6 @@ internal class CheckTrialSubscriptionFunction(
             }
 
             billingService.checkTrialSubscription(
-                Billing.IN_APP_BILLING_VERSION,
                 context.packageName,
             )?.takeIfIsResponseOKOrThrowException(
                 mainThread,
