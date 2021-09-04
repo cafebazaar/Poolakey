@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
                     toast(it.toString())
                 }
                 checkTrialSubscriptionFailed {
-                    toast(R.string.general_check_trial_subscription_failed_message)
+                    it.message?.let { message -> toast(message) }
                 }
             }
         }
