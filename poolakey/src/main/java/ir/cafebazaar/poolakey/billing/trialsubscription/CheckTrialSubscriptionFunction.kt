@@ -5,7 +5,8 @@ import android.os.Bundle
 import android.os.RemoteException
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.billing.BillingFunction
-import ir.cafebazaar.poolakey.billing.FeatureConfig.isCheckTrialSubscriptionAvailable
+import ir.cafebazaar.poolakey.billing.Feature
+import ir.cafebazaar.poolakey.billing.FeatureConfig
 import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
@@ -24,9 +25,11 @@ internal class CheckTrialSubscriptionFunction(
         request: CheckTrialSubscriptionFunctionRequest
     ): Unit = with(request) {
         try {
-            val featureConfigBundle = billingService.featureConfig
-
-            if (isCheckTrialSubscriptionAvailable(featureConfigBundle).not()) {
+            val isCheckTrialSubscriptionAvailable = FeatureConfig.isFeatureAvailable(
+                featureConfigBundle = billingService.featureConfig,
+                feature = Feature.CHECK_TRIAL_SUBSCRIPTION
+            )
+            if (isCheckTrialSubscriptionAvailable.not()) {
                 CheckTrialSubscriptionCallback().apply(callback)
                     .checkTrialSubscriptionFailed
                     .invoke(BazaarNotSupportedException())

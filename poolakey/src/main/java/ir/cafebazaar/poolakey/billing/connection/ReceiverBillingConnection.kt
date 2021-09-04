@@ -6,7 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
-import ir.cafebazaar.poolakey.billing.FeatureConfig.isCheckTrialSubscriptionAvailable
+import ir.cafebazaar.poolakey.billing.Feature
+import ir.cafebazaar.poolakey.billing.FeatureConfig.isFeatureAvailable
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
@@ -230,7 +231,8 @@ internal class ReceiverBillingConnection(
         callback: CheckTrialSubscriptionCallback.() -> Unit
     ) {
         checkTrialSubscriptionCallback = callback
-        bazaarSupportCheckTrialSubscription(
+        bazaarSupportFeature(
+            feature = Feature.CHECK_TRIAL_SUBSCRIPTION,
             isSupport = {
                 getNewIntentForBroadcast().apply {
                     action = ACTION_CHECK_TRIAL_SUBSCRIPTION
@@ -245,7 +247,8 @@ internal class ReceiverBillingConnection(
         )
     }
 
-    private fun bazaarSupportCheckTrialSubscription(
+    private fun bazaarSupportFeature(
+        feature: Feature,
         isSupport: () -> Unit,
         error: (Exception) -> Unit
     ) {
@@ -255,8 +258,8 @@ internal class ReceiverBillingConnection(
         }
 
         getFeatureConfig {
-            getFeatureConfigSucceed {
-                if (isCheckTrialSubscriptionAvailable(it)) {
+            getFeatureConfigSucceed { bundle ->
+                if (isFeatureAvailable(featureConfigBundle = bundle, feature)) {
                     isSupport.invoke()
                 } else {
                     error.invoke(BazaarNotSupportedException())

@@ -4,12 +4,17 @@ import android.os.Bundle
 
 internal object FeatureConfig {
 
-    private const val INTENT_TRIAL_SUBSCRIPTION_SUPPORT = "INTENT_TRIAL_SUBSCRIPTION_SUPPORT"
-
-    internal fun isCheckTrialSubscriptionAvailable(featureConfigBundle: Bundle?): Boolean {
+    internal fun isFeatureAvailable(
+        featureConfigBundle: Bundle?,
+        feature: Feature
+    ): Boolean {
         return featureConfigBundle?.getBoolean(
-            INTENT_TRIAL_SUBSCRIPTION_SUPPORT,
+            feature.key,
             false
         ) ?: false
     }
+}
+
+internal enum class Feature(val key: String) {
+    CHECK_TRIAL_SUBSCRIPTION("INTENT_TRIAL_SUBSCRIPTION_SUPPORT")
 }
