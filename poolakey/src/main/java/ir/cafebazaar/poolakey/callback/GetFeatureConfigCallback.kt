@@ -3,7 +3,7 @@ package ir.cafebazaar.poolakey.callback
 import android.os.Bundle
 import java.lang.Exception
 
-class GetFeatureConfigCallback {
+internal class GetFeatureConfigCallback {
 
     internal var getFeatureConfigSucceed: (Bundle) -> Unit = {}
 
