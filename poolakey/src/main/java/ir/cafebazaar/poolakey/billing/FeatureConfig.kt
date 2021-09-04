@@ -2,7 +2,7 @@ package ir.cafebazaar.poolakey.billing
 
 import android.os.Bundle
 
-object FeatureConfig {
+internal object FeatureConfig {
 
     private const val INTENT_TRIAL_SUBSCRIPTION_SUPPORT = "INTENT_TRIAL_SUBSCRIPTION_SUPPORT"
 
