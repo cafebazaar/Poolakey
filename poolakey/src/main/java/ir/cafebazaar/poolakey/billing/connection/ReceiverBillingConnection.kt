@@ -523,7 +523,7 @@ internal class ReceiverBillingConnection(
     companion object {
 
         private const val BAZAAR_WITH_RECEIVER_CONNECTION_VERSION = 801301
-        private const val BAZAAR_WITH_FEATURE_CONFIG_VERSION = 1400400
+        private const val BAZAAR_WITH_FEATURE_CONFIG_VERSION = 1400500
 
         private const val DEFAULT_SECURE_SIGNATURE = "secureBroadcastKey"
         private const val ACTION_BAZAAR_BASE = "com.farsitel.bazaar."
