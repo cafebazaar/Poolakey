@@ -231,9 +231,9 @@ internal class ReceiverBillingConnection(
         callback: CheckTrialSubscriptionCallback.() -> Unit
     ) {
         checkTrialSubscriptionCallback = callback
-        bazaarSupportFeature(
+        isFeatureSupportedByBazaar(
             feature = Feature.CHECK_TRIAL_SUBSCRIPTION,
-            isSupport = {
+            isSupported = {
                 getNewIntentForBroadcast().apply {
                     action = ACTION_CHECK_TRIAL_SUBSCRIPTION
                 }.run(::sendBroadcast)
@@ -247,12 +247,12 @@ internal class ReceiverBillingConnection(
         )
     }
 
-    private fun bazaarSupportFeature(
+    private fun isFeatureSupportedByBazaar(
         feature: Feature,
-        isSupport: () -> Unit,
+        isSupported: () -> Unit,
         error: (Exception) -> Unit
     ) {
-        if (isBazaarVersionSupportFeatureConfig().not()) {
+        if (isBazaarVersionSupportedFeatureConfig().not()) {
             error.invoke(BazaarNotSupportedException())
             return
         }
@@ -260,7 +260,7 @@ internal class ReceiverBillingConnection(
         getFeatureConfig {
             getFeatureConfigSucceed { bundle ->
                 if (isFeatureAvailable(featureConfigBundle = bundle, feature)) {
-                    isSupport.invoke()
+                    isSupported.invoke()
                 } else {
                     error.invoke(BazaarNotSupportedException())
                 }
@@ -271,7 +271,7 @@ internal class ReceiverBillingConnection(
         }
     }
 
-    private fun isBazaarVersionSupportFeatureConfig(): Boolean {
+    private fun isBazaarVersionSupportedFeatureConfig(): Boolean {
         return bazaarVersionCode >= BAZAAR_WITH_FEATURE_CONFIG_VERSION
     }
 
