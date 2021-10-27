@@ -8,7 +8,8 @@
     <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />
 
     <application>
-        <receiver android:name=".receiver.BillingReceiver">
+        <receiver android:name=".receiver.BillingReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.farsitel.bazaar.purchase" />
                 <action android:name="com.farsitel.bazaar.billingSupport" />
