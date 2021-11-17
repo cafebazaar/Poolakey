@@ -17,6 +17,7 @@
                 <action android:name="com.farsitel.bazaar.consume" />
                 <action android:name="com.farsitel.bazaar.getPurchase" />
                 <action android:name="com.farsitel.bazaar.skuDetail" />
+                <action android:name="com.farsitel.bazaar.checkTrialSubscription" />
             </intent-filter>
         </receiver>
     </application>

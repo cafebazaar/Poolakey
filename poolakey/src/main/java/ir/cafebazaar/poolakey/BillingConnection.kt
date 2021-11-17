@@ -9,11 +9,14 @@ import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
@@ -24,6 +27,7 @@ internal class BillingConnection(
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val queryFunction: QueryFunction,
     private val skuDetailFunction: GetSkuDetailFunction,
+    private val checkTrialSubscriptionFunction: CheckTrialSubscriptionFunction,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
@@ -41,6 +45,7 @@ internal class BillingConnection(
             paymentConfiguration,
             queryFunction,
             skuDetailFunction,
+            checkTrialSubscriptionFunction,
             ::disconnect
         )
 
@@ -133,6 +138,17 @@ internal class BillingConnection(
         }
     }
 
+    fun checkTrialSubscription(
+        callback: CheckTrialSubscriptionCallback.() -> Unit
+    ) {
+        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) {
+            requireNotNull(billingCommunicator).checkTrialSubscription(
+                CheckTrialSubscriptionFunctionRequest(callback),
+                callback
+            )
+        }
+    }
+
     private fun stopConnection() {
         runOnCommunicator(TAG_STOP_CONNECTION) {
             requireNotNull(billingCommunicator).stopConnection()
@@ -165,10 +181,12 @@ internal class BillingConnection(
     }
 
     companion object {
+
         private const val TAG_STOP_CONNECTION = "stopConnection"
         private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
         private const val TAG_CONSUME = "consume"
         private const val TAG_PURCHASE = "purchase"
         private const val TAG_GET_SKU_DETAIL = "skuDetial"
+        private const val TAG_CHECK_TRIAL_SUBSCRIPTION = "checkTrialSubscription"
     }
 }

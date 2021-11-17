@@ -5,11 +5,13 @@ import android.content.Context
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 
 internal interface BillingConnectionCommunicator {
@@ -46,6 +48,11 @@ internal interface BillingConnectionCommunicator {
     fun getSkuDetails(
         request: SkuDetailFunctionRequest,
         callback: GetSkuDetailsCallback.() -> Unit,
+    )
+
+    fun checkTrialSubscription(
+        request: CheckTrialSubscriptionFunctionRequest,
+        callback: CheckTrialSubscriptionCallback.() -> Unit,
     )
 
     fun stopConnection()
