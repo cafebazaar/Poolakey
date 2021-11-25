@@ -6,13 +6,19 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
+import ir.cafebazaar.poolakey.billing.Feature
+import ir.cafebazaar.poolakey.billing.FeatureConfig.isFeatureAvailable
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
 import ir.cafebazaar.poolakey.billing.query.QueryFunctionRequest
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.skudetail.extractSkuDetailDataFromBundle
+import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
+import ir.cafebazaar.poolakey.billing.trialsubscription.extractTrialSubscriptionDataFromBundle
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
+import ir.cafebazaar.poolakey.callback.GetFeatureConfigCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
@@ -47,12 +53,15 @@ internal class ReceiverBillingConnection(
     private var consumeCallback: (ConsumeCallback.() -> Unit)? = null
     private var queryCallback: (PurchaseQueryCallback.() -> Unit)? = null
     private var skuDetailCallback: (GetSkuDetailsCallback.() -> Unit)? = null
+    private var checkTrialSubscriptionCallback: (CheckTrialSubscriptionCallback.() -> Unit)? = null
+    private var featureConfigCallback: (GetFeatureConfigCallback.() -> Unit)? = null
 
     private var connectionCallbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
     private var receiverCommunicator: BillingReceiverCommunicator? = null
     private var disconnected: Boolean = false
+    private var bazaarVersionCode: Long = 0L
 
     private var purchaseFragmentWeakReference: WeakReference<PurchaseWeakHolder<Fragment>>? = null
     private var purchaseActivityWeakReference: WeakReference<PurchaseWeakHolder<Activity>>? = null
@@ -65,12 +74,12 @@ internal class ReceiverBillingConnection(
             return false
         }
 
-        val bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
+        bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
             sdkAwareVersionCode(it)
         } ?: 0L
 
         return when {
-            canConnectWithReceiverComponent(bazaarVersionCode) -> {
+            canConnectWithReceiverComponent() -> {
                 createReceiverConnection()
                 registerBroadcast()
                 isPurchaseTypeSupported()
@@ -86,7 +95,7 @@ internal class ReceiverBillingConnection(
         }
     }
 
-    private fun canConnectWithReceiverComponent(bazaarVersionCode: Long): Boolean {
+    private fun canConnectWithReceiverComponent(): Boolean {
         return bazaarVersionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
     }
 
@@ -134,6 +143,12 @@ internal class ReceiverBillingConnection(
             }
             ACTION_RECEIVE_SKU_DETAILS -> {
                 onGetSkuDetailsReceived(extras)
+            }
+            ACTION_RECEIVE_GET_FEATURE_CONFIG -> {
+                onGetFeatureConfigReceived(extras)
+            }
+            ACTION_RECEIVE_CHECK_TRIAL_SUBSCRIPTION -> {
+                onCheckTrialSubscriptionReceived(extras)
             }
         }
     }
@@ -202,6 +217,64 @@ internal class ReceiverBillingConnection(
         }.run(::sendBroadcast)
     }
 
+    private fun getFeatureConfig(
+        callback: GetFeatureConfigCallback.() -> Unit
+    ) {
+        featureConfigCallback = callback
+        getNewIntentForBroadcast().apply {
+            action = ACTION_GET_FEATURE_CONFIG
+        }.run(::sendBroadcast)
+    }
+
+    override fun checkTrialSubscription(
+        request: CheckTrialSubscriptionFunctionRequest,
+        callback: CheckTrialSubscriptionCallback.() -> Unit
+    ) {
+        checkTrialSubscriptionCallback = callback
+        isFeatureSupportedByBazaar(
+            feature = Feature.CHECK_TRIAL_SUBSCRIPTION,
+            isSupported = {
+                getNewIntentForBroadcast().apply {
+                    action = ACTION_CHECK_TRIAL_SUBSCRIPTION
+                }.run(::sendBroadcast)
+            },
+            error = {
+                CheckTrialSubscriptionCallback()
+                    .apply(requireNotNull(checkTrialSubscriptionCallback))
+                    .checkTrialSubscriptionFailed
+                    .invoke(it)
+            }
+        )
+    }
+
+    private fun isFeatureSupportedByBazaar(
+        feature: Feature,
+        isSupported: () -> Unit,
+        error: (Exception) -> Unit
+    ) {
+        if (isBazaarVersionSupportedFeatureConfig().not()) {
+            error.invoke(BazaarNotSupportedException())
+            return
+        }
+
+        getFeatureConfig {
+            getFeatureConfigSucceed { bundle ->
+                if (isFeatureAvailable(featureConfigBundle = bundle, feature)) {
+                    isSupported.invoke()
+                } else {
+                    error.invoke(BazaarNotSupportedException())
+                }
+            }
+            getFeatureConfigFailed {
+                error.invoke(it)
+            }
+        }
+    }
+
+    private fun isBazaarVersionSupportedFeatureConfig(): Boolean {
+        return bazaarVersionCode >= BAZAAR_WITH_FEATURE_CONFIG_VERSION
+    }
+
     private fun sendPurchaseBroadcast(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
@@ -230,6 +303,8 @@ internal class ReceiverBillingConnection(
         consumeCallback = null
         queryCallback = null
         skuDetailCallback = null
+        checkTrialSubscriptionCallback = null
+        featureConfigCallback = null
         connectionCallbackReference = null
         contextReference = null
 
@@ -349,6 +424,41 @@ internal class ReceiverBillingConnection(
         }
     }
 
+    private fun onGetFeatureConfigReceived(extras: Bundle?) {
+        if (featureConfigCallback == null) {
+            return
+        }
+
+        if (isResponseSucceed(extras)) {
+            GetFeatureConfigCallback()
+                .apply(requireNotNull(featureConfigCallback))
+                .getFeatureConfigSucceed.invoke(requireNotNull(extras))
+        } else {
+            GetFeatureConfigCallback()
+                .apply(requireNotNull(featureConfigCallback)).run {
+                    getFeatureConfigFailed.invoke(ResultNotOkayException())
+                }
+        }
+    }
+
+    private fun onCheckTrialSubscriptionReceived(extras: Bundle?) {
+        if (checkTrialSubscriptionCallback == null) {
+            return
+        }
+
+        if (isResponseSucceed(extras)) {
+            val response = extractTrialSubscriptionDataFromBundle(requireNotNull(extras))
+            CheckTrialSubscriptionCallback()
+                .apply(requireNotNull(checkTrialSubscriptionCallback))
+                .checkTrialSubscriptionSucceed.invoke(requireNotNull(response))
+        } else {
+            CheckTrialSubscriptionCallback()
+                .apply(requireNotNull(checkTrialSubscriptionCallback)).run {
+                    checkTrialSubscriptionFailed.invoke(ResultNotOkayException())
+                }
+        }
+    }
+
     private fun onBillingSupportActionReceived(extras: Bundle?) {
         val isResponseSucceed = isResponseSucceed(extras)
         val isSubscriptionSupport = isSubscriptionSupport(extras)
@@ -411,7 +521,9 @@ internal class ReceiverBillingConnection(
     }
 
     companion object {
+
         private const val BAZAAR_WITH_RECEIVER_CONNECTION_VERSION = 801301
+        private const val BAZAAR_WITH_FEATURE_CONFIG_VERSION = 1400500
 
         private const val DEFAULT_SECURE_SIGNATURE = "secureBroadcastKey"
         private const val ACTION_BAZAAR_BASE = "com.farsitel.bazaar."
@@ -422,6 +534,9 @@ internal class ReceiverBillingConnection(
         private const val ACTION_PURCHASE = ACTION_BAZAAR_BASE + "purchase"
         private const val ACTION_QUERY_PURCHASES = ACTION_BAZAAR_BASE + "getPurchase"
         private const val ACTION_GET_SKU_DETAIL = ACTION_BAZAAR_BASE + "skuDetail"
+        private const val ACTION_GET_FEATURE_CONFIG = ACTION_BAZAAR_BASE + "featureConfig"
+        private const val ACTION_CHECK_TRIAL_SUBSCRIPTION =
+            ACTION_BAZAAR_BASE + "checkTrialSubscription"
 
         private const val ACTION_RECEIVE_CONSUME = ACTION_CONSUME + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_PURCHASE = ACTION_PURCHASE + ACTION_BAZAAR_POST
@@ -431,6 +546,10 @@ internal class ReceiverBillingConnection(
             ACTION_QUERY_PURCHASES + ACTION_BAZAAR_POST
         private const val ACTION_RECEIVE_SKU_DETAILS =
             ACTION_GET_SKU_DETAIL + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_GET_FEATURE_CONFIG =
+            ACTION_GET_FEATURE_CONFIG + ACTION_BAZAAR_POST
+        private const val ACTION_RECEIVE_CHECK_TRIAL_SUBSCRIPTION =
+            ACTION_CHECK_TRIAL_SUBSCRIPTION + ACTION_BAZAAR_POST
 
         private const val KEY_SUBSCRIPTION_SUPPORT = "subscriptionSupport"
         private const val KEY_PACKAGE_NAME = "packageName"

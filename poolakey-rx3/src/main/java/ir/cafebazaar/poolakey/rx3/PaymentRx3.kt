@@ -10,6 +10,7 @@ import ir.cafebazaar.poolakey.Connection
 import ir.cafebazaar.poolakey.Payment
 import ir.cafebazaar.poolakey.entity.PurchaseInfo
 import ir.cafebazaar.poolakey.entity.SkuDetails
+import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.rxbase.exception.PurchaseCanceledException
 
@@ -179,6 +180,19 @@ fun Payment.getSubscriptionSkuDetails(skuIds: List<String>): Single<List<SkuDeta
         getSubscriptionSkuDetails(skuIds) {
             getSkuDetailsSucceed { emitter.onSuccess(it) }
             getSkuDetailsFailed { emitter.onError(it) }
+        }
+    }
+}
+
+/**
+ * You can use this function to check trial subscription,
+ * @return Single that you can subscribe to it and get the trial subscription info.
+ */
+fun Payment.checkTrialSubscription(): Single<TrialSubscriptionInfo> {
+    return Single.create { emitter ->
+        checkTrialSubscription {
+            checkTrialSubscriptionSucceed { emitter.onSuccess(it) }
+            checkTrialSubscriptionFailed { emitter.onError(it) }
         }
     }
 }

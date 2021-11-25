@@ -48,4 +48,8 @@ interface IInAppBillingService {
         String sku,
         String developerPayload,
         in Bundle extraData);
+
+    Bundle checkTrialSubscription(String packageName);
+
+    Bundle getFeatureConfig();
 }
