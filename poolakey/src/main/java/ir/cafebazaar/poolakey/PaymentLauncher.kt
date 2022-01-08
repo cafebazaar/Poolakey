@@ -7,7 +7,7 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 
-internal class ResultLauncher private constructor(
+internal class PaymentLauncher private constructor(
     val activityLauncher: ActivityResultLauncher<Intent>,
     val intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 ) {
@@ -17,7 +17,7 @@ internal class ResultLauncher private constructor(
         private val onActivityResult: (ActivityResult) -> Unit
     ) {
 
-        fun build(): ResultLauncher {
+        fun build(): PaymentLauncher {
             val activityLauncher = registry.register(
                 BillingConnection.PAYMENT_SERVICE_KEY,
                 ActivityResultContracts.StartActivityForResult(),
@@ -30,7 +30,7 @@ internal class ResultLauncher private constructor(
                 onActivityResult::invoke
             )
 
-            return ResultLauncher(activityLauncher, intentSenderLauncher)
+            return PaymentLauncher(activityLauncher, intentSenderLauncher)
         }
     }
 

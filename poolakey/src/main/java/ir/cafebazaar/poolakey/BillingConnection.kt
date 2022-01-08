@@ -34,7 +34,7 @@ internal class BillingConnection(
 ) {
 
     private var callback: ConnectionCallback? = null
-    private var launcher: ResultLauncher? = null
+    private var paymentLauncher: PaymentLauncher? = null
 
     private var billingCommunicator: BillingConnectionCommunicator? = null
 
@@ -78,13 +78,13 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         purchaseCallback: PurchaseCallback.() -> Unit
     ) {
-        launcher = ResultLauncher.Builder(registry) {
+        paymentLauncher = PaymentLauncher.Builder(registry) {
             onActivityResult(it, purchaseCallback)
         }.build()
 
         runOnCommunicator(TAG_PURCHASE) {
             requireNotNull(billingCommunicator).purchase(
-                requireNotNull(launcher),
+                requireNotNull(paymentLauncher),
                 purchaseRequest,
                 purchaseType,
                 purchaseCallback
@@ -150,8 +150,8 @@ internal class BillingConnection(
     private fun disconnect() {
         callback?.disconnected?.invoke()
         callback = null
-        launcher?.unregister()
-        launcher = null
+        paymentLauncher?.unregister()
+        paymentLauncher = null
         backgroundThread.dispose()
         billingCommunicator = null
     }

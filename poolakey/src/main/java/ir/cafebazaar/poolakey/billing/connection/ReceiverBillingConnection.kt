@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import ir.cafebazaar.poolakey.PurchaseType
-import ir.cafebazaar.poolakey.ResultLauncher
+import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.Feature
 import ir.cafebazaar.poolakey.billing.FeatureConfig.isFeatureAvailable
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
@@ -178,13 +178,13 @@ internal class ReceiverBillingConnection(
     }
 
     override fun purchase(
-        resultLauncher: ResultLauncher,
+        paymentLauncher: PaymentLauncher,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseCallback.() -> Unit
     ) {
         purchaseWeakReference = WeakReference(
-            PurchaseWeakHolder(resultLauncher, callback)
+            PurchaseWeakHolder(paymentLauncher, callback)
         )
 
         sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
@@ -346,7 +346,7 @@ internal class ReceiverBillingConnection(
         purchaseWeakHolder: PurchaseWeakHolder,
         purchaseIntent: Intent?
     ) {
-        purchaseWeakHolder.resultLauncher.activityLauncher.launch(purchaseIntent)
+        purchaseWeakHolder.paymentLauncher.activityLauncher.launch(purchaseIntent)
     }
 
     private fun getPurchaseIntent(extras: Bundle?): Intent? {

@@ -2,7 +2,7 @@ package ir.cafebazaar.poolakey.billing.connection
 
 import android.content.Context
 import ir.cafebazaar.poolakey.PurchaseType
-import ir.cafebazaar.poolakey.ResultLauncher
+import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
 import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
@@ -31,7 +31,7 @@ internal interface BillingConnectionCommunicator {
     )
 
     fun purchase(
-        resultLauncher: ResultLauncher,
+        paymentLauncher: PaymentLauncher,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseCallback.() -> Unit

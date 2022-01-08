@@ -11,7 +11,7 @@ import androidx.activity.result.IntentSenderRequest
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
-import ir.cafebazaar.poolakey.ResultLauncher
+import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunction
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunction
@@ -156,21 +156,21 @@ internal class ServiceBillingConnection(
     }
 
     override fun purchase(
-        resultLauncher: ResultLauncher,
+        paymentLauncher: PaymentLauncher,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
         callback: PurchaseCallback.() -> Unit,
     ) {
 
         val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
-            resultLauncher.intentSenderLauncher.launch(
+            paymentLauncher.intentSenderLauncher.launch(
                 IntentSenderRequest.Builder(intentSender).build()
             )
             PurchaseCallback().apply(callback).purchaseFlowBegan.invoke()
         }
 
         val intentFire: (Intent) -> Unit = { intent ->
-            resultLauncher.activityLauncher.launch(intent)
+            paymentLauncher.activityLauncher.launch(intent)
             PurchaseCallback().apply(callback).purchaseFlowBegan.invoke()
         }
 
