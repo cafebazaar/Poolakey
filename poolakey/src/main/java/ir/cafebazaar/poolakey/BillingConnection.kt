@@ -11,12 +11,12 @@ import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
 import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
-import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
@@ -75,8 +75,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_PURCHASE) {
-            requireNotNull(billingCommunicator).purchase(
+        runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
+            billingCommunicator.purchase(
                 activity,
                 purchaseRequest,
                 purchaseType,
@@ -91,8 +91,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseIntentCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_PURCHASE) {
-            requireNotNull(billingCommunicator).purchase(
+        runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
+            billingCommunicator.purchase(
                 fragment,
                 purchaseRequest,
                 purchaseType,
@@ -105,8 +105,8 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CONSUME) {
-            requireNotNull(billingCommunicator).consume(
+        runOnCommunicator(TAG_CONSUME) { billingCommunicator ->
+            billingCommunicator.consume(
                 purchaseToken,
                 callback
             )
@@ -117,8 +117,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) {
-            requireNotNull(billingCommunicator).queryPurchasedProducts(
+        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) { billingCommunicator ->
+            billingCommunicator.queryPurchasedProducts(
                 purchaseType,
                 callback
             )
@@ -130,8 +130,8 @@ internal class BillingConnection(
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_GET_SKU_DETAIL) {
-            requireNotNull(billingCommunicator).getSkuDetails(
+        runOnCommunicator(TAG_GET_SKU_DETAIL) { billingCommunicator ->
+            billingCommunicator.getSkuDetails(
                 SkuDetailFunctionRequest(purchaseType, skuIds, callback),
                 callback
             )
@@ -141,8 +141,8 @@ internal class BillingConnection(
     fun checkTrialSubscription(
         callback: CheckTrialSubscriptionCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) {
-            requireNotNull(billingCommunicator).checkTrialSubscription(
+        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) { billingCommunicator ->
+            billingCommunicator.checkTrialSubscription(
                 CheckTrialSubscriptionFunctionRequest(callback),
                 callback
             )
@@ -150,8 +150,8 @@ internal class BillingConnection(
     }
 
     private fun stopConnection() {
-        runOnCommunicator(TAG_STOP_CONNECTION) {
-            requireNotNull(billingCommunicator).stopConnection()
+        runOnCommunicator(TAG_STOP_CONNECTION) { billingCommunicator ->
+            billingCommunicator.stopConnection()
             disconnect()
         }
     }
@@ -165,13 +165,10 @@ internal class BillingConnection(
 
     private fun runOnCommunicator(
         methodName: String,
-        ifConnected: () -> Unit
+        ifConnected: (BillingConnectionCommunicator) -> Unit
     ) {
-        if (billingCommunicator == null) {
-            raiseErrorForCommunicatorNotInitialized(methodName)
-        } else {
-            ifConnected.invoke()
-        }
+        billingCommunicator?.let(ifConnected)
+            ?: raiseErrorForCommunicatorNotInitialized(methodName)
     }
 
     private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
