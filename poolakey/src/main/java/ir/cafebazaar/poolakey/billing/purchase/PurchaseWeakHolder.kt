@@ -1,9 +1,9 @@
 package ir.cafebazaar.poolakey.billing.purchase
 
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
+import ir.cafebazaar.poolakey.ResultLauncher
+import ir.cafebazaar.poolakey.callback.PurchaseCallback
 
-internal data class PurchaseWeakHolder<T>(
-    val component: T,
-    val requestCode: Int,
-    val callback: PurchaseIntentCallback.() -> Unit
+internal data class PurchaseWeakHolder(
+    val resultLauncher: ResultLauncher,
+    val callback: PurchaseCallback.() -> Unit
 )

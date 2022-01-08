@@ -8,7 +8,7 @@ import android.os.RemoteException
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.BillingFunction
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
+import ir.cafebazaar.poolakey.callback.PurchaseCallback
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.exception.DynamicPriceNotSupportedException
@@ -31,7 +31,7 @@ internal class PurchaseFunction(
             )
 
             val intentResponseIsNullError = {
-                PurchaseIntentCallback().apply(callback)
+                PurchaseCallback().apply(callback)
                     .failedToBeginFlow
                     .invoke(IllegalStateException("Couldn't receive buy intent from Bazaar"))
             }
@@ -48,7 +48,7 @@ internal class PurchaseFunction(
                 }
             }
         } catch (e: RemoteException) {
-            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(e)
+            PurchaseCallback().apply(callback).failedToBeginFlow.invoke(e)
         }
     }
 
@@ -76,7 +76,7 @@ internal class PurchaseFunction(
     ) {
 
         if (purchaseRequest.dynamicPriceToken.isNullOrEmpty().not()) {
-            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
+            PurchaseCallback().apply(callback).failedToBeginFlow.invoke(
                 DynamicPriceNotSupportedException()
             )
             return
@@ -101,7 +101,7 @@ internal class PurchaseFunction(
         intentResponseIsNullError: () -> Unit
     ) {
         if (purchaseRequest.dynamicPriceToken.isNullOrEmpty().not()) {
-            PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(
+            PurchaseCallback().apply(callback).failedToBeginFlow.invoke(
                 DynamicPriceNotSupportedException()
             )
             return
@@ -125,7 +125,7 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ) = billingService.getBuyIntent(
         Billing.IN_APP_BILLING_VERSION,
         context.packageName,
@@ -138,7 +138,7 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ) = billingService.getBuyIntentV2(
         Billing.IN_APP_BILLING_VERSION,
         context.packageName,
@@ -151,7 +151,7 @@ internal class PurchaseFunction(
         billingService: IInAppBillingService,
         purchaseRequest: PurchaseRequest,
         extraData: Bundle,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ) = billingService.getBuyIntentV3(
         Billing.IN_APP_BILLING_VERSION,
         context.packageName,
@@ -161,12 +161,12 @@ internal class PurchaseFunction(
     )?.takeBundleIfResponseIsOk(callback)
 
     private inline fun Bundle.takeBundleIfResponseIsOk(
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ): Bundle? = takeIf(
         thisIsTrue = { bundle ->
             bundle.get(BazaarIntent.RESPONSE_CODE) == BazaarIntent.RESPONSE_RESULT_OK
         }, andIfNot = {
-            PurchaseIntentCallback().apply(callback)
+            PurchaseCallback().apply(callback)
                 .failedToBeginFlow
                 .invoke(ResultNotOkayException())
         }

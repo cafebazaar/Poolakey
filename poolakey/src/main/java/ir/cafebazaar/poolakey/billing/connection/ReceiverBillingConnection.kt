@@ -1,11 +1,10 @@
 package ir.cafebazaar.poolakey.billing.connection
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import ir.cafebazaar.poolakey.PurchaseType
+import ir.cafebazaar.poolakey.ResultLauncher
 import ir.cafebazaar.poolakey.billing.Feature
 import ir.cafebazaar.poolakey.billing.FeatureConfig.isFeatureAvailable
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
@@ -20,7 +19,7 @@ import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetFeatureConfigCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
+import ir.cafebazaar.poolakey.callback.PurchaseCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.config.SecurityCheck
@@ -63,8 +62,7 @@ internal class ReceiverBillingConnection(
     private var disconnected: Boolean = false
     private var bazaarVersionCode: Long = 0L
 
-    private var purchaseFragmentWeakReference: WeakReference<PurchaseWeakHolder<Fragment>>? = null
-    private var purchaseActivityWeakReference: WeakReference<PurchaseWeakHolder<Activity>>? = null
+    private var purchaseWeakReference: WeakReference<PurchaseWeakHolder>? = null
 
     override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
         connectionCallbackReference = WeakReference(callback)
@@ -180,26 +178,13 @@ internal class ReceiverBillingConnection(
     }
 
     override fun purchase(
-        activity: Activity,
+        resultLauncher: ResultLauncher,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ) {
-        purchaseActivityWeakReference = WeakReference(
-            PurchaseWeakHolder(activity, purchaseRequest.requestCode, callback)
-        )
-
-        sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
-    }
-
-    override fun purchase(
-        fragment: Fragment,
-        purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
-    ) {
-        purchaseFragmentWeakReference = WeakReference(
-            PurchaseWeakHolder(fragment, purchaseRequest.requestCode, callback)
+        purchaseWeakReference = WeakReference(
+            PurchaseWeakHolder(resultLauncher, callback)
         )
 
         sendPurchaseBroadcast(purchaseRequest, purchaseType, callback)
@@ -278,9 +263,9 @@ internal class ReceiverBillingConnection(
     private fun sendPurchaseBroadcast(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit
     ) {
-        PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+        PurchaseCallback().apply(callback).purchaseFlowBegan.invoke()
         getNewIntentForBroadcast().apply {
             action = ACTION_PURCHASE
             putExtra(KEY_SKU, purchaseRequest.productId)
@@ -308,11 +293,8 @@ internal class ReceiverBillingConnection(
         connectionCallbackReference = null
         contextReference = null
 
-        purchaseFragmentWeakReference?.clear()
-        purchaseFragmentWeakReference = null
-
-        purchaseActivityWeakReference?.clear()
-        purchaseActivityWeakReference = null
+        purchaseWeakReference?.clear()
+        purchaseWeakReference = null
     }
 
     private fun onQueryPurchaseReceived(extras: Bundle?) {
@@ -330,15 +312,9 @@ internal class ReceiverBillingConnection(
     private fun onPurchaseReceived(extras: Bundle?) {
         if (isResponseSucceed(extras)) {
             when {
-                purchaseActivityWeakReference?.get() != null -> {
-                    startPurchaseActivityWithActivity(
-                        requireNotNull(purchaseActivityWeakReference?.get()),
-                        getPurchaseIntent(extras)
-                    )
-                }
-                purchaseFragmentWeakReference?.get() != null -> {
-                    startPurchaseActivityWithFragment(
-                        requireNotNull(purchaseFragmentWeakReference?.get()),
+                purchaseWeakReference?.get() != null -> {
+                    startPurchaseActivity(
+                        requireNotNull(purchaseWeakReference?.get()),
                         getPurchaseIntent(extras)
                     )
                 }
@@ -348,20 +324,17 @@ internal class ReceiverBillingConnection(
             }
         } else {
             getPurchaseCallback()?.let { purchaseCallback ->
-                PurchaseIntentCallback()
+                PurchaseCallback()
                     .apply(purchaseCallback)
                     .failedToBeginFlow.invoke(DisconnectException())
             }
         }
     }
 
-    private fun getPurchaseCallback(): (PurchaseIntentCallback.() -> Unit)? {
+    private fun getPurchaseCallback(): (PurchaseCallback.() -> Unit)? {
         return when {
-            purchaseActivityWeakReference?.get() != null -> {
-                purchaseActivityWeakReference?.get()?.callback
-            }
-            purchaseFragmentWeakReference?.get() != null -> {
-                purchaseActivityWeakReference?.get()?.callback
+            purchaseWeakReference?.get() != null -> {
+                purchaseWeakReference?.get()?.callback
             }
             else -> {
                 null
@@ -369,24 +342,11 @@ internal class ReceiverBillingConnection(
         }
     }
 
-    private fun startPurchaseActivityWithActivity(
-        purchaseWeakHolder: PurchaseWeakHolder<Activity>,
+    private fun startPurchaseActivity(
+        purchaseWeakHolder: PurchaseWeakHolder,
         purchaseIntent: Intent?
     ) {
-        purchaseWeakHolder.component.startActivityForResult(
-            purchaseIntent,
-            purchaseWeakHolder.requestCode
-        )
-    }
-
-    private fun startPurchaseActivityWithFragment(
-        purchaseWeakHolder: PurchaseWeakHolder<Fragment>,
-        purchaseIntent: Intent?
-    ) {
-        purchaseWeakHolder.component.startActivityForResult(
-            purchaseIntent,
-            purchaseWeakHolder.requestCode
-        )
+        purchaseWeakHolder.resultLauncher.activityLauncher.launch(purchaseIntent)
     }
 
     private fun getPurchaseIntent(extras: Bundle?): Intent? {

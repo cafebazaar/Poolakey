@@ -1,6 +1,5 @@
 package ir.cafebazaar.poolakey.billing.connection
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -8,10 +7,11 @@ import android.content.IntentSender
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import androidx.fragment.app.Fragment
+import androidx.activity.result.IntentSenderRequest
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
+import ir.cafebazaar.poolakey.ResultLauncher
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunction
 import ir.cafebazaar.poolakey.billing.consume.ConsumeFunctionRequest
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseFunction
@@ -22,12 +22,12 @@ import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
+import ir.cafebazaar.poolakey.callback.PurchaseCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
-import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
@@ -156,66 +156,22 @@ internal class ServiceBillingConnection(
     }
 
     override fun purchase(
-        activity: Activity,
+        resultLauncher: ResultLauncher,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        callback: PurchaseCallback.() -> Unit,
     ) {
 
         val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
-            activity.startIntentSenderForResult(
-                intentSender,
-                purchaseRequest.requestCode,
-                Intent(),
-                0,
-                0,
-                0
+            resultLauncher.intentSenderLauncher.launch(
+                IntentSenderRequest.Builder(intentSender).build()
             )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+            PurchaseCallback().apply(callback).purchaseFlowBegan.invoke()
         }
 
         val intentFire: (Intent) -> Unit = { intent ->
-            activity.startActivityForResult(
-                intent,
-                purchaseRequest.requestCode
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
-        }
-
-        purchase(
-            purchaseRequest,
-            purchaseType,
-            callback,
-            intentSenderFire,
-            intentFire
-        )
-    }
-
-    override fun purchase(
-        fragment: Fragment,
-        purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
-    ) {
-        val intentSenderFire: (IntentSender) -> Unit = { intentSender ->
-            fragment.startIntentSenderForResult(
-                intentSender,
-                purchaseRequest.requestCode,
-                Intent(),
-                0,
-                0,
-                0,
-                null
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
-        }
-
-        val intentFire: (Intent) -> Unit = { intent ->
-            fragment.startActivityForResult(
-                intent,
-                purchaseRequest.requestCode
-            )
-            PurchaseIntentCallback().apply(callback).purchaseFlowBegan.invoke()
+            resultLauncher.activityLauncher.launch(intent)
+            PurchaseCallback().apply(callback).purchaseFlowBegan.invoke()
         }
 
         purchase(
@@ -256,7 +212,7 @@ internal class ServiceBillingConnection(
     private fun purchase(
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit,
+        callback: PurchaseCallback.() -> Unit,
         fireIntentSender: (IntentSender) -> Unit,
         fireIntent: (Intent) -> Unit
     ) = withService {
@@ -271,7 +227,7 @@ internal class ServiceBillingConnection(
             )
         )
     } ifServiceIsDisconnected {
-        PurchaseIntentCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
+        PurchaseCallback().apply(callback).failedToBeginFlow.invoke(DisconnectException())
     }
 
     private fun getQueryPurchasedBundle(
@@ -323,6 +279,7 @@ internal class ServiceBillingConnection(
     }
 
     companion object {
+
         private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
     }
 }

@@ -1,8 +1,6 @@
 package ir.cafebazaar.poolakey.rx
 
-import android.app.Activity
-import android.content.Intent
-import androidx.fragment.app.Fragment
+import androidx.activity.result.ActivityResultRegistry
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -12,7 +10,6 @@ import ir.cafebazaar.poolakey.entity.PurchaseInfo
 import ir.cafebazaar.poolakey.entity.SkuDetails
 import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
-import ir.cafebazaar.poolakey.rxbase.exception.PurchaseCanceledException
 
 /**
  * You have to use this function to connect to the In-App Billing service. Note that you have to
@@ -39,30 +36,16 @@ fun Payment.connect(): Observable<Connection> {
  * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
  * Note that for subscribing a product you have to use the 'subscribeProduct' function.
  * @see subscribeProduct
- * @param activity We use this activity instance to actually start Bazaar's payment activity.
+ * @param registry We use this activityResultRegistry instance to actually start Bazaar's payment activity.
  * @param request This contains some information about the product that we are going to purchase.
  * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
  */
-fun Payment.purchaseProduct(activity: Activity, request: PurchaseRequest): Completable {
+fun Payment.purchaseProduct(
+    registry: ActivityResultRegistry,
+    request: PurchaseRequest
+): Completable {
     return Completable.create { emitter ->
-        purchaseProduct(activity, request) {
-            purchaseFlowBegan { emitter.onComplete() }
-            failedToBeginFlow { emitter.onError(it) }
-        }
-    }
-}
-
-/**
- * You can use this function to navigate user to Bazaar's payment activity to purchase a product.
- * Note that for subscribing a product you have to use the 'subscribeProduct' function.
- * @see subscribeProduct
- * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
- * @param request This contains some information about the product that we are going to purchase.
- * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
- */
-fun Payment.purchaseProduct(fragment: Fragment, request: PurchaseRequest): Completable {
-    return Completable.create { emitter ->
-        purchaseProduct(fragment, request) {
+        purchaseProduct(registry, request) {
             purchaseFlowBegan { emitter.onComplete() }
             failedToBeginFlow { emitter.onError(it) }
         }
@@ -92,30 +75,16 @@ fun Payment.consumeProduct(purchaseToken: String): Completable {
  * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
  * Note that for purchasing a product you have to use the 'purchaseProduct' function.
  * @see purchaseProduct
- * @param activity We use this activity instance to actually start Bazaar's payment activity.
+ * @param registry We use this activityResultRegistry instance to actually start Bazaar's payment activity.
  * @param request This contains some information about the product that we are going to subscribe.
  * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
  */
-fun Payment.subscribeProduct(activity: Activity, request: PurchaseRequest): Completable {
+fun Payment.subscribeProduct(
+    registry: ActivityResultRegistry,
+    request: PurchaseRequest
+): Completable {
     return Completable.create { emitter ->
-        subscribeProduct(activity, request) {
-            purchaseFlowBegan { emitter.onComplete() }
-            failedToBeginFlow { emitter.onError(it) }
-        }
-    }
-}
-
-/**
- * You can use this function to navigate user to Bazaar's payment activity to subscribe a product.
- * Note that for purchasing a product you have to use the 'purchaseProduct' function.
- * @see purchaseProduct
- * @param fragment We use this fragment instance to actually start Bazaar's payment activity.
- * @param request This contains some information about the product that we are going to subscribe.
- * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
- */
-fun Payment.subscribeProduct(fragment: Fragment, request: PurchaseRequest): Completable {
-    return Completable.create { emitter ->
-        subscribeProduct(fragment, request) {
+        subscribeProduct(registry, request) {
             purchaseFlowBegan { emitter.onComplete() }
             failedToBeginFlow { emitter.onError(it) }
         }
@@ -197,32 +166,6 @@ fun Payment.checkTrialSubscription(): Single<TrialSubscriptionInfo> {
         checkTrialSubscription {
             checkTrialSubscriptionSucceed { emitter.onSuccess(it) }
             checkTrialSubscriptionFailed { emitter.onError(it) }
-        }
-    }
-}
-
-/**
- * You have to use this function in order to check if user purchased or subscribed the product.
- * Note that even if the purchase was successful, it's highly recommended to double check the
- * purchase via Bazaar's REST API: http://developers.cafebazaar.ir/fa/docs/developer-api-v2-introduction/
- * @param requestCode This is the request code that you've used when constructing PurchaseRequest.
- * @see PurchaseRequest
- * @param resultCode When you override 'onActivityResult' function in your activity or fragment
- * you have access to this argument and it indicates if user canceled the purchase or not.
- * @param data When you override 'onActivityResult' function in your activity or fragment
- * you have access to this argument and it contains purchase data.
- * @return Single that you can subscribe to it and get notified about the purchase state.
- */
-fun Payment.onActivityResult(
-    requestCode: Int,
-    resultCode: Int,
-    data: Intent?
-): Single<PurchaseInfo> {
-    return Single.create { emitter ->
-        onActivityResult(requestCode, resultCode, data) {
-            purchaseSucceed { emitter.onSuccess(it) }
-            purchaseCanceled { emitter.onError(PurchaseCanceledException()) }
-            purchaseFailed { emitter.onError(it) }
         }
     }
 }
