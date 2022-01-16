@@ -1,6 +1,5 @@
 package ir.cafebazaar.poolakeysample
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -49,8 +48,7 @@ class MainActivity : AppCompatActivity() {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 purchaseProduct(
                     productId = skuValueInput.text.toString(),
-                    requestCode = PURCHASE_REQUEST_CODE,
-                    payload = "payload",
+                    payload = "purchasePayload",
                     dynamicPriceToken = dynamicPriceToken.text.toString()
                 )
             }
@@ -59,8 +57,7 @@ class MainActivity : AppCompatActivity() {
             if (paymentConnection.getState() == ConnectionState.Connected) {
                 subscribeProduct(
                     productId = skuValueInput.text.toString(),
-                    requestCode = SUBSCRIBE_REQUEST_CODE,
-                    payload = "",
+                    payload = "subscribePayload",
                     dynamicPriceToken = dynamicPriceToken.text.toString()
                 )
             }
@@ -83,18 +80,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun subscribeProduct(
         productId: String,
-        requestCode: Int,
         payload: String,
         dynamicPriceToken: String?
     ) {
+        val purchaseRequest = PurchaseRequest(
+            productId = skuValueInput.text.toString(),
+            payload = payload,
+            dynamicPriceToken = dynamicPriceToken
+        )
         payment.subscribeProduct(
-            activity = this@MainActivity,
-            request = PurchaseRequest(
-                productId = skuValueInput.text.toString(),
-                requestCode = SUBSCRIBE_REQUEST_CODE,
-                payload = "",
-                dynamicPriceToken = dynamicPriceToken
-            )
+            registry = activityResultRegistry,
+            request = purchaseRequest
         ) {
             purchaseFlowBegan {
                 toast(R.string.general_purchase_flow_began_message)
@@ -103,25 +99,35 @@ class MainActivity : AppCompatActivity() {
                 // bazaar need to update, in this case we only launch purchase without discount
                 if (it is DynamicPriceNotSupportedException) {
                     toast(R.string.general_purchase_failed_dynamic_price_token_message)
-                    subscribeProduct(productId, requestCode, payload, null)
+                    subscribeProduct(productId, payload, null)
                 } else {
                     toast(R.string.general_purchase_failed_message)
                 }
+            }
+            purchaseSucceed {
+                toast(R.string.general_purchase_succeed_message)
+                if (consumeSwitch.isChecked) {
+                    consumePurchasedItem(it.purchaseToken)
+                }
+            }
+            purchaseCanceled {
+                toast(R.string.general_purchase_cancelled_message)
+            }
+            purchaseFailed {
+                toast(R.string.general_purchase_failed_message)
             }
         }
     }
 
     private fun purchaseProduct(
         productId: String,
-        requestCode: Int,
         payload: String,
         dynamicPriceToken: String?
     ) {
         payment.purchaseProduct(
-            activity = this,
+            registry = activityResultRegistry,
             request = PurchaseRequest(
                 productId = productId,
-                requestCode = requestCode,
                 payload = payload,
                 dynamicPriceToken = dynamicPriceToken
             )
@@ -133,10 +139,22 @@ class MainActivity : AppCompatActivity() {
                 // bazaar need to update, in this case we only launch purchase without discount
                 if (it is DynamicPriceNotSupportedException) {
                     toast(R.string.general_purchase_failed_dynamic_price_token_message)
-                    purchaseProduct(productId, requestCode, payload, null)
+                    purchaseProduct(productId, payload, null)
                 } else {
                     toast(R.string.general_purchase_failed_message)
                 }
+            }
+            purchaseSucceed {
+                toast(R.string.general_purchase_succeed_message)
+                if (consumeSwitch.isChecked) {
+                    consumePurchasedItem(it.purchaseToken)
+                }
+            }
+            purchaseCanceled {
+                toast(R.string.general_purchase_cancelled_message)
+            }
+            purchaseFailed {
+                toast(R.string.general_purchase_failed_message)
             }
         }
     }
@@ -221,24 +239,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        payment.onActivityResult(requestCode, resultCode, data) {
-            purchaseSucceed {
-                toast(R.string.general_purchase_succeed_message)
-                if (consumeSwitch.isChecked) {
-                    consumePurchasedItem(it.purchaseToken)
-                }
-            }
-            purchaseCanceled {
-                toast(R.string.general_purchase_cancelled_message)
-            }
-            purchaseFailed {
-                toast(R.string.general_purchase_failed_message)
-            }
-        }
-    }
-
     private fun consumePurchasedItem(purchaseToken: String) {
         payment.consumeProduct(purchaseToken) {
             consumeSucceed {
@@ -261,11 +261,5 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         paymentConnection.disconnect()
         super.onDestroy()
-    }
-
-    companion object {
-
-        private const val PURCHASE_REQUEST_CODE = 1000
-        private const val SUBSCRIBE_REQUEST_CODE = 1001
     }
 }

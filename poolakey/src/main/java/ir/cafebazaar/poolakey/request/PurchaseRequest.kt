@@ -5,7 +5,6 @@ import ir.cafebazaar.poolakey.constant.BazaarIntent
 
 data class PurchaseRequest(
     val productId: String,
-    val requestCode: Int,
     val payload: String? = null,
     val dynamicPriceToken: String? = null
 )

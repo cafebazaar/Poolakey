@@ -2,12 +2,12 @@ ext {
 
     libraryVersions = [
             'kotlin'   : '1.4.20',
-            'appcompat': '1.2.0',
+            'appcompat': '1.4.0',
             'rxkotlin' : '2.4.0',
             'rxkotlin3': '3.0.1',
             'rxjava'   : '2.2.20',
             'rxjava3'  : '3.0.8',
-            'fragment' : '1.2.5'
+            'fragment' : '1.4.0'
     ]
 
     pluginVersions = [
@@ -19,7 +19,7 @@ ext {
     ]
 
     buildVersions = [
-            'compileSdkVersion': 29,
+            'compileSdkVersion': 31,
             'buildToolsVersion': '29.0.3',
             'minSdkVersion'    : 14,
             'targetSdkVersion' : 29
