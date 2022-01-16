@@ -82,8 +82,8 @@ internal class BillingConnection(
             onActivityResult(it, purchaseCallback)
         }.build()
 
-        runOnCommunicator(TAG_PURCHASE) {
-            requireNotNull(billingCommunicator).purchase(
+        runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
+            billingCommunicator.purchase(
                 requireNotNull(paymentLauncher),
                 purchaseRequest,
                 purchaseType,
@@ -96,8 +96,8 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CONSUME) {
-            requireNotNull(billingCommunicator).consume(
+        runOnCommunicator(TAG_CONSUME) { billingCommunicator ->
+            billingCommunicator.consume(
                 purchaseToken,
                 callback
             )
@@ -108,8 +108,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) {
-            requireNotNull(billingCommunicator).queryPurchasedProducts(
+        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) { billingCommunicator ->
+            billingCommunicator.queryPurchasedProducts(
                 purchaseType,
                 callback
             )
@@ -121,8 +121,8 @@ internal class BillingConnection(
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_GET_SKU_DETAIL) {
-            requireNotNull(billingCommunicator).getSkuDetails(
+        runOnCommunicator(TAG_GET_SKU_DETAIL) { billingCommunicator ->
+            billingCommunicator.getSkuDetails(
                 SkuDetailFunctionRequest(purchaseType, skuIds, callback),
                 callback
             )
@@ -132,8 +132,8 @@ internal class BillingConnection(
     fun checkTrialSubscription(
         callback: CheckTrialSubscriptionCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) {
-            requireNotNull(billingCommunicator).checkTrialSubscription(
+        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) { billingCommunicator ->
+            billingCommunicator.checkTrialSubscription(
                 CheckTrialSubscriptionFunctionRequest(callback),
                 callback
             )
@@ -141,8 +141,8 @@ internal class BillingConnection(
     }
 
     private fun stopConnection() {
-        runOnCommunicator(TAG_STOP_CONNECTION) {
-            requireNotNull(billingCommunicator).stopConnection()
+        runOnCommunicator(TAG_STOP_CONNECTION) { billingCommunicator ->
+            billingCommunicator.stopConnection()
             disconnect()
         }
     }
@@ -158,13 +158,10 @@ internal class BillingConnection(
 
     private fun runOnCommunicator(
         methodName: String,
-        ifConnected: () -> Unit
+        ifConnected: (BillingConnectionCommunicator) -> Unit
     ) {
-        if (billingCommunicator == null) {
-            raiseErrorForCommunicatorNotInitialized(methodName)
-        } else {
-            ifConnected.invoke()
-        }
+        billingCommunicator?.let(ifConnected)
+            ?: raiseErrorForCommunicatorNotInitialized(methodName)
     }
 
     private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
