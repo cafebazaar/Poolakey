@@ -10,6 +10,7 @@ import ir.cafebazaar.poolakey.entity.PurchaseInfo
 import ir.cafebazaar.poolakey.entity.SkuDetails
 import ir.cafebazaar.poolakey.entity.TrialSubscriptionInfo
 import ir.cafebazaar.poolakey.request.PurchaseRequest
+import ir.cafebazaar.poolakey.rxbase.exception.PurchaseCanceledException
 
 /**
  * You have to use this function to connect to the In-App Billing service. Note that you have to
@@ -38,15 +39,17 @@ fun Payment.connect(): Observable<Connection> {
  * @see subscribeProduct
  * @param registry We use this activityResultRegistry instance to actually start Bazaar's payment activity.
  * @param request This contains some information about the product that we are going to purchase.
- * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ * @return Single that you can subscribe to it and get the PurchaseInfo.
  */
 fun Payment.purchaseProduct(
     registry: ActivityResultRegistry,
     request: PurchaseRequest
-): Completable {
-    return Completable.create { emitter ->
+): Single<PurchaseInfo> {
+    return Single.create { emitter ->
         purchaseProduct(registry, request) {
-            purchaseFlowBegan { emitter.onComplete() }
+            purchaseSucceed { emitter.onSuccess(it) }
+            purchaseCanceled { emitter.onError(PurchaseCanceledException()) }
+            purchaseFailed { emitter.onError(it) }
             failedToBeginFlow { emitter.onError(it) }
         }
     }
@@ -77,15 +80,17 @@ fun Payment.consumeProduct(purchaseToken: String): Completable {
  * @see purchaseProduct
  * @param registry We use this activityResultRegistry instance to actually start Bazaar's payment activity.
  * @param request This contains some information about the product that we are going to subscribe.
- * @return Completable that you can subscribe to it and it gets completed when purchase flow begins.
+ * @return Single that you can subscribe to it and get the PurchaseInfo.
  */
 fun Payment.subscribeProduct(
     registry: ActivityResultRegistry,
     request: PurchaseRequest
-): Completable {
-    return Completable.create { emitter ->
+): Single<PurchaseInfo> {
+    return Single.create { emitter ->
         subscribeProduct(registry, request) {
-            purchaseFlowBegan { emitter.onComplete() }
+            purchaseSucceed { emitter.onSuccess(it) }
+            purchaseCanceled { emitter.onError(PurchaseCanceledException()) }
+            purchaseFailed { emitter.onError(it) }
             failedToBeginFlow { emitter.onError(it) }
         }
     }
