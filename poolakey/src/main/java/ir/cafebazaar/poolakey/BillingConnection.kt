@@ -2,7 +2,8 @@ package ir.cafebazaar.poolakey
 
 import android.app.Activity
 import android.content.Context
-import androidx.fragment.app.Fragment
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultRegistry
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
@@ -11,12 +12,12 @@ import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
 import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
+import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.callback.ConnectionCallback
 import ir.cafebazaar.poolakey.callback.ConsumeCallback
 import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
-import ir.cafebazaar.poolakey.callback.PurchaseIntentCallback
+import ir.cafebazaar.poolakey.callback.PurchaseCallback
 import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
-import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
@@ -27,11 +28,13 @@ internal class BillingConnection(
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val queryFunction: QueryFunction,
     private val skuDetailFunction: GetSkuDetailFunction,
+    private val purchaseResultParser: PurchaseResultParser,
     private val checkTrialSubscriptionFunction: CheckTrialSubscriptionFunction,
     private val mainThread: PoolakeyThread<() -> Unit>
 ) {
 
     private var callback: ConnectionCallback? = null
+    private var paymentLauncher: PaymentLauncher? = null
 
     private var billingCommunicator: BillingConnectionCommunicator? = null
 
@@ -70,33 +73,21 @@ internal class BillingConnection(
     }
 
     fun purchase(
-        activity: Activity,
+        registry: ActivityResultRegistry,
         purchaseRequest: PurchaseRequest,
         purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
+        purchaseCallback: PurchaseCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_PURCHASE) {
-            requireNotNull(billingCommunicator).purchase(
-                activity,
-                purchaseRequest,
-                purchaseType,
-                callback
-            )
-        }
-    }
+        paymentLauncher = PaymentLauncher.Builder(registry) {
+            onActivityResult(it, purchaseCallback)
+        }.build()
 
-    fun purchase(
-        fragment: Fragment,
-        purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType,
-        callback: PurchaseIntentCallback.() -> Unit
-    ) {
-        runOnCommunicator(TAG_PURCHASE) {
-            requireNotNull(billingCommunicator).purchase(
-                fragment,
+        runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
+            billingCommunicator.purchase(
+                requireNotNull(paymentLauncher),
                 purchaseRequest,
                 purchaseType,
-                callback
+                purchaseCallback
             )
         }
     }
@@ -105,8 +96,8 @@ internal class BillingConnection(
         purchaseToken: String,
         callback: ConsumeCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CONSUME) {
-            requireNotNull(billingCommunicator).consume(
+        runOnCommunicator(TAG_CONSUME) { billingCommunicator ->
+            billingCommunicator.consume(
                 purchaseToken,
                 callback
             )
@@ -117,8 +108,8 @@ internal class BillingConnection(
         purchaseType: PurchaseType,
         callback: PurchaseQueryCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) {
-            requireNotNull(billingCommunicator).queryPurchasedProducts(
+        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) { billingCommunicator ->
+            billingCommunicator.queryPurchasedProducts(
                 purchaseType,
                 callback
             )
@@ -130,8 +121,8 @@ internal class BillingConnection(
         skuIds: List<String>,
         callback: GetSkuDetailsCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_GET_SKU_DETAIL) {
-            requireNotNull(billingCommunicator).getSkuDetails(
+        runOnCommunicator(TAG_GET_SKU_DETAIL) { billingCommunicator ->
+            billingCommunicator.getSkuDetails(
                 SkuDetailFunctionRequest(purchaseType, skuIds, callback),
                 callback
             )
@@ -141,8 +132,8 @@ internal class BillingConnection(
     fun checkTrialSubscription(
         callback: CheckTrialSubscriptionCallback.() -> Unit
     ) {
-        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) {
-            requireNotNull(billingCommunicator).checkTrialSubscription(
+        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) { billingCommunicator ->
+            billingCommunicator.checkTrialSubscription(
                 CheckTrialSubscriptionFunctionRequest(callback),
                 callback
             )
@@ -150,8 +141,8 @@ internal class BillingConnection(
     }
 
     private fun stopConnection() {
-        runOnCommunicator(TAG_STOP_CONNECTION) {
-            requireNotNull(billingCommunicator).stopConnection()
+        runOnCommunicator(TAG_STOP_CONNECTION) { billingCommunicator ->
+            billingCommunicator.stopConnection()
             disconnect()
         }
     }
@@ -159,19 +150,18 @@ internal class BillingConnection(
     private fun disconnect() {
         callback?.disconnected?.invoke()
         callback = null
+        paymentLauncher?.unregister()
+        paymentLauncher = null
         backgroundThread.dispose()
         billingCommunicator = null
     }
 
     private fun runOnCommunicator(
         methodName: String,
-        ifConnected: () -> Unit
+        ifConnected: (BillingConnectionCommunicator) -> Unit
     ) {
-        if (billingCommunicator == null) {
-            raiseErrorForCommunicatorNotInitialized(methodName)
-        } else {
-            ifConnected.invoke()
-        }
+        billingCommunicator?.let(ifConnected)
+            ?: raiseErrorForCommunicatorNotInitialized(methodName)
     }
 
     private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
@@ -180,7 +170,34 @@ internal class BillingConnection(
         )
     }
 
+    private fun onActivityResult(
+        activityResult: ActivityResult,
+        purchaseCallback: PurchaseCallback.() -> Unit
+    ) {
+        when (activityResult.resultCode) {
+            Activity.RESULT_OK -> {
+                purchaseResultParser.handleReceivedResult(
+                    paymentConfiguration.localSecurityCheck,
+                    activityResult.data,
+                    purchaseCallback
+                )
+            }
+            Activity.RESULT_CANCELED -> {
+                PurchaseCallback().apply(purchaseCallback)
+                    .purchaseCanceled
+                    .invoke()
+            }
+            else -> {
+                PurchaseCallback().apply(purchaseCallback)
+                    .purchaseFailed
+                    .invoke(IllegalStateException("Result code is not valid"))
+            }
+        }
+    }
+
     companion object {
+
+        const val PAYMENT_SERVICE_KEY = "payment_service_key"
 
         private const val TAG_STOP_CONNECTION = "stopConnection"
         private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
