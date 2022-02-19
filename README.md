@@ -31,9 +31,9 @@ Yes, you've read that right! Poolakey supports Reactive Extension framework. Jus
 ```groovy
 dependencies {
     // RxJava 3
-    implementation "com.github.cafebazaar.Poolakey:Poolakey-rx3:[latest_version]"
+    implementation "com.github.cafebazaar.Poolakey:poolakey-rx3:[latest_version]"
     // RxJava 2
-    implementation "com.github.cafebazaar.Poolakey:Poolakey-rx:[latest_version]"
+    implementation "com.github.cafebazaar.Poolakey:poolakey-rx:[latest_version]"
 }
 ```
 
