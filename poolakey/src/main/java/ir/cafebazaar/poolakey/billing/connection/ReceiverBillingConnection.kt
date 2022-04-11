@@ -3,8 +3,8 @@ package ir.cafebazaar.poolakey.billing.connection
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
+import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.billing.Feature
 import ir.cafebazaar.poolakey.billing.FeatureConfig.isFeatureAvailable
 import ir.cafebazaar.poolakey.billing.purchase.PurchaseWeakHolder
@@ -271,7 +271,7 @@ internal class ReceiverBillingConnection(
             putExtra(KEY_SKU, purchaseRequest.productId)
             putExtra(KEY_DEVELOPER_PAYLOAD, purchaseRequest.payload)
             putExtra(KEY_ITEM_TYPE, purchaseType.type)
-            putExtra(KEY_EXTRA_INFO, purchaseRequest.purchaseExtraData())
+            putExtra(KEY_EXTRA_INFO, purchaseExtraData(purchaseRequest, purchaseType))
         }.run(::sendBroadcast)
     }
 

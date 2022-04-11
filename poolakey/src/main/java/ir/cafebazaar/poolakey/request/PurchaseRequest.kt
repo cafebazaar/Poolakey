@@ -1,6 +1,7 @@
 package ir.cafebazaar.poolakey.request
 
 import android.os.Bundle
+import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 
 data class PurchaseRequest(
@@ -9,8 +10,12 @@ data class PurchaseRequest(
     val dynamicPriceToken: String? = null
 )
 
-internal fun PurchaseRequest.purchaseExtraData(): Bundle {
+internal fun purchaseExtraData(
+    purchaseRequest: PurchaseRequest,
+    purchaseType: PurchaseType
+): Bundle {
     return Bundle().apply {
-        putString(BazaarIntent.RESPONSE_DYNAMIC_PRICE_TOKEN, dynamicPriceToken)
+        putString(BazaarIntent.RESPONSE_DYNAMIC_PRICE_TOKEN, purchaseRequest.dynamicPriceToken)
+        putString(BazaarIntent.RESPONSE_PURCHASE_TYPE, purchaseType.type)
     }
 }

@@ -59,7 +59,7 @@ internal class PurchaseFunction(
         getBuyIntentV3FromBillingService(
             billingService,
             purchaseRequest,
-            purchaseRequest.purchaseExtraData(),
+            purchaseExtraData(purchaseRequest, purchaseType),
             callback
         )?.takeIf(
             thisIsTrue = { bundle ->
@@ -181,9 +181,9 @@ internal class PurchaseFunction(
     }
 
     companion object {
+
         private const val INTENT_RESPONSE_BUY = "BUY_INTENT"
         private const val INTENT_V2_SUPPORT = "INTENT_V2_SUPPORT"
         private const val INTENT_V3_SUPPORT = "INTENT_V3_SUPPORT"
     }
-
 }
