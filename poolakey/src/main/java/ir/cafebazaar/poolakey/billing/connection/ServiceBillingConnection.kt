@@ -82,7 +82,11 @@ internal class ServiceBillingConnection(
                 }
             )?.let {
                 try {
-                    context.bindService(it, this, Context.BIND_AUTO_CREATE)
+                    val bindResult = context.bindService(it, this, Context.BIND_AUTO_CREATE)
+                    if (!bindResult){
+                        callback.connectionFailed.invoke(BazaarNotFoundException())
+                    }
+                    bindResult
                 } catch (e: SecurityException) {
                     callback.connectionFailed.invoke(e)
                     false
