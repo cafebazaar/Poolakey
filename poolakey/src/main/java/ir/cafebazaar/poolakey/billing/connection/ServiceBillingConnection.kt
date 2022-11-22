@@ -32,6 +32,7 @@ import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
+import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PAYMENT_SERVICE_CLASS_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
@@ -65,7 +66,10 @@ internal class ServiceBillingConnection(
         callbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
-        return Intent(BILLING_SERVICE_ACTION).apply { `package` = BAZAAR_PACKAGE_NAME }
+        return Intent(BILLING_SERVICE_ACTION).apply {
+            `package` = BAZAAR_PACKAGE_NAME
+            setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
+        }
             .takeIf(
                 thisIsTrue = {
                     context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
