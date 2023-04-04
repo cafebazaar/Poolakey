@@ -7,6 +7,7 @@ import android.content.IntentSender
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.os.RemoteException
 import androidx.activity.result.IntentSenderRequest
 import com.android.vending.billing.IInAppBillingService
 import ir.cafebazaar.poolakey.ConnectionState
@@ -97,27 +98,26 @@ internal class ServiceBillingConnection(
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         IInAppBillingService.Stub.asInterface(service)
             ?.also { billingService = it }
-            ?.takeIf(
-                thisIsTrue = {
-                    isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.IN_APP
-                    )
-                },
-                andIfNot = {
-                    callbackReference?.get()?.connectionFailed?.invoke(IAPNotSupportedException())
+            ?.also {
+                try {
+                    if (isPurchaseTypeSupported(purchaseType = PurchaseType.IN_APP)) {
+                        if (!paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
+                                purchaseType = PurchaseType.SUBSCRIPTION
+                            )
+                        ) {
+                            callbackReference?.get()?.connectionSucceed?.invoke()
+                        } else {
+                            callbackReference?.get()?.connectionFailed?.invoke(
+                                SubsNotSupportedException()
+                            )
+                        }
+                    } else {
+                        callbackReference?.get()?.connectionFailed?.invoke(IAPNotSupportedException())
+                    }
+                } catch (exception: RemoteException) {
+                    callbackReference?.get()?.connectionFailed?.invoke(exception)
                 }
-            )
-            ?.takeIf(
-                thisIsTrue = {
-                    !paymentConfiguration.shouldSupportSubscription || isPurchaseTypeSupported(
-                        purchaseType = PurchaseType.SUBSCRIPTION
-                    )
-                },
-                andIfNot = {
-                    callbackReference?.get()?.connectionFailed?.invoke(SubsNotSupportedException())
-                }
-            )
-            ?.also { callbackReference?.get()?.connectionSucceed?.invoke() }
+            }
     }
 
     private fun isPurchaseTypeSupported(purchaseType: PurchaseType): Boolean {
