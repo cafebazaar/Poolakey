@@ -284,7 +284,11 @@ internal class ServiceBillingConnection(
 
     private fun isServiceAvailable(intent: Intent): Boolean {
         return context.packageManager.queryIntentServices(intent, 0).isNotEmpty() ||
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                isServiceAvailableInDeepSleep(intent)
+    }
+
+    private fun isServiceAvailableInDeepSleep(intent: Intent): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
                 context.packageManager
                     .queryIntentServices(intent, MATCH_DISABLED_COMPONENTS)
                     .isNotEmpty()
