@@ -74,14 +74,7 @@ internal class ServiceBillingConnection(
             setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
         }
             .takeIf(
-                thisIsTrue = {
-                    context.packageManager.queryIntentServices(it, 0).isNotEmpty() ||
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-                            context.packageManager
-                                .queryIntentServices(it, MATCH_DISABLED_COMPONENTS)
-                                .isNotEmpty()
-
-                },
+                thisIsTrue = ::isServiceAvailable,
                 andIfNot = {
                     callback.connectionFailed.invoke(BazaarNotFoundException())
                 }
@@ -287,6 +280,14 @@ internal class ServiceBillingConnection(
 
     private fun disconnect() {
         billingService = null
+    }
+
+    private fun isServiceAvailable(intent: Intent): Boolean {
+        return context.packageManager.queryIntentServices(intent, 0).isNotEmpty() ||
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                context.packageManager
+                    .queryIntentServices(intent, MATCH_DISABLED_COMPONENTS)
+                    .isNotEmpty()
     }
 
     companion object {
