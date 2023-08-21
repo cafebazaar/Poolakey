@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
+import android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
@@ -73,7 +75,12 @@ internal class ServiceBillingConnection(
         }
             .takeIf(
                 thisIsTrue = {
-                    context.packageManager.queryIntentServices(it, 0).isNullOrEmpty().not()
+                    context.packageManager.queryIntentServices(it, 0).isNotEmpty() ||
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                            context.packageManager
+                                .queryIntentServices(it, MATCH_DISABLED_COMPONENTS)
+                                .isNotEmpty()
+
                 },
                 andIfNot = {
                     callback.connectionFailed.invoke(BazaarNotFoundException())
