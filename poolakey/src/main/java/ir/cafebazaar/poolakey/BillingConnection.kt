@@ -2,6 +2,9 @@ package ir.cafebazaar.poolakey
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistry
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
@@ -81,6 +84,15 @@ internal class BillingConnection(
         paymentLauncher = PaymentLauncher.Builder(registry) {
             onActivityResult(it, purchaseCallback)
         }.build()
+
+        purchaseRequest.cutoutModeIsShortEdges = if (SDK_INT >= Build.VERSION_CODES.P) {
+            (context as? Activity)
+                ?.window
+                ?.attributes
+                ?.layoutInDisplayCutoutMode == LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        } else {
+            false
+        }
 
         runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
             billingCommunicator.purchase(
