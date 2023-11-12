@@ -21,7 +21,7 @@ import ir.cafebazaar.poolakey.thread.PoolakeyThread
 
 class Payment(
     context: Context,
-    private val config: PaymentConfiguration
+    config: PaymentConfiguration
 ) {
 
     private val backgroundThread: PoolakeyThread<Runnable> = BackgroundThread()
