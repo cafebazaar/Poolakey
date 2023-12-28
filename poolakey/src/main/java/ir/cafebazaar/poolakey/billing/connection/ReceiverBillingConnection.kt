@@ -3,6 +3,7 @@ package ir.cafebazaar.poolakey.billing.connection
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import ir.cafebazaar.poolakey.ConnectionRequestResult
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.Feature
@@ -64,33 +65,35 @@ internal class ReceiverBillingConnection(
 
     private var purchaseWeakReference: WeakReference<PurchaseWeakHolder>? = null
 
-    override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
+    override fun startConnection(
+        context: Context,
+        callback: ConnectionCallback
+    ): ConnectionRequestResult {
         connectionCallbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
-        if (!Security.verifyBazaarIsInstalled(context)) {
-            return false
-        }
+        if (Security.verifyBazaarIsInstalled(context)) {
+            bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
+                sdkAwareVersionCode(it)
+            } ?: 0L
 
-        bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
-            sdkAwareVersionCode(it)
-        } ?: 0L
+            return when {
+                canConnectWithReceiverComponent() -> {
+                    createReceiverConnection()
+                    registerBroadcast()
+                    isPurchaseTypeSupported()
+                    ConnectionRequestResult(true)
+                }
 
-        return when {
-            canConnectWithReceiverComponent() -> {
-                createReceiverConnection()
-                registerBroadcast()
-                isPurchaseTypeSupported()
-                true
-            }
-            bazaarVersionCode > 0 -> {
-                callback.connectionFailed.invoke(BazaarNotSupportedException())
-                false
-            }
-            else -> {
-                false
+                bazaarVersionCode > 0 -> {
+                    callback.connectionFailed.invoke(BazaarNotSupportedException())
+                    ConnectionRequestResult(false)
+                }
+
+                else -> ConnectionRequestResult(false)
             }
         }
+        return ConnectionRequestResult(canConnect = false, canUseFallback = false)
     }
 
     private fun canConnectWithReceiverComponent(): Boolean {

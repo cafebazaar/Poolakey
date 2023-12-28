@@ -6,12 +6,12 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
 import android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
 import androidx.activity.result.IntentSenderRequest
 import com.android.vending.billing.IInAppBillingService
+import ir.cafebazaar.poolakey.ConnectionRequestResult
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
@@ -65,34 +65,32 @@ internal class ServiceBillingConnection(
     private var callbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
-    override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
+    override fun startConnection(
+        context: Context,
+        callback: ConnectionCallback
+    ): ConnectionRequestResult {
         callbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
-
-        return Intent(BILLING_SERVICE_ACTION).apply {
-            `package` = BAZAAR_PACKAGE_NAME
-            setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
-        }
-            .takeIf(
+        if (Security.verifyBazaarIsInstalled(context)) {
+            Intent(BILLING_SERVICE_ACTION).apply {
+                `package` = BAZAAR_PACKAGE_NAME
+                setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
+            }.takeIf(
                 thisIsTrue = ::isServiceAvailable,
                 andIfNot = {
                     callback.connectionFailed.invoke(BazaarNotFoundException())
-                }
-            )?.takeIf(
-                thisIsTrue = {
-                    Security.verifyBazaarIsInstalled(context)
-                },
-                andIfNot = {
-                    callback.connectionFailed.invoke(BazaarNotFoundException())
+                    return ConnectionRequestResult(canConnect = false)
                 }
             )?.let {
-                try {
-                    context.bindService(it, this, Context.BIND_AUTO_CREATE)
+                return try {
+                    ConnectionRequestResult(context.bindService(it, this, Context.BIND_AUTO_CREATE))
                 } catch (e: SecurityException) {
                     callback.connectionFailed.invoke(e)
-                    false
+                    ConnectionRequestResult(false)
                 }
-            } ?: false
+            }
+        }
+        return ConnectionRequestResult(canConnect = false, canUseFallback = false)
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {

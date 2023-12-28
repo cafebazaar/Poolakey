@@ -2,8 +2,6 @@ package ir.cafebazaar.poolakey
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistry
@@ -60,17 +58,24 @@ internal class BillingConnection(
             queryFunction
         )
 
-        val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
+        val serviceConnectRequestResult =
+            serviceCommunicator.startConnection(context, requireNotNull(callback))
 
-        billingCommunicator = if (canConnect) {
-            serviceCommunicator
-        } else {
-            receiverConnection.startConnection(
-                context,
-                requireNotNull(callback)
-            )
+        billingCommunicator = when {
+            serviceConnectRequestResult.canConnect -> serviceCommunicator
+            serviceConnectRequestResult.canUseFallback -> {
+                val receiverConnectRequestResult = receiverConnection.startConnection(
+                    context,
+                    requireNotNull(callback)
+                )
+                if (receiverConnectRequestResult.canConnect) {
+                    receiverConnection
+                } else {
+                    null
+                }
+            }
 
-            receiverConnection
+            else -> null
         }
         return requireNotNull(callback)
     }
