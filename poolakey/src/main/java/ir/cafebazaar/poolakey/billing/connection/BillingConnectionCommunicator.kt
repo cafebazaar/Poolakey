@@ -1,6 +1,7 @@
 package ir.cafebazaar.poolakey.billing.connection
 
 import android.content.Context
+import ir.cafebazaar.poolakey.ConnectionRequestResult
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
@@ -18,7 +19,7 @@ internal interface BillingConnectionCommunicator {
     fun startConnection(
         context: Context,
         callback: ConnectionCallback
-    ): Boolean
+    ): ConnectionRequestResult
 
     fun consume(
         purchaseToken: String,
