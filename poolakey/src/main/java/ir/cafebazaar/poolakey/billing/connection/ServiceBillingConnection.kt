@@ -40,6 +40,7 @@ import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
+import ir.cafebazaar.poolakey.isSdkNougatAndUp
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
@@ -286,7 +287,7 @@ internal class ServiceBillingConnection(
     }
 
     private fun isServiceAvailableInDeepSleep(intent: Intent): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+        return isSdkNougatAndUp() &&
                 context.packageManager
                     .queryIntentServices(intent, MATCH_DISABLED_COMPONENTS)
                     .isNotEmpty()

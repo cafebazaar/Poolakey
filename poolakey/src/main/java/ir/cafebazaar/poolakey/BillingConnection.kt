@@ -90,7 +90,7 @@ internal class BillingConnection(
             onActivityResult(it, purchaseCallback)
         }.build()
 
-        purchaseRequest.cutoutModeIsShortEdges = if (SDK_INT >= Build.VERSION_CODES.P) {
+        purchaseRequest.cutoutModeIsShortEdges = if (isSdkPieAndUp()) {
             (context as? Activity)
                 ?.window
                 ?.attributes
