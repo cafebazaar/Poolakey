@@ -28,6 +28,7 @@ import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.BazaarIntent.REQUEST_SKU_DETAILS_LIST
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
+import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ConsumeFailedException
 import ir.cafebazaar.poolakey.exception.DisconnectException
@@ -87,12 +88,13 @@ internal class ReceiverBillingConnection(
 
                 bazaarVersionCode > 0 -> {
                     callback.connectionFailed.invoke(BazaarNotSupportedException())
-                    ConnectionRequestResult(false)
+                    ConnectionRequestResult(canConnect = false, canUseFallback = false)
                 }
 
                 else -> ConnectionRequestResult(false)
             }
         }
+        callback.connectionFailed.invoke(BazaarNotFoundException())
         return ConnectionRequestResult(canConnect = false, canUseFallback = false)
     }
 

@@ -80,7 +80,7 @@ internal class ServiceBillingConnection(
                 thisIsTrue = ::isServiceAvailable,
                 andIfNot = {
                     callback.connectionFailed.invoke(BazaarNotFoundException())
-                    return ConnectionRequestResult(canConnect = false)
+                    return ConnectionRequestResult(canConnect = false, canUseFallback = false)
                 }
             )?.let {
                 return try {
@@ -91,6 +91,7 @@ internal class ServiceBillingConnection(
                 }
             }
         }
+        callback.connectionFailed.invoke(BazaarNotFoundException())
         return ConnectionRequestResult(canConnect = false, canUseFallback = false)
     }
 
