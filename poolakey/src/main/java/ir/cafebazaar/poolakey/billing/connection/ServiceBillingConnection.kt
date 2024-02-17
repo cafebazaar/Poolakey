@@ -65,34 +65,28 @@ internal class ServiceBillingConnection(
     private var callbackReference: WeakReference<ConnectionCallback>? = null
     private var contextReference: WeakReference<Context>? = null
 
-    override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
+    override fun startConnection(
+        context: Context,
+        callback: ConnectionCallback
+    ): ConnectionResult {
         callbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
         return Intent(BILLING_SERVICE_ACTION).apply {
             `package` = BAZAAR_PACKAGE_NAME
             setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
-        }
-            .takeIf(
-                thisIsTrue = ::isServiceAvailable,
-                andIfNot = {
-                    callback.connectionFailed.invoke(BazaarNotFoundException())
-                }
-            )?.takeIf(
-                thisIsTrue = {
-                    Security.verifyBazaarIsInstalled(context)
-                },
-                andIfNot = {
-                    callback.connectionFailed.invoke(BazaarNotFoundException())
-                }
-            )?.let {
+        }.let {
+            if (Security.verifyBazaarIsInstalled(context) && isServiceAvailable(it)) {
                 try {
                     context.bindService(it, this, Context.BIND_AUTO_CREATE)
+                    ConnectionResult.Success
                 } catch (e: SecurityException) {
-                    callback.connectionFailed.invoke(e)
-                    false
+                    ConnectionResult.Failed(e)
                 }
-            } ?: false
+            } else {
+                return ConnectionResult.Failed(BazaarNotFoundException())
+            }
+        }
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
