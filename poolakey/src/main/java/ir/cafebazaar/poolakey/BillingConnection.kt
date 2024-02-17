@@ -8,6 +8,7 @@ import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHO
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistry
 import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
+import ir.cafebazaar.poolakey.billing.connection.ConnectionResult
 import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
 import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
 import ir.cafebazaar.poolakey.billing.query.QueryFunction
@@ -60,18 +61,25 @@ internal class BillingConnection(
             queryFunction
         )
 
-        val canConnect = serviceCommunicator.startConnection(context, requireNotNull(callback))
+        billingCommunicator = serviceCommunicator.startConnection(
+            context,
+            requireNotNull(callback)
+        ).let {
+            if (it is ConnectionResult.Success) {
+                serviceCommunicator
+            } else {
+                val connectionResult = receiverConnection.startConnection(
+                    context,
+                    requireNotNull(callback)
+                )
 
-        billingCommunicator = if (canConnect) {
-            serviceCommunicator
-        } else {
-            receiverConnection.startConnection(
-                context,
-                requireNotNull(callback)
-            )
-
-            receiverConnection
+                if (connectionResult is ConnectionResult.Failed) {
+                    requireNotNull(callback).connectionFailed.invoke(connectionResult.exception)
+                }
+                receiverConnection
+            }
         }
+
         return requireNotNull(callback)
     }
 

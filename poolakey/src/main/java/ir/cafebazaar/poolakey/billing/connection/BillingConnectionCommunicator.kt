@@ -18,7 +18,7 @@ internal interface BillingConnectionCommunicator {
     fun startConnection(
         context: Context,
         callback: ConnectionCallback
-    ): Boolean
+    ): ConnectionResult
 
     fun consume(
         purchaseToken: String,

@@ -27,6 +27,7 @@ import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.BazaarIntent.REQUEST_SKU_DETAILS_LIST
 import ir.cafebazaar.poolakey.constant.Billing
 import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
+import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ConsumeFailedException
 import ir.cafebazaar.poolakey.exception.DisconnectException
@@ -64,12 +65,15 @@ internal class ReceiverBillingConnection(
 
     private var purchaseWeakReference: WeakReference<PurchaseWeakHolder>? = null
 
-    override fun startConnection(context: Context, callback: ConnectionCallback): Boolean {
+    override fun startConnection(
+        context: Context,
+        callback: ConnectionCallback
+    ): ConnectionResult {
         connectionCallbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
-        if (!Security.verifyBazaarIsInstalled(context)) {
-            return false
+        if (Security.verifyBazaarIsInstalled(context).not()) {
+            return ConnectionResult.Failed(BazaarNotFoundException())
         }
 
         bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
@@ -81,14 +85,10 @@ internal class ReceiverBillingConnection(
                 createReceiverConnection()
                 registerBroadcast()
                 isPurchaseTypeSupported()
-                true
-            }
-            bazaarVersionCode > 0 -> {
-                callback.connectionFailed.invoke(BazaarNotSupportedException())
-                false
+                ConnectionResult.Success
             }
             else -> {
-                false
+                ConnectionResult.Failed(BazaarNotSupportedException())
             }
         }
     }
