@@ -42,7 +42,6 @@ import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.security.Security
-import ir.cafebazaar.poolakey.takeIf
 import ir.cafebazaar.poolakey.thread.PoolakeyThread
 import java.lang.ref.WeakReference
 
