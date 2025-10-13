@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ir.cafebazaar.poolakey">
 
@@ -8,9 +9,10 @@
     <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />
 
     <application>
-        <receiver android:name=".receiver.BillingReceiver"
-              android:exported="true"     
-                  >
+        <!-- Receiver from your original manifest -->
+        <receiver
+            android:name=".receiver.BillingReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.farsitel.bazaar.purchase" />
                 <action android:name="com.farsitel.bazaar.billingSupport" />
@@ -20,5 +22,16 @@
                 <action android:name="com.farsitel.bazaar.checkTrialSubscription" />
             </intent-filter>
         </receiver>
+
+        <!-- A simple activity to show UI for billing -->
+        <activity android:name=".ui.BillingActivity"
+                  android:exported="true"
+                  android:label="Billing">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
+
 </manifest>
