@@ -1,0 +1,166 @@
+package ir.cafebazaar.poolakey.entity
+
+import org.json.JSONObject
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.*
+
+// ===================== PurchaseInfo =====================
+data class PurchaseInfo(
+    val orderId: String,
+    val purchaseToken: String,
+    val payload: String,
+    val packageName: String,
+    val purchaseState: PurchaseState,
+    val purchaseTime: Long,
+    val productId: String,
+    val originalJson: String,
+    val dataSignature: String
+) {
+
+    fun isValid(): Boolean = purchaseState == PurchaseState.PURCHASED && purchaseToken.isNotEmpty()
+
+    fun formattedPurchaseTime(pattern: String = "yyyy-MM-dd HH:mm:ss"): String =
+        SimpleDateFormat(pattern, Locale.getDefault()).format(Date(purchaseTime))
+
+    fun toJsonObject(): JSONObject = try {
+        JSONObject(originalJson)
+    } catch (_: Exception) {
+        JSONObject()
+    }
+
+    fun isSamePurchase(other: PurchaseInfo): Boolean = this.orderId == other.orderId
+    fun isRefunded(): Boolean = purchaseState == PurchaseState.REFUNDED
+
+    fun summary(): String = "Product: $productId | Status: $purchaseState | Date: ${formattedPurchaseTime()}"
+
+    fun isEarlierThan(other: PurchaseInfo): Boolean = this.purchaseTime < other.purchaseTime
+
+    // Enhanced UI-friendly display
+    fun detailedDisplay(): String {
+        return buildString {
+            appendLine("╔═════════ Purchase Info ═════════╗")
+            appendLine("║ Order ID   : $orderId")
+            appendLine("║ Product ID : $productId")
+            appendLine("║ Status     : $purchaseState")
+            appendLine("║ Purchased  : ${formattedPurchaseTime()}")
+            appendLine("║ Token      : ${if (purchaseToken.isNotEmpty()) "Valid" else "Missing"}")
+            appendLine("╚═════════════════════════════════╝")
+        }
+    }
+}
+
+// ===================== PurchaseState =====================
+enum class PurchaseState {
+    PURCHASED,
+    REFUNDED;
+
+    companion object {
+        fun fromString(value: String?): PurchaseState = when (value?.uppercase(Locale.getDefault())) {
+            "PURCHASED" -> PURCHASED
+            "REFUNDED" -> REFUNDED
+            else -> PURCHASED
+        }
+    }
+}
+
+// ===================== SkuDetails =====================
+class SkuDetails private constructor(
+    val sku: String,
+    val type: String,
+    val price: String,
+    val title: String,
+    val description: String
+) {
+
+    override fun toString(): String = "SKU: $sku | Type: $type | Price: $price | Title: $title"
+
+    companion object {
+        internal fun fromJson(json: String): SkuDetails {
+            val jsonObject = JSONObject(json)
+            return with(jsonObject) {
+                SkuDetails(
+                    optString("productId", "unknown_sku"),
+                    optString("type", "unknown_type"),
+                    optString("price", "0"),
+                    optString("title", "N/A"),
+                    optString("description", "")
+                )
+            }
+        }
+    }
+
+    fun isSubscription(): Boolean = type.lowercase(Locale.getDefault()) == "subs"
+
+    fun displaySummary(): String {
+        val formattedPrice = try {
+            NumberFormat.getCurrencyInstance().format(price.filter { it.isDigit() }.toDouble())
+        } catch (_: Exception) {
+            price
+        }
+        return "$title - $formattedPrice"
+    }
+
+    fun cheaperThan(other: SkuDetails): Boolean {
+        val thisPrice = price.filter { it.isDigit() }.toDoubleOrNull() ?: Double.MAX_VALUE
+        val otherPrice = other.price.filter { it.isDigit() }.toDoubleOrNull() ?: Double.MAX_VALUE
+        return thisPrice < otherPrice
+    }
+
+    fun fullDisplay(): String {
+        return buildString {
+            appendLine("╔══════════ SKU Details ══════════╗")
+            appendLine("║ SKU         : $sku")
+            appendLine("║ Title       : $title")
+            appendLine("║ Price       : $price")
+            appendLine("║ Type        : $type")
+            appendLine("║ Description : $description")
+            appendLine("╚════════════════════════════════╝")
+        }
+    }
+}
+
+// ===================== TrialSubscriptionInfo =====================
+class TrialSubscriptionInfo private constructor(
+    val isAvailable: Boolean,
+    val trialPeriodDays: Int
+) {
+
+    override fun toString(): String =
+        "Trial Available: $isAvailable | Days: $trialPeriodDays"
+
+    companion object {
+        internal fun fromJson(json: String): TrialSubscriptionInfo {
+            val jsonObject = JSONObject(json)
+            return with(jsonObject) {
+                TrialSubscriptionInfo(
+                    optBoolean("isAvailable", false),
+                    optInt("trialPeriodDays", 0)
+                )
+            }
+        }
+    }
+
+    fun canUseTrial(): Boolean = isAvailable && trialPeriodDays > 0
+
+    fun trialInfo(): String =
+        if (isAvailable) "Trial available for $trialPeriodDays days" else "No trial available"
+
+    fun trialEndDate(): String {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, trialPeriodDays)
+        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+    }
+
+    fun isEmptyTrial(): Boolean = !isAvailable || trialPeriodDays <= 0
+
+    fun detailedDisplay(): String {
+        return buildString {
+            appendLine("╔══════════ Trial Info ═══════════╗")
+            appendLine("║ Available    : $isAvailable")
+            appendLine("║ Trial Days   : $trialPeriodDays")
+            appendLine("║ Ends On      : ${trialEndDate()}")
+            appendLine("╚════════════════════════════════╝")
+        }
+    }
+}

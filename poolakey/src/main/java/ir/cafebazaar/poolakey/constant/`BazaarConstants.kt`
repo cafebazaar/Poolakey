@@ -1,0 +1,123 @@
+package ir.cafebazaar.poolakey.constant
+
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
+
+internal object BazaarIntent {
+
+    const val RESPONSE_CODE = "RESPONSE_CODE"
+    const val RESPONSE_RESULT_OK = 0
+    const val RESPONSE_PURCHASE_DATA = "INAPP_PURCHASE_DATA"
+    const val RESPONSE_SIGNATURE_DATA = "INAPP_DATA_SIGNATURE"
+    const val RESPONSE_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN"
+    const val RESPONSE_PURCHASE_ITEM_LIST = "INAPP_PURCHASE_ITEM_LIST"
+    const val RESPONSE_PURCHASE_DATA_LIST = "INAPP_PURCHASE_DATA_LIST"
+    const val RESPONSE_DATA_SIGNATURE_LIST = "INAPP_DATA_SIGNATURE_LIST"
+    const val RESPONSE_GET_SKU_DETAILS_LIST = "DETAILS_LIST"
+    const val RESPONSE_CHECK_TRIAL_SUBSCRIPTION_DATA = "CHECK_TRIAL_SUBSCRIPTION_DATA"
+    const val REQUEST_SKU_DETAILS_LIST = "ITEM_ID_LIST"
+    const val RESPONSE_DYNAMIC_PRICE_TOKEN = "DYNAMIC_PRICE_TOKEN"
+    const val RESPONSE_CUTOUT_MODE_IS_SHORT_EDGES = "CUTOUT_MODE_IS_SHORT_EDGES"
+
+    // ===================== Utility Functions =====================
+    
+    fun isResponseOk(code: Int): Boolean = code == RESPONSE_RESULT_OK
+
+    fun extractPurchaseData(response: Map<String, Any?>): String? =
+        response[RESPONSE_PURCHASE_DATA]?.toString()
+
+    fun extractSignatureData(response: Map<String, Any?>): String? =
+        response[RESPONSE_SIGNATURE_DATA]?.toString()
+
+    fun extractContinuationToken(response: Map<String, Any?>): String? =
+        response[RESPONSE_CONTINUATION_TOKEN]?.toString()
+
+    fun parsePurchaseDataList(response: Map<String, Any?>): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        val jsonArrayObj = response[RESPONSE_PURCHASE_DATA_LIST] ?: return list
+        try {
+            val jsonArray = when (jsonArrayObj) {
+                is JSONArray -> jsonArrayObj
+                is String -> JSONArray(jsonArrayObj)
+                else -> return list
+            }
+            for (i in 0 until jsonArray.length()) {
+                jsonArray.getJSONObject(i)?.let { list.add(it) }
+            }
+        } catch (_: JSONException) {}
+        return list
+    }
+
+    // ===================== Additional Functions =====================
+    
+    fun isValidPurchaseJson(json: JSONObject): Boolean {
+        return json.has(RawJson.ORDER_ID) &&
+               json.has(RawJson.PURCHASE_TOKEN) &&
+               json.has(RawJson.PURCHASE_STATE)
+    }
+
+    fun formattedPurchaseTime(json: JSONObject, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
+        val time = RawJson.getLong(json, RawJson.PURCHASE_TIME)
+        val date = Date(time)
+        val sdf = SimpleDateFormat(pattern, Locale.getDefault())
+        return sdf.format(date)
+    }
+
+    fun extractOrderIds(purchaseList: List<JSONObject>): List<String> =
+        purchaseList.mapNotNull { RawJson.getString(it, RawJson.ORDER_ID) }
+
+    fun isRefunded(json: JSONObject): Boolean =
+        RawJson.getString(json, RawJson.PURCHASE_STATE)
+            ?.uppercase(Locale.ROOT) == "REFUNDED"
+
+    /** Pretty-print purchase JSON for console/debugging */
+    fun prettyPrintPurchase(json: JSONObject): String {
+        val orderId = RawJson.getString(json, RawJson.ORDER_ID) ?: "N/A"
+        val productId = RawJson.getString(json, RawJson.PRODUCT_ID) ?: "N/A"
+        val state = RawJson.getString(json, RawJson.PURCHASE_STATE) ?: "UNKNOWN"
+        val purchaseTime = formattedPurchaseTime(json)
+        val tokenStatus = if (!RawJson.getString(json, RawJson.PURCHASE_TOKEN).isNullOrEmpty()) "Valid" else "Missing"
+
+        return buildString {
+            appendLine("╔═════════ Purchase Info ═════════╗")
+            appendLine("║ Order ID   : $orderId")
+            appendLine("║ Product ID : $productId")
+            appendLine("║ Status     : $state")
+            appendLine("║ Purchased  : $purchaseTime")
+            appendLine("║ Token      : $tokenStatus")
+            appendLine("╚═════════════════════════════════╝")
+        }
+    }
+}
+
+internal object Billing {
+    const val IN_APP_BILLING_VERSION = 3
+    fun isSupported(version: Int): Boolean = version >= IN_APP_BILLING_VERSION
+}
+
+internal object Const {
+    const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
+    const val BAZAAR_PAYMENT_SERVICE_CLASS_NAME =
+        "com.farsitel.bazaar.inappbilling.service.InAppBillingService"
+
+    fun isBazaarPackage(packageName: String): Boolean = packageName == BAZAAR_PACKAGE_NAME
+}
+
+internal object RawJson {
+    const val ORDER_ID: String = "orderId"
+    const val PURCHASE_TOKEN: String = "purchaseToken"
+    const val DEVELOPER_PAYLOAD: String = "developerPayload"
+    const val PACKAGE_NAME: String = "packageName"
+    const val PURCHASE_STATE: String = "purchaseState"
+    const val PURCHASE_TIME: String = "purchaseTime"
+    const val PRODUCT_ID: String = "productId"
+
+    fun getString(json: JSONObject, key: String): String? =
+        if (json.has(key)) json.optString(key, null) else null
+
+    fun getLong(json: JSONObject, key: String): Long =
+        if (json.has(key)) json.optLong(key, 0) else 0
+}

@@ -2,228 +2,251 @@ package ir.cafebazaar.poolakey
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.util.Log
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.view.View
 import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+import android.widget.TextView
+import androidx.annotation.ColorInt
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistry
-import ir.cafebazaar.poolakey.billing.connection.BillingConnectionCommunicator
-import ir.cafebazaar.poolakey.billing.connection.ConnectionResult
-import ir.cafebazaar.poolakey.billing.connection.ReceiverBillingConnection
-import ir.cafebazaar.poolakey.billing.connection.ServiceBillingConnection
-import ir.cafebazaar.poolakey.billing.query.QueryFunction
-import ir.cafebazaar.poolakey.billing.skudetail.GetSkuDetailFunction
-import ir.cafebazaar.poolakey.billing.skudetail.SkuDetailFunctionRequest
-import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunction
-import ir.cafebazaar.poolakey.billing.trialsubscription.CheckTrialSubscriptionFunctionRequest
-import ir.cafebazaar.poolakey.callback.CheckTrialSubscriptionCallback
-import ir.cafebazaar.poolakey.callback.ConnectionCallback
-import ir.cafebazaar.poolakey.callback.ConsumeCallback
-import ir.cafebazaar.poolakey.callback.GetSkuDetailsCallback
-import ir.cafebazaar.poolakey.callback.PurchaseCallback
-import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
-import ir.cafebazaar.poolakey.config.PaymentConfiguration
-import ir.cafebazaar.poolakey.request.PurchaseRequest
-import ir.cafebazaar.poolakey.thread.PoolakeyThread
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
-internal class BillingConnection(
-    private val context: Context,
-    private val paymentConfiguration: PaymentConfiguration,
-    private val backgroundThread: PoolakeyThread<Runnable>,
-    private val queryFunction: QueryFunction,
-    private val skuDetailFunction: GetSkuDetailFunction,
-    private val purchaseResultParser: PurchaseResultParser,
-    private val checkTrialSubscriptionFunction: CheckTrialSubscriptionFunction,
-    private val mainThread: PoolakeyThread<() -> Unit>
-) {
+// -------------------- Package Utilities --------------------
 
-    private var callback: ConnectionCallback? = null
-    private var paymentLauncher: PaymentLauncher? = null
+internal fun getPackageInfo(context: Context, packageName: String): PackageInfo? = try {
+    context.packageManager.getPackageInfo(packageName, 0)
+} catch (_: Exception) {
+    null
+}
 
-    private var billingCommunicator: BillingConnectionCommunicator? = null
+@Suppress("DEPRECATION")
+internal fun sdkAwareVersionCode(packageInfo: PackageInfo): Long =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) packageInfo.longVersionCode
+    else packageInfo.versionCode.toLong()
 
-    internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
-        callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
+internal fun getVersionName(context: Context, packageName: String): String? =
+    getPackageInfo(context, packageName)?.versionName
 
-        val serviceCommunicator = ServiceBillingConnection(
-            context,
-            mainThread,
-            backgroundThread,
-            paymentConfiguration,
-            queryFunction,
-            skuDetailFunction,
-            checkTrialSubscriptionFunction,
-            ::disconnect
-        )
+internal fun isPackageInstalled(context: Context, packageName: String): Boolean =
+    try { context.packageManager.getPackageInfo(packageName, 0); true } catch (_: Exception) { false }
 
-        val receiverConnection = ReceiverBillingConnection(
-            paymentConfiguration,
-            queryFunction
-        )
+internal fun isVersionAtLeast(context: Context, packageName: String, minVersionCode: Long): Boolean {
+    val info = getPackageInfo(context, packageName)
+    return info?.let { sdkAwareVersionCode(it) >= minVersionCode } ?: false
+}
 
-        billingCommunicator = serviceCommunicator.startConnection(
-            context,
-            requireNotNull(callback)
-        ).let {
-            if (it is ConnectionResult.Success) {
-                serviceCommunicator
-            } else {
-                val connectionResult = receiverConnection.startConnection(
-                    context,
-                    requireNotNull(callback)
-                )
+internal fun logPackageInfo(context: Context, packageName: String) {
+    val info = getPackageInfo(context, packageName) ?: run {
+        Log.w("Poolakey", "⚠️ Package $packageName not found or inaccessible.")
+        return
+    }
+    Log.d("Poolakey", """
+        📦 Package Info:
+        - Package Name: $packageName
+        - Version Name: ${info.versionName ?: "N/A"}
+        - Version Code: ${sdkAwareVersionCode(info)}
+        - First Install Time: ${info.firstInstallTime}
+        - Last Update Time: ${info.lastUpdateTime}
+    """.trimIndent())
+}
 
-                if (connectionResult is ConnectionResult.Failed) {
-                    requireNotNull(callback).connectionFailed.invoke(connectionResult.exception)
-                }
-                receiverConnection
-            }
-        }
+internal fun getFirstInstallTime(context: Context, packageName: String): Long? =
+    getPackageInfo(context, packageName)?.firstInstallTime
 
-        return requireNotNull(callback)
+internal fun getLastUpdateTime(context: Context, packageName: String): Long? =
+    getPackageInfo(context, packageName)?.lastUpdateTime
+
+internal fun compareAppVersions(context: Context, packageName1: String, packageName2: String): Int {
+    val info1 = getPackageInfo(context, packageName1)
+    val info2 = getPackageInfo(context, packageName2)
+    if (info1 == null || info2 == null) return 0
+    return sdkAwareVersionCode(info1).compareTo(sdkAwareVersionCode(info2))
+}
+
+internal fun getPackageSummary(context: Context, packageName: String): String {
+    val info = getPackageInfo(context, packageName) ?: return "Package \"$packageName\" is not installed."
+    return """
+        📦 $packageName
+        • Version: ${info.versionName ?: "Unknown"} (${sdkAwareVersionCode(info)})
+        • Installed: ${info.firstInstallTime}
+        • Updated: ${info.lastUpdateTime}
+    """.trimIndent()
+}
+
+internal fun getAppAgeInDays(context: Context, packageName: String): Long? {
+    val installTime = getFirstInstallTime(context, packageName) ?: return null
+    return (System.currentTimeMillis() - installTime) / (1000 * 60 * 60 * 24)
+}
+
+internal fun needsUpdate(context: Context, packageName: String, remoteVersionCode: Long): Boolean {
+    val currentVersion = getPackageInfo(context, packageName)?.let { sdkAwareVersionCode(it) } ?: return false
+    return currentVersion < remoteVersionCode
+}
+
+internal fun getPackageUiSummary(context: Context, packageName: String): String {
+    val info = getPackageInfo(context, packageName) ?: return "Package \"$packageName\" not installed."
+    val age = getAppAgeInDays(context, packageName) ?: 0
+    return "${info.packageName} v${info.versionName ?: "?"} (${sdkAwareVersionCode(info)}) - Installed $age days ago"
+}
+
+// -------------------- Connection State --------------------
+
+sealed class ConnectionState {
+
+    object Connected : ConnectionState()
+    object FailedToConnect : ConnectionState()
+    object Disconnected : ConnectionState()
+
+    fun isConnected(): Boolean = this is Connected
+    fun isDisconnected(): Boolean = this is Disconnected
+    fun isFailed(): Boolean = this is FailedToConnect
+
+    fun getDescription(): String = when (this) {
+        Connected -> "✅ Connected to Bazaar billing service."
+        FailedToConnect -> "❌ Failed to connect to Bazaar billing service."
+        Disconnected -> "⚠️ Disconnected from Bazaar billing service."
     }
 
-    fun purchase(
-        registry: ActivityResultRegistry,
-        purchaseRequest: PurchaseRequest,
-        purchaseType: PurchaseType,
-        purchaseCallback: PurchaseCallback.() -> Unit
-    ) {
-        paymentLauncher = PaymentLauncher.Builder(registry) {
-            onActivityResult(it, purchaseCallback)
-        }.build()
-
-        purchaseRequest.cutoutModeIsShortEdges = if (SDK_INT >= Build.VERSION_CODES.P) {
-            (context as? Activity)
-                ?.window
-                ?.attributes
-                ?.layoutInDisplayCutoutMode == LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-        } else {
-            false
-        }
-
-        runOnCommunicator(TAG_PURCHASE) { billingCommunicator ->
-            billingCommunicator.purchase(
-                requireNotNull(paymentLauncher),
-                purchaseRequest,
-                purchaseType,
-                purchaseCallback
-            )
-        }
+    fun toStatusCode(): String = when (this) {
+        Connected -> "CONNECTED"
+        FailedToConnect -> "FAILED"
+        Disconnected -> "DISCONNECTED"
     }
 
-    fun consume(
-        purchaseToken: String,
-        callback: ConsumeCallback.() -> Unit
-    ) {
-        runOnCommunicator(TAG_CONSUME) { billingCommunicator ->
-            billingCommunicator.consume(
-                purchaseToken,
-                callback
-            )
-        }
+    fun getEmoji(): String = when (this) {
+        Connected -> "🟢"
+        FailedToConnect -> "🔴"
+        Disconnected -> "🟡"
     }
 
-    fun queryPurchasedProducts(
-        purchaseType: PurchaseType,
-        callback: PurchaseQueryCallback.() -> Unit
-    ) {
-        runOnCommunicator(TAG_QUERY_PURCHASE_PRODUCT) { billingCommunicator ->
-            billingCommunicator.queryPurchasedProducts(
-                purchaseType,
-                callback
-            )
-        }
+    fun logState(tag: String = "PoolakeyConnection") {
+        Log.d(tag, "Connection State: ${toStatusCode()} - ${getDescription()}")
     }
 
-    fun getSkuDetail(
-        purchaseType: PurchaseType,
-        skuIds: List<String>,
-        callback: GetSkuDetailsCallback.() -> Unit
-    ) {
-        runOnCommunicator(TAG_GET_SKU_DETAIL) { billingCommunicator ->
-            billingCommunicator.getSkuDetails(
-                SkuDetailFunctionRequest(purchaseType, skuIds, callback),
-                callback
-            )
-        }
+    @ColorInt
+    fun getStateColor(): Int = when (this) {
+        Connected -> Color.parseColor("#4CAF50")
+        FailedToConnect -> Color.parseColor("#F44336")
+        Disconnected -> Color.parseColor("#FFC107")
     }
 
-    fun checkTrialSubscription(
-        callback: CheckTrialSubscriptionCallback.() -> Unit
-    ) {
-        runOnCommunicator(TAG_CHECK_TRIAL_SUBSCRIPTION) { billingCommunicator ->
-            billingCommunicator.checkTrialSubscription(
-                CheckTrialSubscriptionFunctionRequest(callback),
-                callback
-            )
+    fun getUiLabel(): String = "${getEmoji()} ${toStatusCode()}"
+
+    fun bindToStatusView(textView: TextView, context: Context) {
+        textView.text = getUiLabel()
+        val drawable = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dpToPx(context, 20).toFloat()
+            setColor(getStateColor())
+        }
+        textView.apply {
+            setTextColor(Color.WHITE)
+            setTypeface(Typeface.DEFAULT_BOLD)
+            textSize = 14f
+            setPadding(dpToPx(context, 16), dpToPx(context, 8), dpToPx(context, 16), dpToPx(context, 8))
+            background = drawable
+            elevation = 6f
         }
     }
 
-    private fun stopConnection() {
-        runOnCommunicator(TAG_STOP_CONNECTION) { billingCommunicator ->
-            billingCommunicator.stopConnection()
-            disconnect()
+    fun styleTextViewAsBadge(textView: TextView, context: Context) {
+        val color = getStateColor()
+        val drawable = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dpToPx(context, 16).toFloat()
+            setColor(adjustAlpha(color, 0.12f))
+        }
+        textView.apply {
+            text = getUiLabel()
+            setTextColor(color)
+            setTypeface(Typeface.DEFAULT_BOLD)
+            textSize = 13f
+            setPadding(dpToPx(context, 10), dpToPx(context, 4), dpToPx(context, 10), dpToPx(context, 4))
+            background = drawable
+            elevation = 4f
         }
     }
 
-    private fun disconnect() {
-        callback?.disconnected?.invoke()
-        callback = null
-        paymentLauncher?.unregister()
-        paymentLauncher = null
-        backgroundThread.dispose()
-        billingCommunicator = null
+    fun shouldAttemptReconnect(): Boolean = !isConnected()
+    fun getNextSuggestedState(): ConnectionState = when (this) {
+        Connected -> Disconnected
+        else -> Connected
     }
 
-    private fun runOnCommunicator(
-        methodName: String,
-        ifConnected: (BillingConnectionCommunicator) -> Unit
-    ) {
-        billingCommunicator?.let(ifConnected)
-            ?: raiseErrorForCommunicatorNotInitialized(methodName)
+    fun toNotificationMessage(): String = when (this) {
+        Connected -> "🟢 Connection established with Bazaar."
+        FailedToConnect -> "🔴 Unable to reach Bazaar servers. Please try again."
+        Disconnected -> "🟡 Connection lost. Attempting to reconnect..."
     }
 
-    private fun raiseErrorForCommunicatorNotInitialized(methodName: String) {
-        callback?.connectionFailed?.invoke(
-            IllegalStateException("You called $methodName but communicator is not initialized yet")
-        )
+    fun getConnectionStabilityScore(): Int = when (this) {
+        Connected -> 100
+        FailedToConnect -> 25
+        Disconnected -> 50
     }
 
-    private fun onActivityResult(
-        activityResult: ActivityResult,
-        purchaseCallback: PurchaseCallback.() -> Unit
-    ) {
-        when (activityResult.resultCode) {
-            Activity.RESULT_OK -> {
-                purchaseResultParser.handleReceivedResult(
-                    paymentConfiguration.localSecurityCheck,
-                    activityResult.data,
-                    purchaseCallback
-                )
-            }
-            Activity.RESULT_CANCELED -> {
-                PurchaseCallback().apply(purchaseCallback)
-                    .purchaseCanceled
-                    .invoke()
-            }
-            else -> {
-                PurchaseCallback().apply(purchaseCallback)
-                    .purchaseFailed
-                    .invoke(IllegalStateException("Result code is not valid"))
-            }
-        }
-    }
+    fun asLiveData(): LiveData<ConnectionState> = MutableLiveData<ConnectionState>().apply { value = this@ConnectionState }
+    fun asStateFlow(): StateFlow<ConnectionState> = MutableStateFlow(this)
 
-    companion object {
+    private fun dpToPx(context: Context, dp: Int): Int =
+        (dp * context.resources.displayMetrics.density + 0.5f).toInt()
 
-        const val PAYMENT_SERVICE_KEY = "payment_service_key"
-
-        private const val TAG_STOP_CONNECTION = "stopConnection"
-        private const val TAG_QUERY_PURCHASE_PRODUCT = "queryPurchasedProducts"
-        private const val TAG_CONSUME = "consume"
-        private const val TAG_PURCHASE = "purchase"
-        private const val TAG_GET_SKU_DETAIL = "skuDetial"
-        private const val TAG_CHECK_TRIAL_SUBSCRIPTION = "checkTrialSubscription"
+    private fun adjustAlpha(@ColorInt color: Int, factor: Float): Int {
+        val alpha = (Color.alpha(color) * factor).toInt()
+        return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
     }
 }
+
+// -------------------- Connection Interface --------------------
+
+interface Connection {
+    fun getState(): ConnectionState
+    fun disconnect()
+}
+
+// -------------------- Additional Helpers --------------------
+
+fun ConnectionState.toggleTestState(): ConnectionState = when (this) {
+    ConnectionState.Connected -> ConnectionState.Disconnected
+    ConnectionState.Disconnected -> ConnectionState.Connected
+    ConnectionState.FailedToConnect -> ConnectionState.Connected
+}
+
+fun ConnectionState.getSeverityLevel(): Int = when (this) {
+    ConnectionState.Connected -> 0
+    ConnectionState.Disconnected -> 1
+    ConnectionState.FailedToConnect -> 2
+}
+
+fun ConnectionState.updateTextViews(vararg textViews: TextView, context: Context) {
+    textViews.forEach { bindToStatusView(it, context) }
+}
+
+fun ConnectionState.getUiLabelWithMessage(message: String?): String {
+    val baseLabel = getUiLabel()
+    return if (message.isNullOrBlank()) baseLabel else "$baseLabel - $message"
+}
+
+fun ConnectionState.getColoredCircleDrawable(): GradientDrawable {
+    return GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(getStateColor())
+        setSize(24, 24)
+    }
+}
+
+fun ConnectionState.asConnectedLiveData(): LiveData<Boolean> =
+    MutableLiveData<Boolean>().apply { value = isConnected() }
+
+fun ConnectionState.asStabilityStateFlow(): StateFlow<Int> =
+    MutableStateFlow(getConnectionStabilityScore()) 
