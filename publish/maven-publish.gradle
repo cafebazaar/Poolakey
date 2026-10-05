@@ -1,0 +1,53 @@
+apply plugin: 'maven-publish'
+
+group = 'ir.cafebazaar'
+version = poolakeyVersion
+
+android {
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'ir.cafebazaar'
+                artifactId = project.artifact_id
+                version = poolakeyVersion
+
+                pom {
+                    name = project.package_id
+                    packaging = 'aar'
+                    url = 'https://github.com/CafeBazaar/Poolakey'
+
+                    licenses {
+                        license {
+                            name = 'The Apache Software License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'cafebazaar'
+                            name = 'Cafe Bazaar'
+                            email = 'mobilechapter.bazaar@gmail.com'
+                        }
+                    }
+
+                    scm {
+                        connection = 'https://github.com/CafeBazaar/Poolakey.git'
+                        developerConnection = 'https://github.com/CafeBazaar/Poolakey.git'
+                        url = 'https://github.com/CafeBazaar/Poolakey'
+                    }
+                }
+            }
+        }
+    }
+}

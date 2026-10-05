@@ -2,6 +2,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka'
 
+ext {
+    package_id = 'Poolakey-RxBase'
+    artifact_id = 'poolakey-rxbase'
+}
+
 android {
     compileSdkVersion buildVersions.compileSdkVersion
     buildToolsVersion buildVersions.buildToolsVersion
@@ -34,6 +39,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
 }
+
+apply from: "$rootDir/publish/maven-publish.gradle"
 
 tasks.named("dokkaHtml") {
     outputDirectory.set(file("$buildDir/kotlindoc"))
