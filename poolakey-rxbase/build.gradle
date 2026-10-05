@@ -18,17 +18,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    dokka {
-        outputFormat = 'html'
-        outputDirectory = "$buildDir/kotlindoc"
-        configuration {
-            skipEmptyPackages = true
-            externalDocumentationLink {
-                url = new URL("file://${project(":poolakey-rxbase").buildDir}/kotlindoc/poolakey/")
-                packageListUrl = new URL(url, "package-list")
-            }
-        }
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -44,4 +33,15 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
+}
+
+tasks.named("dokkaHtml") {
+    outputDirectory.set(file("$buildDir/kotlindoc"))
+    dokkaSourceSets.configureEach {
+        skipEmptyPackages.set(true)
+        externalDocumentationLink {
+            url.set(new URL("file://${project(":poolakey-rxbase").buildDir}/kotlindoc/poolakey/"))
+            packageListUrl.set(new URL(url.get(), "package-list"))
+        }
+    }
 }

@@ -24,18 +24,13 @@ android {
 
     buildTypes.each {
         it.buildConfigField 'String', 'BAZAAR_HASH', "\"${properties.getProperty('bazaarReleaseHash')}\""
+        // Signing key of the TV-only build (com.farsitel.bazaar.tv). Leave empty when it shares the phone key.
+        it.buildConfigField 'String', 'BAZAAR_TV_HASH', "\"${properties.getProperty('bazaarTvReleaseHash', '')}\""
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    dokka {
-        outputFormat = 'html'
-        outputDirectory = "$buildDir/kotlindoc"
-        configuration {
-            skipEmptyPackages = true
         }
     }
     compileOptions {
@@ -57,5 +52,11 @@ dependencies {
 
 }
 
-apply from: "$rootDir/bintray/install-bintray.gradle"
-apply from: "$rootDir/bintray/config-bintray.gradle"
+apply from: "$rootDir/publish/maven-publish.gradle"
+
+tasks.named("dokkaHtml") {
+    outputDirectory.set(file("$buildDir/kotlindoc"))
+    dokkaSourceSets.configureEach {
+        skipEmptyPackages.set(true)
+    }
+}
