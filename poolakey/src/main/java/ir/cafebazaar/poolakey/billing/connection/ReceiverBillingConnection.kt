@@ -3,6 +3,7 @@ package ir.cafebazaar.poolakey.billing.connection
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import ir.cafebazaar.poolakey.BazaarPackage
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
 import ir.cafebazaar.poolakey.billing.Feature
@@ -26,7 +27,6 @@ import ir.cafebazaar.poolakey.config.SecurityCheck
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.BazaarIntent.REQUEST_SKU_DETAILS_LIST
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.BazaarNotSupportedException
 import ir.cafebazaar.poolakey.exception.ConsumeFailedException
@@ -35,18 +35,17 @@ import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
 import ir.cafebazaar.poolakey.exception.PurchaseHijackedException
 import ir.cafebazaar.poolakey.exception.ResultNotOkayException
 import ir.cafebazaar.poolakey.exception.SubsNotSupportedException
-import ir.cafebazaar.poolakey.getPackageInfo
 import ir.cafebazaar.poolakey.receiver.BillingReceiver
 import ir.cafebazaar.poolakey.receiver.BillingReceiverCommunicator
 import ir.cafebazaar.poolakey.request.PurchaseRequest
 import ir.cafebazaar.poolakey.request.purchaseExtraData
-import ir.cafebazaar.poolakey.sdkAwareVersionCode
 import ir.cafebazaar.poolakey.security.Security
 import ir.cafebazaar.poolakey.takeIf
 import java.lang.ref.WeakReference
 
 internal class ReceiverBillingConnection(
     private val paymentConfiguration: PaymentConfiguration,
+    private val bazaarPackage: BazaarPackage,
     private val queryFunction: QueryFunction
 ) : BillingConnectionCommunicator {
 
@@ -61,7 +60,6 @@ internal class ReceiverBillingConnection(
 
     private var receiverCommunicator: BillingReceiverCommunicator? = null
     private var disconnected: Boolean = false
-    private var bazaarVersionCode: Long = 0L
 
     private var purchaseWeakReference: WeakReference<PurchaseWeakHolder>? = null
 
@@ -72,13 +70,9 @@ internal class ReceiverBillingConnection(
         connectionCallbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
-        if (Security.verifyBazaarIsInstalled(context).not()) {
+        if (Security.verifyBazaarIsInstalled(context, bazaarPackage.packageName).not()) {
             return ConnectionResult.Failed(BazaarNotFoundException())
         }
-
-        bazaarVersionCode = getPackageInfo(context, BAZAAR_PACKAGE_NAME)?.let {
-            sdkAwareVersionCode(it)
-        } ?: 0L
 
         return when {
             canConnectWithReceiverComponent() -> {
@@ -94,7 +88,7 @@ internal class ReceiverBillingConnection(
     }
 
     private fun canConnectWithReceiverComponent(): Boolean {
-        return bazaarVersionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
+        return bazaarPackage.versionCode > BAZAAR_WITH_RECEIVER_CONNECTION_VERSION
     }
 
     private fun createReceiverConnection() {
@@ -257,7 +251,7 @@ internal class ReceiverBillingConnection(
     }
 
     private fun isBazaarVersionSupportedFeatureConfig(): Boolean {
-        return bazaarVersionCode >= BAZAAR_WITH_FEATURE_CONFIG_VERSION
+        return bazaarPackage.versionCode >= BAZAAR_WITH_FEATURE_CONFIG_VERSION
     }
 
     private fun sendPurchaseBroadcast(
@@ -464,7 +458,7 @@ internal class ReceiverBillingConnection(
             putInt(KEY_API_VERSION, Billing.IN_APP_BILLING_VERSION)
         }
         return Intent().apply {
-            `package` = BAZAAR_PACKAGE_NAME
+            `package` = bazaarPackage.packageName
             putExtras(bundle)
         }
     }
