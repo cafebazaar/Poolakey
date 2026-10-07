@@ -24,7 +24,6 @@ android {
 
     buildTypes.each {
         it.buildConfigField 'String', 'BAZAAR_HASH', "\"${properties.getProperty('bazaarReleaseHash')}\""
-        // Signing key of the TV-only build (com.farsitel.bazaar.tv). Leave empty when it shares the phone key.
         it.buildConfigField 'String', 'BAZAAR_TV_HASH', "\"${properties.getProperty('bazaarTvReleaseHash', '')}\""
     }
     buildTypes {
