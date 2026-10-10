@@ -30,7 +30,7 @@ internal class PurchaseVerifier {
         InvalidKeySpecException::class,
         IllegalArgumentException::class
     )
-    private fun generatePublicKey(encodedPublicKey: String): PublicKey {
+    fun generatePublicKey(encodedPublicKey: String): PublicKey {
         val decodedKey = Base64.decode(encodedPublicKey, Base64.DEFAULT)
         val keyFactory = KeyFactory.getInstance(KEY_FACTORY_ALGORITHM)
         return keyFactory.generatePublic(X509EncodedKeySpec(decodedKey))

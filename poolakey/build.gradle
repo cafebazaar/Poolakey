@@ -17,6 +17,7 @@ android {
         versionCode 1
         versionName poolakeyVersion
         consumerProguardFiles 'consumer-rules.pro'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     Properties properties = new Properties()
@@ -54,6 +55,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$libraryVersions.kotlin"
 
     api "androidx.fragment:fragment:$libraryVersions.fragment"
+
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
 
 }
 

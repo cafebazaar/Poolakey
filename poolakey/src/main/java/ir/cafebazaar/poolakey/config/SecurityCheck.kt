@@ -1,5 +1,8 @@
 package ir.cafebazaar.poolakey.config
 
+import ir.cafebazaar.poolakey.security.PurchaseVerifier
+import java.security.GeneralSecurityException
+
 /**
  * You can use this class to disable or enable local security checks for purchases and queries.
  * Note that it's highly recommended to disable local security checks and use Bazaar's REST API to
@@ -19,7 +22,18 @@ sealed class SecurityCheck {
      * You have to use this class in order to enable local security checks. You can access to your
      * app's public rsa key from Bazaar's developer panel, under "In-App Billing" tab:
      * https://pishkhan.cafebazaar.ir/apps/YOUR_APPS_PACKAGE_NAME/in-app-billing
+     * @throws IllegalArgumentException if the RSA public key is invalid.
      */
-    data class Enable(val rsaPublicKey: String) : SecurityCheck()
+    data class Enable(val rsaPublicKey: String) : SecurityCheck() {
+        init {
+            try {
+                PurchaseVerifier().generatePublicKey(rsaPublicKey)
+            } catch (exception: GeneralSecurityException) {
+                throw IllegalArgumentException("Invalid RSA public key", exception)
+            } catch (exception: IllegalArgumentException) {
+                throw IllegalArgumentException("Invalid RSA public key", exception)
+            }
+        }
+    }
 
 }
