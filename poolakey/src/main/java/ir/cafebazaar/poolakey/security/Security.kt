@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.content.pm.Signature
 import android.os.Build
 import ir.cafebazaar.poolakey.BuildConfig
+import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.getPackageInfo
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -39,6 +40,7 @@ internal object Security {
             packageInfo.signatures
         }
 
+        val acceptedCertificateHashes = acceptedCertificateHashesFor(packageName)
         var certificateMatch = true
         for (signature in signatures) {
             val input: InputStream = ByteArrayInputStream(signature.toByteArray())
@@ -74,11 +76,16 @@ internal object Security {
         return stringBuilder.toString()
     }
 
-    /**
-     * Public keys of every certificate Bazaar builds are signed with.
-     */
-    private val acceptedCertificateHashes: Set<String> =
-        listOf(BuildConfig.BAZAAR_HASH, BuildConfig.BAZAAR_TV_HASH)
-            .filter { it.isNotBlank() }
-            .toSet()
+    private fun acceptedCertificateHashesFor(packageName: String): Set<String> {
+        return when (packageName) {
+            Const.BAZAAR_TV_PACKAGE_NAME -> setOf(
+                BuildConfig.BAZAAR_TV_HASH,
+                BuildConfig.BAZAAR_HASH,
+            )
+
+            else -> setOf(
+                BuildConfig.BAZAAR_HASH,
+            )
+        }
+    }
 }

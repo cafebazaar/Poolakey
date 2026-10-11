@@ -1,13 +1,13 @@
 language: android
-dist: trusty
-sudo: required
+dist: focal
+jdk: openjdk17
 
 android:
   components:
     - tools
     - platform-tools
-    - build-tools-29.0.3
-    - android-29
+    - build-tools-34.0.0
+    - android-34
     - extra
   licenses:
     - 'android-sdk-preview-license-52d11cd2'
@@ -25,4 +25,4 @@ cache:
     - $HOME/.android/build-cache
 
 script:
-  - ./gradlew clean assemble
+  - ./gradlew clean assemble detekt
