@@ -1,5 +1,5 @@
 config:
-  validation: false
+  validation: true
   warningsAsErrors: false
 
 build:
@@ -37,7 +37,7 @@ complexity:
     active: true
     threshold: 20
     includeStaticDeclarations: false
-  ComplexMethod:
+  CyclomaticComplexMethod:
     active: true
     threshold: 15
   LabeledExpression:
@@ -50,7 +50,8 @@ complexity:
     threshold: 60
   LongParameterList:
     active: true
-    threshold: 10
+    functionThreshold: 10
+    constructorThreshold: 10
     ignoreDefaultParameters: true
   MethodOverloading:
     active: false
@@ -109,7 +110,11 @@ exceptions:
   active: true
   ExceptionRaisedInUnexpectedLocation:
     active: false
-    methodNames: 'toString,hashCode,equals,finalize'
+    methodNames:
+      - toString
+      - hashCode
+      - equals
+      - finalize
   InstanceOfCheckForException:
     active: false
   NotImplementedDeclaration:
@@ -128,12 +133,15 @@ exceptions:
     active: false
   ThrowingExceptionsWithoutMessageOrCause:
     active: false
-    exceptions: 'IllegalArgumentException,IllegalStateException,IOException'
+    exceptions:
+      - IllegalArgumentException
+      - IllegalStateException
+      - IOException
   ThrowingNewInstanceOfSameException:
     active: false
   TooGenericExceptionCaught:
     active: true
-    exceptions:
+    exceptionNames:
       - Error
       - Exception
       - NullPointerException
@@ -141,7 +149,7 @@ exceptions:
       - RuntimeException
   TooGenericExceptionThrown:
     active: true
-    exceptions:
+    exceptionNames:
       - Error
       - Exception
       - NullPointerException
@@ -158,7 +166,7 @@ naming:
     enumEntryPattern: '^[A-Z$][a-zA-Z_$]*$'
   ForbiddenClassName:
     active: false
-    forbiddenName: ''
+    forbiddenName: []
   FunctionMaxLength:
     active: false
     maximumFunctionNameLength: 30
@@ -172,7 +180,7 @@ naming:
     active: true
   MemberNameEqualsClassName:
     active: false
-    ignoreOverriddenFunction: true
+    ignoreOverridden: true
   ObjectPropertyNaming:
     active: true
     propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
@@ -206,8 +214,6 @@ performance:
 
 potential-bugs:
   active: true
-  DuplicateCaseInWhenExpression:
-    active: true
   EqualsAlwaysReturnsTrueOrFalse:
     active: true
   EqualsWithHashCodeExist:
@@ -222,7 +228,7 @@ potential-bugs:
     active: true
   LateinitUsage:
     active: false
-    excludeAnnotatedProperties: ""
+    ignoreAnnotated: []
     ignoreOnClassesPattern: ""
   UnconditionalJumpStatementInLoop:
     active: true
@@ -243,27 +249,36 @@ style:
     active: true
   DataClassContainsFunctions:
     active: false
-    conversionFunctionPrefix: 'to'
+    conversionFunctionPrefix:
+      - to
   EqualsNullCall:
     active: true
   ExpressionBodySyntax:
     active: false
   ForbiddenComment:
     active: false
-    values: 'TODO:,FIXME:,STOPSHIP:'
+    values:
+      - 'TODO:'
+      - 'FIXME:'
+      - 'STOPSHIP:'
   ForbiddenImport:
     active: false
-    imports: ''
+    imports: []
   FunctionOnlyReturningConstant:
     active: false
     ignoreOverridableFunction: true
-    excludedFunctions: 'describeContents'
+    excludedFunctions:
+      - describeContents
   LoopWithTooManyJumpStatements:
     active: false
     maxJumpCount: 1
   MagicNumber:
     active: true
-    ignoreNumbers: '-1,0,1,2'
+    ignoreNumbers:
+      - '-1'
+      - '0'
+      - '1'
+      - '2'
     ignoreHashCodeFunction: false
     ignorePropertyDeclaration: true
     ignoreConstantDeclaration: true
@@ -288,8 +303,6 @@ style:
     active: false
   OptionalAbstractKeyword:
     active: true
-  OptionalReturnKeyword:
-    active: false
   OptionalUnit:
     active: false
   OptionalWhenBraces:
@@ -301,7 +314,8 @@ style:
   ReturnCount:
     active: true
     max: 2
-    excludedFunctions: "equals"
+    excludedFunctions:
+      - equals
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
@@ -326,11 +340,13 @@ style:
     allowedNames: "(_|ignored|expected)"
   UseDataClass:
     active: true
-    excludeAnnotatedClasses: ""
+    ignoreAnnotated: []
   UtilityClassWithPublicConstructor:
     active: true
   WildcardImport:
     active: true
-    excludeImports: 'java.util.*,kotlinx.android.synthetic.*'
+    excludeImports:
+      - 'java.util.*'
+      - 'kotlinx.android.synthetic.*'
   TrailingWhitespace:
     active: true

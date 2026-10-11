@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
 import android.os.Build
 import ir.cafebazaar.poolakey.constant.Const
+import ir.cafebazaar.poolakey.security.Security
 
 /**
  * The Bazaar build this connection talks to. Resolved once per connection and reused for
@@ -19,7 +20,7 @@ internal object BazaarPackageResolver {
 
     fun resolve(context: Context): BazaarPackage {
         val installedCandidates = Const.BAZAAR_PACKAGE_CANDIDATES.mapNotNull { packageName ->
-            installedCandidate(context, packageName)
+            installedAndTrustedCandidate(context, packageName)
         }
         return installedCandidates.firstOrNull { candidate ->
             isBillingServiceAvailable(context, billingServiceIntent(candidate.packageName))
@@ -48,11 +49,12 @@ internal object BazaarPackageResolver {
                     .isNotEmpty()
     }
 
-    private fun installedCandidate(context: Context, packageName: String): BazaarPackage? {
+    private fun installedAndTrustedCandidate(context: Context, packageName: String): BazaarPackage? {
         val packageInfo = getPackageInfo(context, packageName) ?: return null
         val versionCode = sdkAwareVersionCode(packageInfo)
         return BazaarPackage(packageName, versionCode).takeIf {
-            versionCode >= minimumVersionCode(packageName)
+            versionCode >= minimumVersionCode(packageName) &&
+                Security.verifyBazaarIsInstalled(context, packageName)
         }
     }
 
