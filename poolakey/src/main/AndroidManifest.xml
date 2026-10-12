@@ -3,6 +3,7 @@
 
     <queries>
         <package android:name="com.farsitel.bazaar" />
+        <package android:name="com.farsitel.bazaar.tv" />
     </queries>
 
     <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />

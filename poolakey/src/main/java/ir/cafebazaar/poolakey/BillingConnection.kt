@@ -44,12 +44,14 @@ internal class BillingConnection(
 
     internal fun startConnection(connectionCallback: ConnectionCallback.() -> Unit): Connection {
         callback = ConnectionCallback(disconnect = ::stopConnection).apply(connectionCallback)
+        val bazaarPackage = BazaarPackageResolver.resolve(context)
 
         val serviceCommunicator = ServiceBillingConnection(
             context,
             mainThread,
             backgroundThread,
             paymentConfiguration,
+            bazaarPackage,
             queryFunction,
             skuDetailFunction,
             checkTrialSubscriptionFunction,
@@ -58,6 +60,7 @@ internal class BillingConnection(
 
         val receiverConnection = ReceiverBillingConnection(
             paymentConfiguration,
+            bazaarPackage,
             queryFunction
         )
 

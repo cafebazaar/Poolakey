@@ -2,14 +2,12 @@ buildscript {
     apply from: "$rootDir/version-manager.gradle"
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$pluginVersions.gradle"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$libraryVersions.kotlin"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$pluginVersions.bintray"
-        classpath "com.github.dcendents:android-maven-gradle-plugin:$pluginVersions.androidmaven"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$pluginVersions.dokka"
         classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:$pluginVersions.detekt"
     }
@@ -19,7 +17,7 @@ allprojects {
     apply from: "$rootDir/version-manager.gradle"
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -31,14 +29,19 @@ subprojects {
     apply plugin: "io.gitlab.arturbosch.detekt"
     detekt {
         toolVersion = pluginVersions.detekt
-        input = files("${rootDir}")
+        source = files("${rootDir}")
         config = files("${rootDir}/detekt.yml")
-        filters = ".*/resources/.*,.*/build/.*"
+    }
+    tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach {
+        exclude("**/resources/**", "**/build/**")
         reports {
-            xml.enabled = false
+            xml.required = false
+            txt.required = false
+            sarif.required = false
+            md.required = false
             html {
-                enabled = true
-                destination = file("${rootDir}/build/reports/detekt.html")
+                required = true
+                outputLocation = file("${rootDir}/build/reports/detekt.html")
             }
         }
     }

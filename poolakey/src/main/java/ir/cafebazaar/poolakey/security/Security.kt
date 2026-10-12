@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.content.pm.Signature
 import android.os.Build
 import ir.cafebazaar.poolakey.BuildConfig
-import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
+import ir.cafebazaar.poolakey.constant.Const
 import ir.cafebazaar.poolakey.getPackageInfo
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -17,9 +17,8 @@ import java.util.*
 
 internal object Security {
 
-    fun verifyBazaarIsInstalled(context: Context): Boolean {
-
-        if (getPackageInfo(context, BAZAAR_PACKAGE_NAME) == null) {
+    fun verifyBazaarIsInstalled(context: Context, packageName: String): Boolean {
+        if (getPackageInfo(context, packageName) == null) {
             return false
         }
 
@@ -29,18 +28,19 @@ internal object Security {
         @SuppressLint("PackageManagerGetSignatures")
         val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val packageInfo = packageManager.getPackageInfo(
-                BAZAAR_PACKAGE_NAME,
+                packageName,
                 PackageManager.GET_SIGNING_CERTIFICATES
             )
             packageInfo.signingInfo.apkContentsSigners
         } else {
             val packageInfo = packageManager.getPackageInfo(
-                BAZAAR_PACKAGE_NAME,
+                packageName,
                 PackageManager.GET_SIGNATURES
             )
             packageInfo.signatures
         }
 
+        val acceptedCertificateHashes = acceptedCertificateHashesFor(packageName)
         var certificateMatch = true
         for (signature in signatures) {
             val input: InputStream = ByteArrayInputStream(signature.toByteArray())
@@ -49,7 +49,7 @@ internal object Security {
                 .generateCertificate(input) as X509Certificate
             val publicKey: PublicKey = certificate.publicKey
             val certificateHex = byte2HexFormatted(publicKey.encoded)
-            if (BuildConfig.BAZAAR_HASH != certificateHex) {
+            if (certificateHex !in acceptedCertificateHashes) {
                 certificateMatch = false
                 break
             }
@@ -74,5 +74,18 @@ internal object Security {
             }
         }
         return stringBuilder.toString()
+    }
+
+    private fun acceptedCertificateHashesFor(packageName: String): Set<String> {
+        return when (packageName) {
+            Const.BAZAAR_TV_PACKAGE_NAME -> setOf(
+                BuildConfig.BAZAAR_TV_HASH,
+                BuildConfig.BAZAAR_HASH,
+            )
+
+            else -> setOf(
+                BuildConfig.BAZAAR_HASH,
+            )
+        }
     }
 }

@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.ServiceConnection
-import android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
 import androidx.activity.result.IntentSenderRequest
 import com.android.vending.billing.IInAppBillingService
+import ir.cafebazaar.poolakey.BazaarPackage
+import ir.cafebazaar.poolakey.BazaarPackageResolver
 import ir.cafebazaar.poolakey.ConnectionState
 import ir.cafebazaar.poolakey.PurchaseType
 import ir.cafebazaar.poolakey.PaymentLauncher
@@ -34,8 +34,6 @@ import ir.cafebazaar.poolakey.callback.PurchaseQueryCallback
 import ir.cafebazaar.poolakey.config.PaymentConfiguration
 import ir.cafebazaar.poolakey.constant.BazaarIntent
 import ir.cafebazaar.poolakey.constant.Billing
-import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PACKAGE_NAME
-import ir.cafebazaar.poolakey.constant.Const.BAZAAR_PAYMENT_SERVICE_CLASS_NAME
 import ir.cafebazaar.poolakey.exception.BazaarNotFoundException
 import ir.cafebazaar.poolakey.exception.DisconnectException
 import ir.cafebazaar.poolakey.exception.IAPNotSupportedException
@@ -50,6 +48,7 @@ internal class ServiceBillingConnection(
     mainThread: PoolakeyThread<() -> Unit>,
     private val backgroundThread: PoolakeyThread<Runnable>,
     private val paymentConfiguration: PaymentConfiguration,
+    private val bazaarPackage: BazaarPackage,
     private val queryFunction: QueryFunction,
     private val getSkuDetailFunction: GetSkuDetailFunction,
     private val checkTrialSubscriptionFunction: CheckTrialSubscriptionFunction,
@@ -71,11 +70,10 @@ internal class ServiceBillingConnection(
         callbackReference = WeakReference(callback)
         contextReference = WeakReference(context)
 
-        return Intent(BILLING_SERVICE_ACTION).apply {
-            `package` = BAZAAR_PACKAGE_NAME
-            setClassName(BAZAAR_PACKAGE_NAME, BAZAAR_PAYMENT_SERVICE_CLASS_NAME)
-        }.let {
-            if (Security.verifyBazaarIsInstalled(context) && isServiceAvailable(it)) {
+        return BazaarPackageResolver.billingServiceIntent(bazaarPackage.packageName).let {
+            if (Security.verifyBazaarIsInstalled(context, bazaarPackage.packageName) &&
+                BazaarPackageResolver.isBillingServiceAvailable(context, it)
+            ) {
                 try {
                     context.bindService(it, this, Context.BIND_AUTO_CREATE)
                     ConnectionResult.Success
@@ -275,20 +273,4 @@ internal class ServiceBillingConnection(
         billingService = null
     }
 
-    private fun isServiceAvailable(intent: Intent): Boolean {
-        return context.packageManager.queryIntentServices(intent, 0).isNotEmpty() ||
-                isServiceAvailableInDeepSleep(intent)
-    }
-
-    private fun isServiceAvailableInDeepSleep(intent: Intent): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-                context.packageManager
-                    .queryIntentServices(intent, MATCH_DISABLED_COMPONENTS)
-                    .isNotEmpty()
-    }
-
-    companion object {
-
-        private const val BILLING_SERVICE_ACTION = "ir.cafebazaar.pardakht.InAppBillingService.BIND"
-    }
 }
